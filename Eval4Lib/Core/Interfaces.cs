@@ -1,0 +1,22 @@
+﻿using System;
+
+namespace Eval4.Core
+{
+    public interface IVariableBag
+    {
+        IEvalValue GetVariable(string varname);
+    }
+
+    public interface IEvalValue
+    {
+        object ObjectValue { get; }
+        event ValueChangedEventHandler ValueChanged;
+        Type SystemType { get; }
+        //public string Expression { get; }
+        //public IEvalValue[] Dependencies { get; }
+        //public int Priority { get; }
+    }
+
+    public delegate void ValueChangedEventHandler(object Sender, System.EventArgs e);
+        
+}
