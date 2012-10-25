@@ -149,5 +149,97 @@ namespace Eval4
                     break;
             }
         }
+
+        internal override int GetPrecedence(Parser parser, TokenType tt, bool unary)
+        {
+            if (unary)
+            {
+                switch (tt)
+                {
+                    case TokenType.operator_plus:
+                        tt = TokenType.unary_plus;
+                        break;
+                    case TokenType.operator_minus:
+                        tt = TokenType.unary_minus;
+                        break;
+                }
+            }
+            // http://msdn.microsoft.com/en-us/library/fw84t893(v=vs.80).aspx
+
+            switch (tt)
+            {
+                case TokenType.open_parenthesis:
+                    return 16;
+
+                case TokenType.exponent:
+                    //Exponentiation (^)
+                    return 15;
+
+                case TokenType.unary_minus:
+                case TokenType.unary_plus:
+                    //Unary identity and negation (+, –)
+                    return 14;
+
+                case TokenType.operator_percent:
+                    // the percent operator is something I created 
+                    // it allows formula like 10 + 5% 
+                    return 13;
+
+                case TokenType.operator_mul:
+                case TokenType.operator_div:
+                    //Multiplication and floating-point division (*, /)
+                    return 12;
+
+                case TokenType.backslash:
+                    //Integer division (\)
+                    return 11;
+
+                case TokenType.operator_mod:
+                    //Modulus arithmetic (Mod)
+                    return 10;
+
+                case TokenType.operator_plus:
+                    //Addition and subtraction (+, –), string concatenation (+)
+                    return 9;
+
+                case TokenType.operator_concat:
+                    //String concatenation (&)
+                    return 8;
+
+                case TokenType.shift_left:
+                    //Arithmetic bit shift (<<, >>)
+                    return 7;
+
+                case TokenType.operator_eq:
+                case TokenType.operator_ne:
+                case TokenType.operator_ge:
+                case TokenType.operator_gt:
+                case TokenType.operator_le:
+                case TokenType.operator_lt:
+                    //All comparison operators (=, <>, <, <=, >, >=, Is, IsNot, Like, TypeOf...Is)
+                    return 6;
+
+                case TokenType.operator_not:
+                    //Negation (Not)
+                    return 5;
+
+                case TokenType.operator_and:
+                case TokenType.operator_andalso:
+                    //Conjunction (And, AndAlso)
+                    return 4;
+
+                case TokenType.operator_or:
+                case TokenType.operator_orelse:
+                    //Inclusive disjunction (Or, OrElse)
+                    return 3;
+
+                case TokenType.operator_xor:
+                    //Exclusive disjunction (Xor)
+                    return 2;
+
+                default:
+                    return 1;
+            }
+        }
     }
 }

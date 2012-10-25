@@ -229,7 +229,7 @@ namespace Eval4.Core
             // start the machine
             NextChar();
             NextToken();
-            Expr res = ParseExpr(null, Precedence.None);
+            Expr res = ParseExpr(null, 0);
             if (type == TokenType.end_of_formula)
             {
                 if (res == null)
@@ -243,7 +243,7 @@ namespace Eval4.Core
 
         }
 
-        internal Expr ParseExpr(Expr Acc, Precedence precedence)
+        internal Expr ParseExpr(Expr Acc, int precedence)
         {
             Expr ValueLeft = null;
             ValueLeft = ParseLeft();
@@ -255,13 +255,13 @@ namespace Eval4.Core
             return ParseRight(Acc, precedence, ValueLeft);
         }
 
-        private Expr ParseRight(Expr Acc, Precedence precedence, Expr ValueLeft)
+        private Expr ParseRight(Expr Acc, int precedence, Expr ValueLeft)
         {
             while (true)
             {
                 TokenType tt = default(TokenType);
                 tt = type;
-                Precedence opPrecedence = mEvaluator.GetPrecedence(this, tt);
+                int opPrecedence = mEvaluator.GetPrecedence(this, tt, unary: false);
                 if (precedence >= opPrecedence)
                 {
                     // if on we have twice the same operator precedence it is more natural to calculate the left operator first
@@ -283,7 +283,7 @@ namespace Eval4.Core
             Expr result = null;
             while (type != TokenType.end_of_formula)
             {
-                Precedence opPrecedence = mEvaluator.GetUnaryPrecedence(this, type);
+                int opPrecedence = mEvaluator.GetPrecedence(this, type, unary: true);
                 // we ignore precedence here, not sure if it is valid
                 result = mEvaluator.ParseLeft(this, type, opPrecedence);
                 if (result != null) return result;
@@ -611,7 +611,7 @@ namespace Eval4.Core
                         NextToken();
                         return parameters;
                     }
-                    Valueleft = ParseExpr(null, Precedence.None);
+                    Valueleft = ParseExpr(null, 0);
                     parameters.Add(Valueleft);
 
                     if (type == lClosing)
@@ -652,26 +652,26 @@ namespace Eval4.Core
     //    }
     //}
 
-    public enum Precedence
-    {
-        None,
-        Xor,
-        Or,
-        And,
-        Not,
-        Equality,
-        Arithmeticshift,
-        Concat,
-        Plusminus,
-        Modulo,
-        Integerdiv,
-        Muldiv,
-        Percent, // this is my own opertor here not vb
-        Unaryminus,
-        Exponent,
-        Parenthesis,
-        Undefined
-    }
+    //public enum Precedence
+    //{
+    //    None,
+    //    Xor,
+    //    Or,
+    //    And,
+    //    Not,
+    //    Equality,
+    //    Arithmeticshift,
+    //    Concat,
+    //    Plusminus,
+    //    Modulo,
+    //    Integerdiv,
+    //    Muldiv,
+    //    Percent, // this is my own opertor here not vb
+    //    Unaryminus,
+    //    Exponent,
+    //    Parenthesis,
+    //    Undefined
+    //}
 
     public enum TokenType
     {
@@ -710,7 +710,17 @@ namespace Eval4.Core
         Value_string,
         Value_date,
         open_bracket,
-        close_bracket
+        close_bracket,
+        unary_plus,
+        unary_minus,
+        shift_left,
+        shift_right,
+        @new,
+        unary_not,
+        unary_tilde,
+        operator_tilde,
+        backslash,
+        exponent
 
     }
 

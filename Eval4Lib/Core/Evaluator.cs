@@ -127,35 +127,27 @@ namespace Eval4.Core
             return TokenType.Value_identifier;
         }
 
-        internal virtual Precedence GetPrecedence(Parser parser, TokenType tt)
+        internal virtual int GetPrecedence(Parser parser, TokenType tt, bool unary)
         {
             switch (tt)
             {
-                case TokenType.operator_plus:
-                case TokenType.operator_minus:
-                    return Precedence.Plusminus;
-
+                case TokenType.unary_minus:
+                case TokenType.unary_plus:
+                    return 4;
                 case TokenType.operator_mul:
                 case TokenType.operator_div:
-                    return Precedence.Muldiv;
+                    return 3;
 
-                default:
-                    return Precedence.Undefined;
-            }
-        }
-
-        internal virtual Precedence GetUnaryPrecedence(Parser parser, TokenType tt)
-        {
-            switch (tt)
-            {
-                case TokenType.operator_minus:
                 case TokenType.operator_plus:
-                    return Precedence.Unaryminus;
+                case TokenType.operator_minus:
+                    return 2;
+
                 default:
-                    return Precedence.Undefined;
+                    return 1;
             }
         }
 
+        
         public virtual TokenType ParseToken(Parser parser)
         {
             switch (parser.mCurChar)
@@ -236,7 +228,7 @@ namespace Eval4.Core
             return TokenType.none;
         }
 
-        public virtual Expr ParseLeft(Parser parser, TokenType tokenType, Precedence opPrecedence)
+        public virtual Expr ParseLeft(Parser parser, TokenType tokenType, int opPrecedence)
         {
             Expr result = null;
             switch (tokenType)
@@ -296,7 +288,7 @@ namespace Eval4.Core
                     }
                 case TokenType.open_parenthesis:
                     parser.NextToken();
-                    result = parser.ParseExpr(null, Precedence.None);
+                    result = parser.ParseExpr(null, 0);
                     if (parser.type == TokenType.close_parenthesis)
                     {
                         // good we eat the end parenthesis and continue ...
@@ -320,7 +312,7 @@ namespace Eval4.Core
         }
 
 
-        internal virtual bool ParseRight(Parser parser, TokenType tt, Precedence opPrecedence, Expr Acc, ref Expr ValueLeft)
+        internal virtual bool ParseRight(Parser parser, TokenType tt, int opPrecedence, Expr Acc, ref Expr ValueLeft)
         {
             Expr ValueRight;
             switch (tt)
@@ -358,5 +350,6 @@ namespace Eval4.Core
         internal virtual void CleanUpCharacter(ref char mCurChar)
         {
         }
+
     }
 }
