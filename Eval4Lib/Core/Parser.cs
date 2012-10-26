@@ -16,7 +16,7 @@ namespace Eval4.Core
         public TokenType type;
 
         public System.Text.StringBuilder Value = new System.Text.StringBuilder();
-        private Expr mParsedExpression;
+        private IExpr mParsedExpression;
 
         internal SyntaxError NewParserException(string msg, Exception ex = null)
         {
@@ -97,6 +97,7 @@ namespace Eval4.Core
                     NextChar();
                 }
             }
+            
             return type;
         }
 
@@ -218,7 +219,7 @@ namespace Eval4.Core
             }
         }
 
-        public Expr ParsedExpression { get { return mParsedExpression; } }
+        public IExpr ParsedExpression { get { return mParsedExpression; } }
 
         public Parser(Evaluator evaluator, string source)
         {
@@ -229,7 +230,7 @@ namespace Eval4.Core
             // start the machine
             NextChar();
             NextToken();
-            Expr res = ParseExpr(null, 0);
+            IExpr res = ParseExpr(null, 0);
             if (type == TokenType.end_of_formula)
             {
                 if (res == null)
@@ -243,9 +244,9 @@ namespace Eval4.Core
 
         }
 
-        internal Expr ParseExpr(Expr Acc, int precedence)
+        internal IExpr ParseExpr(IExpr Acc, int precedence)
         {
-            Expr ValueLeft = null;
+            IExpr ValueLeft = null;
             ValueLeft = ParseLeft();
             if (ValueLeft == null)
             {
@@ -255,7 +256,7 @@ namespace Eval4.Core
             return ParseRight(Acc, precedence, ValueLeft);
         }
 
-        private Expr ParseRight(Expr Acc, int precedence, Expr ValueLeft)
+        private IExpr ParseRight(IExpr Acc, int precedence, IExpr ValueLeft)
         {
             while (true)
             {
@@ -278,9 +279,9 @@ namespace Eval4.Core
             }
         }
 
-        private Expr ParseLeft()
+        private IExpr ParseLeft()
         {
-            Expr result = null;
+            IExpr result = null;
             while (type != TokenType.end_of_formula)
             {
                 int opPrecedence = mEvaluator.GetPrecedence(this, type, unary: true);
@@ -301,9 +302,9 @@ namespace Eval4.Core
             all = 7
         }
 
-        private bool EmitCallFunction(ref Expr ValueLeft, string funcName, List<Expr> parameters, CallType CallType, bool ErrorIfNotFound)
+        private bool EmitCallFunction(ref IExpr ValueLeft, string funcName, List<IExpr> parameters, CallType CallType, bool ErrorIfNotFound)
         {
-            Expr newExpr = null;
+            IExpr newExpr = null;
             if (ValueLeft == null)
             {
                 foreach (object environmentFunctions in mEvaluator.mEnvironmentFunctionsList)
@@ -332,7 +333,7 @@ namespace Eval4.Core
             }
         }
 
-        private Expr GetLocalFunction(object @base, Type baseType, string funcName, List<Expr> parameters, CallType CallType)
+        private IExpr GetLocalFunction(object @base, Type baseType, string funcName, List<IExpr> parameters, CallType CallType)
         {
             MemberInfo mi = null;
             mi = GetMemberInfo(baseType, isStatic: true, isInstance: @base != null, func: funcName, parameters: parameters);
@@ -360,7 +361,7 @@ namespace Eval4.Core
             }
             if (@base is IVariableBag && (parameters == null || parameters.Count == 0))
             {
-                IEvalValue val = ((IVariableBag)@base).GetVariable(funcName);
+                IHasValue val = ((IVariableBag)@base).GetVariable(funcName);
                 if ((val != null))
                 {
                     return new GetVariableExpr(val);
@@ -369,7 +370,7 @@ namespace Eval4.Core
             return null;
         }
 
-        private MemberInfo GetMemberInfo(Type objType, bool isStatic, bool isInstance, string func, List<Expr> parameters)
+        private MemberInfo GetMemberInfo(Type objType, bool isStatic, bool isInstance, string func, List<IExpr> parameters)
         {
             BindingFlags bindingAttr = default(BindingFlags);
             bindingAttr = BindingFlags.GetProperty | BindingFlags.GetField | BindingFlags.Public | BindingFlags.InvokeMethod;
@@ -422,7 +423,7 @@ namespace Eval4.Core
                 if (plist == null)
                     plist = new ParameterInfo[] { };
                 if (parameters == null)
-                    parameters = new List<Expr>();
+                    parameters = new List<IExpr>();
 
                 ParameterInfo pi = null;
                 if (parameters.Count > plist.Length)
@@ -481,7 +482,7 @@ namespace Eval4.Core
             }
         }
 
-        private void ParseDot(ref Expr ValueLeft)
+        private void ParseDot(ref IExpr ValueLeft)
         {
             do
             {
@@ -500,10 +501,10 @@ namespace Eval4.Core
             } while (true);
         }
 
-        internal void ParseIdentifier(ref Expr ValueLeft)
+        internal void ParseIdentifier(ref IExpr ValueLeft)
         {
             // first check functions
-            List<Expr> parameters = null;
+            List<IExpr> parameters = null;
             // parameters... 
             //Dim types As New ArrayList
             string func = Value.ToString();
@@ -512,7 +513,7 @@ namespace Eval4.Core
             parameters = ParseParameters(ref isBrackets);
             if ((parameters != null))
             {
-                List<Expr> EmptyParameters = new List<Expr>();
+                List<IExpr> EmptyParameters = new List<IExpr>();
                 bool ParamsNotUsed = false;
                 if (mEvaluator.UseParenthesisForArrays)
                 {
@@ -581,10 +582,10 @@ namespace Eval4.Core
             }
         }
 
-        internal List<Expr> ParseParameters(ref bool brackets)
+        internal List<IExpr> ParseParameters(ref bool brackets)
         {
-            List<Expr> parameters = null;
-            Expr Valueleft = null;
+            List<IExpr> parameters = null;
+            IExpr Valueleft = null;
             TokenType lClosing = default(TokenType);
 
             if (type == TokenType.open_parenthesis
@@ -600,7 +601,7 @@ namespace Eval4.Core
                         lClosing = TokenType.close_parenthesis;
                         break;
                 }
-                parameters = new List<Expr>();
+                parameters = new List<IExpr>();
                 NextToken();
                 //eat the parenthesis
                 do
@@ -720,7 +721,8 @@ namespace Eval4.Core
         unary_tilde,
         operator_tilde,
         backslash,
-        exponent
+        exponent,
+        operator_integerdiv
 
     }
 

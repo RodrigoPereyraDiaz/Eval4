@@ -4,10 +4,10 @@ namespace Eval4.Core
 {
     public interface IVariableBag
     {
-        IEvalValue GetVariable(string varname);
+        IHasValue GetVariable(string varname);
     }
 
-    public interface IEvalValue
+    public interface IHasValue
     {
         object ObjectValue { get; }
         event ValueChangedEventHandler ValueChanged;
@@ -15,6 +15,11 @@ namespace Eval4.Core
         //public string Expression { get; }
         //public IEvalValue[] Dependencies { get; }
         //public int Priority { get; }
+    }
+
+    public interface IHasValue<T>
+    {
+        T Value { get; }        
     }
 
     public delegate void ValueChangedEventHandler(object Sender, System.EventArgs e);

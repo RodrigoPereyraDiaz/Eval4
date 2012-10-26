@@ -90,11 +90,11 @@ namespace Eval4.CSharpTests
             TestFormula("accounts.DecimalValue", (decimal)123);
             TestFormula("accounts.Int16Value", (Int16)123);
 
-            TestFormula("accounts.ByteValue * 1", 123.0);
-            TestFormula("accounts.SingleValue  * 1", 123.0);
-            TestFormula("accounts.DecimalValue * 1", 123.0);
-            TestFormula("accounts.Int16Value * 1", 123.0);
-            TestFormula("accounts.Sum(1,2,3,4)", (Decimal)10.0);
+            TestFormula("accounts.ByteValue * 1.0", 123.0);
+            TestFormula("accounts.SingleValue  * 1.0", 123.0);
+            TestFormula("accounts.DecimalValue * 1.0", 123.0);
+            TestFormula("accounts.Int16Value * 1.0", 123.0);
+            TestFormula("accounts.Sum(1,2,3,4)", (decimal)10.0);
 
         }
     }

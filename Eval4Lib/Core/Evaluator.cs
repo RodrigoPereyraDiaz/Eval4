@@ -34,7 +34,7 @@ namespace Eval4.Core
             }
         }
 
-        public Expr Parse(string str)
+        public IExpr Parse(string str)
         {
             if (str == null)
                 str = string.Empty;
@@ -96,11 +96,11 @@ namespace Eval4.Core
             return null;
         }
 
-        Dictionary<string, Expr> mExpressions = new Dictionary<string, Expr>();
+        Dictionary<string, IExpr> mExpressions = new Dictionary<string, IExpr>();
 
         public object Eval(string formula)
         {
-            Expr parsed;
+            IExpr parsed;
             if (!mExpressions.TryGetValue(formula, out parsed))
             {
                 parsed = Parse(formula);
@@ -228,33 +228,29 @@ namespace Eval4.Core
             return TokenType.none;
         }
 
-        public virtual Expr ParseLeft(Parser parser, TokenType tokenType, int opPrecedence)
+        public virtual IExpr ParseLeft(Parser parser, TokenType tokenType, int opPrecedence)
         {
-            Expr result = null;
+            IExpr result = null;
             switch (tokenType)
             {
                 case TokenType.operator_minus:
-                    // unary minus operator
-                    parser.NextToken();
-                    result = parser.ParseExpr(null, opPrecedence);
-                    result = new UnaryExpr(TokenType.operator_minus, result);
-                    return result;
                 case TokenType.operator_plus:
+                case TokenType.operator_not:
                     // unary minus operator
                     parser.NextToken();
-                    break;
-                case TokenType.operator_not:
-                    parser.NextToken();
                     result = parser.ParseExpr(null, opPrecedence);
-                    result = new UnaryExpr(TokenType.operator_not, result);
+                    result = TypedExpr.UnaryExpr(parser, tokenType, result);
                     return result;
+                
                 case TokenType.Value_identifier:
                     parser.ParseIdentifier(ref result);
                     return result;
+                
                 case TokenType.Value_true:
                     result = new ImmediateExpr<bool>(true);
                     parser.NextToken();
                     return result;
+                
                 case TokenType.Value_false:
                     result = new ImmediateExpr<bool>(false);
                     parser.NextToken();
@@ -264,17 +260,26 @@ namespace Eval4.Core
                     result = new ImmediateExpr<string>(parser.Value.ToString());
                     parser.NextToken();
                     return result;
+                
                 case TokenType.Value_number:
-                    try
+                    string valueString = parser.Value.ToString();
+                    int intValue;
+                    double doubleValue;
+                    if (int.TryParse(valueString, out intValue))
                     {
-                        result = new ImmediateExpr<double>(double.Parse(parser.Value.ToString(), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture));
+                        result = new ImmediateExpr<int>(intValue);
                     }
-                    catch (Exception) // ex)
+                    else if (double.TryParse(valueString, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out doubleValue))
+                    {
+                        result = new ImmediateExpr<double>(doubleValue);
+                    }
+                    else
                     {
                         throw parser.NewParserException(string.Format("Invalid number {0}", parser.Value.ToString()));
                     }
                     parser.NextToken();
                     return result;
+                
                 case TokenType.Value_date:
                     try
                     {
@@ -286,6 +291,7 @@ namespace Eval4.Core
                     {
                         throw parser.NewParserException(string.Format("Invalid date {0}, it should be #DD/MM/YYYY hh:mm:ss#", parser.Value.ToString()));
                     }
+                
                 case TokenType.open_parenthesis:
                     parser.NextToken();
                     result = parser.ParseExpr(null, 0);
@@ -299,9 +305,10 @@ namespace Eval4.Core
                     {
                         throw parser.NewUnexpectedToken("End parenthesis not found");
                     }
+                
                 case TokenType.operator_if:
                     // first check functions
-                    List<Expr> parameters = null;
+                    List<IExpr> parameters = null;
                     // parameters... 
                     parser.NextToken();
                     bool brackets = false;
@@ -312,9 +319,9 @@ namespace Eval4.Core
         }
 
 
-        internal virtual bool ParseRight(Parser parser, TokenType tt, int opPrecedence, Expr Acc, ref Expr ValueLeft)
+        internal virtual bool ParseRight(Parser parser, TokenType tt, int opPrecedence, IExpr Acc, ref IExpr ValueLeft)
         {
-            Expr ValueRight;
+            IExpr ValueRight;
             switch (tt)
             {
                 case TokenType.operator_plus:
@@ -336,11 +343,11 @@ namespace Eval4.Core
                 case TokenType.operator_lt:
                     parser.NextToken();
                     ValueRight = parser.ParseExpr(ValueLeft, opPrecedence);
-                    ValueLeft = new BinaryExpr(parser, ValueLeft, tt, ValueRight);
+                    ValueLeft = TypedExpr.BinaryExpr(parser, ValueLeft, tt, ValueRight);
                     return true;
                 case TokenType.operator_percent:
                     parser.NextToken();
-                    ValueLeft = new BinaryExpr(parser, ValueLeft, tt, Acc);
+                    ValueLeft = TypedExpr.BinaryExpr(parser, ValueLeft, tt, Acc);
                     return true;
                 default:
                     return false;

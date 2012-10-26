@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Eval4
 {
 
-    public class Variable<T> : Core.Variable
+    public class Variable<T> : Core.Variable, Core.IHasValue<T>
     {
         private T mValue;
 

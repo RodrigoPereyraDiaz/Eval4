@@ -13,7 +13,7 @@ namespace Eval4.Core
             mVariables = new Dictionary<string, Variable>(caseSensitive ? StringComparer.InvariantCulture : StringComparer.InvariantCultureIgnoreCase);
         }
 
-        public IEvalValue GetVariable(string varname)
+        public IHasValue GetVariable(string varname)
         {
             Variable result;
             mVariables.TryGetValue(varname, out result);
@@ -42,7 +42,7 @@ namespace Eval4.Core
 
     }
 
-    public abstract class Variable : IEvalValue
+    public abstract class Variable : IHasValue
     {
         protected string mDescription;
         protected string mName;
@@ -52,17 +52,17 @@ namespace Eval4.Core
         public event ValueChangedEventHandler ValueChanged;
 
 
-        public string Description
-        {
-            get { return mDescription; }
-            set { mDescription = value; }
-        }
+        //public string Description
+        //{
+        //    get { return mDescription; }
+        //    set { mDescription = value; }
+        //}
 
-        public string Name
-        {
-            get { return mName; }
-            set { mName = value; }
-        }
+        //public string Name
+        //{
+        //    get { return mName; }
+        //    set { mName = value; }
+        //}
 
         public Variable(string description)
         {

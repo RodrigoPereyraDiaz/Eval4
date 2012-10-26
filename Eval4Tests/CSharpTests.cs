@@ -71,8 +71,8 @@ namespace Eval4.CSharpTests
         [TestMethod]
         public void TestIf()
         {
-            TestFormula("true ?  1:0", 1.0);
-            TestFormula("false ?  1:0", 0.0);
+            TestFormula("true ?  1:0", 1);
+            TestFormula("false ?  1:0", 0);
         }
     }
 }

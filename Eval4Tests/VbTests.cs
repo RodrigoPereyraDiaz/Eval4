@@ -17,12 +17,12 @@ namespace Eval4.CSharpTests
         [TestMethod]
         public void TestArithmetic()
         {
-            TestFormula("3", 3.0);
-            TestFormula("3 + 2", 5.0);
-            TestFormula("3 - 2", 1.0);
-            TestFormula("3 * 2", 6.0);
+            TestFormula("3", 3);
+            TestFormula("3 + 2", 5);
+            TestFormula("3 - 2", 1);
+            TestFormula("3 * 2", 6);
             TestFormula("3 / 2", 1.5);
-            TestFormula("1*2*3*4*5*6*7*8*9", 1.0 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9);
+            TestFormula("1*2*3*4*5*6*7*8*9", 1 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9);
         }
 
         [TestMethod]
@@ -62,8 +62,8 @@ namespace Eval4.CSharpTests
         [TestMethod]
         public void TestIf()
         {
-            TestFormula("if(false,1,0)", 0.0);
-            TestFormula("if(true,1,0)", 1.0);
+            TestFormula("if(false,1,0)", 0);
+            TestFormula("if(true,1,0)", 1);
         }
 
         [TestMethod]
@@ -164,11 +164,11 @@ namespace Eval4.CSharpTests
         [TestMethod]
         public void TestUnary()
         {
-            TestFormula("-5 + 10", (double)(-5 + 10));
-            TestFormula("5 * -5", (double)(5 * -5));
-            TestFormula("10 - -5", (double)(10 - -5));
-            TestFormula("1+-2*-3", (double)(1.0 + -2 * -3));
-            TestFormula("1+-2*3", (double)(1.0 + -2 * 3));
+            TestFormula("-5 + 10", (-5 + 10));
+            TestFormula("5 * -5", (5 * -5));
+            TestFormula("10 - -5", (10 - -5));
+            TestFormula("1+-2*-3", (1 + -2 * -3));
+            TestFormula("1+-2*3", (1 + -2 * 3));
         }
 
 

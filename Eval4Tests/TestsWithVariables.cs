@@ -32,9 +32,9 @@ namespace Eval4.CSharpTests
         [TestMethod]
         public void CheckVariablesOperations()
         {
-            TestFormula("A+B", 5.0);
-            TestFormula("A-B", -1.0);
-            TestFormula("A*B", 6.0);
+            TestFormula("A+B", 5);
+            TestFormula("A-B", -1);
+            TestFormula("A*B", 6);
         }
 
         [TestMethod]
@@ -44,9 +44,9 @@ namespace Eval4.CSharpTests
             ev.SetVariable("C", 10);
             var parsed = ev.Parse("C*5");
             parsed.ValueChanged += parsed_ValueChanged;
-            Assert.AreEqual(parsed.ObjectValue, 50.0);
+            Assert.AreEqual(parsed.ObjectValue, 50);
             ev.SetVariable("C", 5);
-            Assert.AreEqual(parsed.ObjectValue, 25.0);
+            Assert.AreEqual(parsed.ObjectValue, 25);
             parsed.ValueChanged -= parsed_ValueChanged;
             ev.SetVariable("C", 10);
             //Assert.AreEqual(parsed.ObjectValue, 99.99);
