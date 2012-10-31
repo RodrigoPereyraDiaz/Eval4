@@ -210,7 +210,8 @@ namespace Eval4.Core
                     return TokenType.comma;
                 case '.':
                     parser.NextChar();
-                    return TokenType.dot;
+                    if (parser.mCurChar >= '0' && parser.mCurChar <= '9') return parser.ParseNumber(afterDot:true);
+                    else return TokenType.dot;
                 case '\'':
                 case '"':
                     parser.ParseString(true);
@@ -314,8 +315,9 @@ namespace Eval4.Core
                     bool brackets = false;
                     parameters = parser.ParseParameters(ref brackets);
                     return new OperatorIfExpr(parameters[0], parameters[1], parameters[2]);
+                default:
+                    throw parser.NewUnexpectedToken();
             }
-            return result;
         }
 
 

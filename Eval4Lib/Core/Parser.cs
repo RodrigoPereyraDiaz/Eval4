@@ -79,25 +79,31 @@ namespace Eval4.Core
             }
         }
 
-        internal TokenType ParseNumber()
+        internal TokenType ParseNumber(bool afterDot = false)
         {
             type = TokenType.Value_number;
-            while (mCurChar >= '0' && mCurChar <= '9')
+            if (!afterDot)
             {
-                Value.Append(mCurChar);
-                NextChar();
+                while (mCurChar >= '0' && mCurChar <= '9')
+                {
+                    Value.Append(mCurChar);
+                    NextChar();
+                }
+                if (mCurChar == '.')
+                {
+                    afterDot = true;
+                    NextChar();
+                }
             }
-            if (mCurChar == '.')
+            if (afterDot)
             {
-                Value.Append(mCurChar);
-                NextChar();
+                Value.Append('.');
                 while (mCurChar >= '0' && mCurChar <= '9')
                 {
                     Value.Append(mCurChar);
                     NextChar();
                 }
             }
-            
             return type;
         }
 
@@ -310,15 +316,15 @@ namespace Eval4.Core
                 foreach (object environmentFunctions in mEvaluator.mEnvironmentFunctionsList)
                 {
                     if (environmentFunctions is Type)
-                        newExpr = GetLocalFunction(null, (Type)environmentFunctions, funcName, parameters, CallType);
-                    else newExpr = GetLocalFunction(environmentFunctions, environmentFunctions.GetType(), funcName, parameters, CallType);
+                        newExpr = GetMember(null, (Type)environmentFunctions, funcName, parameters, CallType);
+                    else newExpr = GetMember(environmentFunctions, environmentFunctions.GetType(), funcName, parameters, CallType);
 
                     if (newExpr != null) break;
                 }
             }
             else
             {
-                newExpr = GetLocalFunction(ValueLeft, ValueLeft.SystemType, funcName, parameters, CallType);
+                newExpr = GetMember(ValueLeft, ValueLeft.SystemType, funcName, parameters, CallType);
             }
             if ((newExpr != null))
             {
@@ -333,7 +339,7 @@ namespace Eval4.Core
             }
         }
 
-        private IExpr GetLocalFunction(object @base, Type baseType, string funcName, List<IExpr> parameters, CallType CallType)
+        private IExpr GetMember(object @base, Type baseType, string funcName, List<IExpr> parameters, CallType CallType)
         {
             MemberInfo mi = null;
             mi = GetMemberInfo(baseType, isStatic: true, isInstance: @base != null, func: funcName, parameters: parameters);
