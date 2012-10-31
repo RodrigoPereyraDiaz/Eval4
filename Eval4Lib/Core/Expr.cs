@@ -162,9 +162,9 @@ namespace Eval4.Core
             get { return mSystemType; }
         }
 
-        private void mParam1_ValueChanged(object Sender, System.EventArgs e)
+        private void mParam1_ValueChanged(object sender, System.EventArgs e)
         {
-            base.RaiseEventValueChanged(Sender, e);
+            base.RaiseEventValueChanged(sender, e);
         }
 
     }
@@ -206,9 +206,9 @@ namespace Eval4.Core
             get { return mParam1.SystemType; }
         }
 
-        private void mParam1_ValueChanged(object Sender, System.EventArgs e)
+        private void mParam1_ValueChanged(object sender, System.EventArgs e)
         {
-            base.RaiseEventValueChanged(Sender, e);
+            base.RaiseEventValueChanged(sender, e);
         }
 
     }
@@ -402,19 +402,19 @@ namespace Eval4.Core
             get { return mResultSystemType; }
         }
 
-        private void mParamsValueChanged(object Sender, System.EventArgs e)
+        private void mParamsValueChanged(object sender, System.EventArgs e)
         {
-            base.RaiseEventValueChanged(Sender, e);
+            base.RaiseEventValueChanged(sender, e);
         }
 
-        private void mBaseVariable_ValueChanged(object Sender, System.EventArgs e)
+        private void mBaseVariable_ValueChanged(object sender, System.EventArgs e)
         {
-            base.RaiseEventValueChanged(Sender, e);
+            base.RaiseEventValueChanged(sender, e);
         }
 
-        private void mResultVariable_ValueChanged(object Sender, System.EventArgs e)
+        private void mResultVariable_ValueChanged(object sender, System.EventArgs e)
         {
-            base.RaiseEventValueChanged(Sender, e);
+            base.RaiseEventValueChanged(sender, e);
         }
     }
 
@@ -476,9 +476,9 @@ namespace Eval4.Core
             get { return mResultSystemType; }
         }
 
-        private void mBaseVariable_ValueChanged(object Sender, System.EventArgs e)
+        private void mBaseVariable_ValueChanged(object sender, System.EventArgs e)
         {
-            base.RaiseEventValueChanged(Sender, e);
+            base.RaiseEventValueChanged(sender, e);
         }
 
     }

@@ -28,8 +28,8 @@ namespace Eval4.CSharpTests
         [TestMethod]
         public void TestPercent()
         {
-            TestFormula("200 + 5%", 210.0);
-            TestFormula("200 - 5%", 190.0);
+            TestFormula("200 + 5%", 210);
+            TestFormula("200 - 5%", 190);
         }
 
         [TestMethod]

@@ -758,7 +758,7 @@ namespace Eval4.DemoCSharp
             btnEvaluate2_Click(sender, e);
         }
 
-        private void mFormula3_ValueChanged(Object Sender, System.EventArgs e)
+        private void mFormula3_ValueChanged(Object sender, System.EventArgs e)
         {
             string v = VbEvaluator.ConvertToString(mFormula3.ObjectValue);
             lblResults3.Text = v;

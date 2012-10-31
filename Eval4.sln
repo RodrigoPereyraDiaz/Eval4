@@ -1,5 +1,5 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Express 2012 for Windows Desktop
+# Visual Studio 2012
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Eval3Lib", "Eval3Lib\Eval3Lib.vbproj", "{FE433B1A-3397-45FC-88C4-FB80ECAF5849}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Eval3", "Eval3", "{18472029-172A-4FEC-86D6-435D94FB7B88}"
@@ -17,6 +17,10 @@ EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Eval3DemoVb", "Eval3Demo\Eval3DemoVb.vbproj", "{9F55B772-EBA3-4764-8583-9D508DA9D0DD}"
 EndProject
 Global
+	GlobalSection(SubversionScc) = preSolution
+		Svn-Managed = True
+		Manager = AnkhSVN - Subversion Support for Visual Studio
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|Mixed Platforms = Debug|Mixed Platforms

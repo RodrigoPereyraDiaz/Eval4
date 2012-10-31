@@ -52,7 +52,7 @@ namespace Eval4.CSharpTests
             //Assert.AreEqual(parsed.ObjectValue, 99.99);
         }
 
-        void parsed_ValueChanged(object Sender, EventArgs e)
+        void parsed_ValueChanged(object sender, EventArgs e)
         {
 
         }

@@ -16,7 +16,7 @@ namespace Eval4.Core
         {
             return new TypedExpr<P1, T>(ChangeType<P1>(p1), func);
         }
-        
+
         private static IExpr<P> ChangeType<P>(IExpr p)
         {
             if (!(p is IExpr<P>))
@@ -64,78 +64,87 @@ namespace Eval4.Core
                     else if (Expr.IsDoubleOrSmaller(v1Type) && v2Type == typeof(DateTime)) return TypedExpr.Create<double, DateTime, DateTime>(ValueLeft, ValueRight, (a, b) => { return b.AddDays(a); });
                     else if (Expr.IsDoubleOrSmaller(v1Type) && Expr.IsDoubleOrSmaller(v2Type)) return TypedExpr.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a + b; });
                     else return TypedExpr.Create<string, string, string>(ValueLeft, ValueRight, (a, b) => { return a + b; });
-                    break;
+
                 case TokenType.operator_minus:
                     if (Expr.IsIntOrSmaller(v1Type) && Expr.IsIntOrSmaller(v2Type)) return TypedExpr.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a - b; });
                     else if (v1Type == typeof(DateTime) && Expr.IsDoubleOrSmaller(v2Type)) return TypedExpr.Create<DateTime, double, DateTime>(ValueLeft, ValueRight, (a, b) => { return a.AddDays(-b); });
                     else if (v1Type == typeof(DateTime) && v2Type == typeof(DateTime)) return TypedExpr.Create<DateTime, DateTime, double>(ValueLeft, ValueRight, (a, b) => { return a.Subtract(b).TotalDays; });
                     else if (Expr.IsDoubleOrSmaller(v1Type) && Expr.IsDoubleOrSmaller(v2Type)) return TypedExpr.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a - b; });
                     break;
+
                 case TokenType.operator_mul:
                     if (Expr.IsIntOrSmaller(v1Type) && Expr.IsIntOrSmaller(v2Type)) return TypedExpr.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a * b; });
                     else if (Expr.IsDoubleOrSmaller(v1Type) && Expr.IsDoubleOrSmaller(v2Type)) return TypedExpr.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a * b; });
                     break;
+
                 case TokenType.operator_integerdiv:
                     if (Expr.IsIntOrSmaller(v1Type) && Expr.IsIntOrSmaller(v2Type)) return TypedExpr.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a / b; });
                     break;
+
                 case TokenType.operator_div:
-                    return TypedExpr.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a / b; });
-                
+                    if (Expr.IsDoubleOrSmaller(v1Type) && Expr.IsDoubleOrSmaller(v2Type)) return TypedExpr.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a / b; });
+                    break;
+
                 case TokenType.operator_mod:
                     if (Expr.IsIntOrSmaller(v1Type) && Expr.IsIntOrSmaller(v2Type)) return TypedExpr.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a % b; });
-                    else return TypedExpr.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a % b; });
+                    else if (Expr.IsDoubleOrSmaller(v1Type) && Expr.IsDoubleOrSmaller(v2Type)) return TypedExpr.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a % b; });
                     break;
                 case TokenType.operator_and:
                     if (v1Type == typeof(bool) && v2Type == typeof(bool)) return TypedExpr.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a & b; });
-                    return TypedExpr.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a & b; });
-                
+                    else if (Expr.IsIntOrSmaller(v1Type) && Expr.IsIntOrSmaller(v2Type)) return TypedExpr.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a & b; });
+                    break;
+
                 case TokenType.operator_or:
                     if (v1Type == typeof(bool) && v2Type == typeof(bool)) return TypedExpr.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a | b; });
-                    return TypedExpr.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a | b; });
-                
+                    else if (Expr.IsIntOrSmaller(v1Type) && Expr.IsIntOrSmaller(v2Type)) return TypedExpr.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a | b; });
+                    break;
+
                 case TokenType.operator_xor:
                     if (v1Type == typeof(bool) && v2Type == typeof(bool)) return TypedExpr.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a ^ b; });
-                    return TypedExpr.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a ^ b; });
-                
+                    else if (Expr.IsIntOrSmaller(v1Type) && Expr.IsIntOrSmaller(v2Type)) return TypedExpr.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a ^ b; });
+                    break;
+
                 case TokenType.operator_andalso:
-                    return TypedExpr.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a && b; });
-                
+                    if (v1Type == typeof(bool) && v2Type == typeof(bool)) return TypedExpr.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a && b; });
+                    break;
+
                 case TokenType.operator_orelse:
-                    return TypedExpr.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a || b; });
-                
+                    if (v1Type == typeof(bool) && v2Type == typeof(bool)) return TypedExpr.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a || b; });
+                    break;
+
                 case TokenType.operator_eq:
                     if (v1Type == typeof(bool) && v2Type == typeof(bool)) return TypedExpr.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a == b; });
                     else if (Expr.IsIntOrSmaller(v1Type) && Expr.IsIntOrSmaller(v2Type)) return TypedExpr.Create<int, int, bool>(ValueLeft, ValueRight, (a, b) => { return a == b; });
                     else if (v1Type == typeof(string) && v2Type == typeof(string)) return TypedExpr.Create<string, string, bool>(ValueLeft, ValueRight, (a, b) => { return a == b; });
-                    else if (v1Type == typeof(double) && v2Type == typeof(double)) return TypedExpr.Create<double, double, bool>(ValueLeft, ValueRight, (a, b) => { return a == b; });
+                    else if (Expr.IsDoubleOrSmaller(v1Type) && Expr.IsDoubleOrSmaller(v2Type)) return TypedExpr.Create<double, double, bool>(ValueLeft, ValueRight, (a, b) => { return a == b; });
                     else return TypedExpr.Create<object, object, bool>(ValueLeft, ValueRight, (a, b) => { return a.Equals(b); });
-                
+
                 case TokenType.operator_ne:
                     if (v1Type == typeof(bool) && v2Type == typeof(bool)) return TypedExpr.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a != b; });
                     else if (Expr.IsIntOrSmaller(v1Type) && Expr.IsIntOrSmaller(v2Type)) return TypedExpr.Create<int, int, bool>(ValueLeft, ValueRight, (a, b) => { return a != b; });
                     else if (v1Type == typeof(string) && v2Type == typeof(string)) return TypedExpr.Create<string, string, bool>(ValueLeft, ValueRight, (a, b) => { return a != b; });
-                    else if (v1Type == typeof(double) && v2Type == typeof(double)) return TypedExpr.Create<double, double, bool>(ValueLeft, ValueRight, (a, b) => { return a != b; });
+                    else if (Expr.IsDoubleOrSmaller(v1Type) && Expr.IsDoubleOrSmaller(v2Type)) return TypedExpr.Create<double, double, bool>(ValueLeft, ValueRight, (a, b) => { return a != b; });
                     else return TypedExpr.Create<object, object, bool>(ValueLeft, ValueRight, (a, b) => { return !a.Equals(b); });
-                
+
                 case TokenType.operator_ge:
                 case TokenType.operator_gt:
                 case TokenType.operator_le:
                 case TokenType.operator_lt:
-                    if (Expr.IsIntOrSmaller(v1Type)) return CompareToExpr<int>(ValueLeft, ValueRight, tt);
+                    if (Expr.IsIntOrSmaller(v1Type) && Expr.IsIntOrSmaller(v2Type)) return CompareToExpr<int>(ValueLeft, ValueRight, tt);
+                    else if (Expr.IsDoubleOrSmaller(v1Type) && Expr.IsDoubleOrSmaller(v2Type)) return CompareToExpr<double>(ValueLeft, ValueRight, tt);
                     else if (v1Type == typeof(bool)) return CompareToExpr<bool>(ValueLeft, ValueRight, tt);
-                    else if (v1Type == typeof(double)) return CompareToExpr<double>(ValueLeft, ValueRight, tt);
                     else if (v1Type == typeof(string)) return CompareToExpr<string>(ValueLeft, ValueRight, tt);
                     else return CompareToExpr<object>(ValueLeft, ValueRight, tt);
 
                 case TokenType.operator_percent:
-                    return TypedExpr.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a * b / 100.0; });
+                    if (Expr.IsIntOrSmaller(v1Type) && Expr.IsIntOrSmaller(v2Type)) return TypedExpr.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a * b / 100; });
+                    else if (Expr.IsDoubleOrSmaller(v1Type) && Expr.IsDoubleOrSmaller(v2Type)) return TypedExpr.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a * b / 100.0; });
+                    break;
             }
-            
-            
             throw parser.NewParserException("Cannot apply the operator " + tt.ToString().Replace("operator_", "") + " on " + v1Type.ToString() + " and " + v2Type.ToString());
         }
 
-       
+
         internal static IExpr UnaryExpr(Parser parser, TokenType tt, IExpr ValueLeft)
         {
             var v1Type = ValueLeft.SystemType;
@@ -169,6 +178,12 @@ namespace Eval4.Core
         public ChangeTypeExpr(IExpr p1)
         {
             mP1 = p1;
+            mP1.ValueChanged += mP1_ValueChanged;
+        }
+
+        void mP1_ValueChanged(object sender, EventArgs e)
+        {
+            if (ValueChanged != null) ValueChanged(sender, e);
         }
 
         public object ObjectValue
@@ -203,6 +218,13 @@ namespace Eval4.Core
             mP1 = p1;
             mP2 = p2;
             mFunc = func;
+            mP1.ValueChanged += mP_ValueChanged;
+            mP2.ValueChanged += mP_ValueChanged;
+        }
+
+        void mP_ValueChanged(object sender, EventArgs e)
+        {
+            if (ValueChanged != null) ValueChanged(sender, e);
         }
 
 
@@ -237,8 +259,13 @@ namespace Eval4.Core
         {
             mP1 = p1;
             mFunc = func;
+            mP1.ValueChanged += mP_ValueChanged;
         }
 
+        void mP_ValueChanged(object Sender, EventArgs e)
+        {
+            if (ValueChanged != null) ValueChanged(Sender, e);
+        }
 
         public object ObjectValue
         {

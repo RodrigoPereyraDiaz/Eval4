@@ -22,6 +22,6 @@ namespace Eval4.Core
         T Value { get; }        
     }
 
-    public delegate void ValueChangedEventHandler(object Sender, System.EventArgs e);
+    public delegate void ValueChangedEventHandler(object sender, System.EventArgs e);
         
 }
