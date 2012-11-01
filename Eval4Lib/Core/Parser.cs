@@ -20,7 +20,7 @@ namespace Eval4.Core
         }
     }
 
-    public class Token<T>:Token
+    public class Token<T> : Token
     {
         public Token()
         {
@@ -315,7 +315,7 @@ namespace Eval4.Core
         protected bool EmitCallFunction(ref IHasValue ValueLeft, string funcName, List<IHasValue> parameters, CallType CallType, bool ErrorIfNotFound)
         {
             IHasValue newExpr = null;
-            
+
             if (ValueLeft == null)
             {
                 foreach (object environmentFunctions in mEvaluator.mEnvironmentFunctionsList)
@@ -351,28 +351,32 @@ namespace Eval4.Core
         protected IHasValue GetMember(object @base, Type baseType, string funcName, List<IHasValue> parameters, CallType CallType)
         {
             MemberInfo mi = null;
-            mi = GetMemberInfo(baseType, isStatic: true, isInstance: @base != null, func: funcName, parameters: parameters);
-            if ((mi != null))
+            Type resultType;
+            if (GetMemberInfo(baseType, isStatic: true, isInstance: @base != null, func: funcName, parameters: parameters, mi: out mi, resultType: out resultType))
             {
+
                 switch (mi.MemberType)
                 {
                     case MemberTypes.Field:
                         if ((CallType & CallType.field) == 0)
                             throw NewParserException("Unexpected Field");
+                        resultType = (mi as FieldInfo).FieldType;
                         break;
                     case MemberTypes.Method:
                         if ((CallType & CallType.method) == 0)
                             throw NewParserException("Unexpected Method");
+                        resultType = (mi as MethodInfo).ReturnType;
                         break;
                     case MemberTypes.Property:
                         if ((CallType & CallType.property) == 0)
                             throw NewParserException("Unexpected Property");
+                        resultType = (mi as PropertyInfo).PropertyType;
                         break;
                     default:
                         throw NewUnexpectedToken(mi.MemberType.ToString() + " members are not supported");
                 }
 
-                return CallMethodExpr.GetNew(this, @base, mi, parameters);
+                return GetNewCallMethodExpr(resultType, @base, mi, parameters);
             }
             if (@base is IVariableBag && (parameters == null || parameters.Count == 0))
             {
@@ -385,7 +389,13 @@ namespace Eval4.Core
             return null;
         }
 
-        protected MemberInfo GetMemberInfo(Type objType, bool isStatic, bool isInstance, string func, List<IHasValue> parameters)
+        private IHasValue GetNewCallMethodExpr(Type resultType, object @base, MemberInfo mi, List<IHasValue> parameters)
+        {
+            var t = typeof(CallMethodExpr<>).MakeGenericType(resultType);
+            return (IHasValue)Activator.CreateInstance(t, @base, mi, parameters);
+        }
+
+        protected bool GetMemberInfo(Type objType, bool isStatic, bool isInstance, string func, List<IHasValue> parameters, out MemberInfo mi, out Type resultType)
         {
             BindingFlags bindingAttr = default(BindingFlags);
             bindingAttr = BindingFlags.GetProperty | BindingFlags.GetField | BindingFlags.Public | BindingFlags.InvokeMethod;
@@ -415,7 +425,7 @@ namespace Eval4.Core
             ParameterInfo[] plist = null;
             int idx = 0;
 
-            MemberInfo mi = null;
+            mi = null;
             for (int i = 0; i <= mis.Length - 1; i++)
             {
                 mi = mis[i];
@@ -472,7 +482,12 @@ namespace Eval4.Core
                     BestMember = mi;
                 }
             }
-            return BestMember;
+            mi = BestMember;
+            if (mi is MethodInfo) resultType = (mi as MethodInfo).ReturnType;
+            else if (mi is PropertyInfo) resultType = (mi as PropertyInfo).PropertyType;
+            else if (mi is FieldInfo) resultType = (mi as FieldInfo).FieldType;
+            else resultType = null;
+            return resultType != null;
         }
 
         protected static int ParamCompatibility(object value, Type type)
@@ -525,6 +540,7 @@ namespace Eval4.Core
             string func = mCurToken.Value;
             NextToken();
             bool isBrackets = false;
+            Type resultType;
             parameters = ParseParameters(ref isBrackets);
             if ((parameters != null))
             {
@@ -579,10 +595,9 @@ namespace Eval4.Core
                     else
                     {
                         MemberInfo mi = null;
-                        mi = GetMemberInfo(t, isStatic: true, isInstance: true, func: null, parameters: parameters);
-                        if ((mi != null))
+                        if (GetMemberInfo(t, isStatic: true, isInstance: true, func: null, parameters: parameters, mi: out mi, resultType: out resultType))
                         {
-                            ValueLeft = CallMethodExpr.GetNew(this, ValueLeft, mi, parameters);
+                            ValueLeft = GetNewCallMethodExpr(resultType, ValueLeft, mi, parameters);
                         }
                         else
                         {

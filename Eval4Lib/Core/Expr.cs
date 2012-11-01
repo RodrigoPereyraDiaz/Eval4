@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace Eval4.Core
@@ -182,29 +183,11 @@ namespace Eval4.Core
         }
     }
 
-    public class CallMethodExpr : DelegatedExpr
+    public class CallMethodExpr<T> : IHasValue<T>
     {
-
+        Func<T> mValueDelegate;
         private object mBaseObject;
         private IHasValue withEventsField_mBaseValue;
-        public IHasValue mBaseValue
-        {
-            get { return withEventsField_mBaseValue; }
-            set
-            {
-                if (withEventsField_mBaseValue != null)
-                {
-                    withEventsField_mBaseValue.ValueChanged -= mBaseVariable_ValueChanged;
-                }
-                withEventsField_mBaseValue = value;
-                if (withEventsField_mBaseValue != null)
-                {
-                    withEventsField_mBaseValue.ValueChanged += mBaseVariable_ValueChanged;
-                }
-            }
-            // for the events only
-        }
-
         private object mBaseValueObject;
         private MemberInfo mMethod;
         private IHasValue[] mParams;
@@ -212,25 +195,8 @@ namespace Eval4.Core
         private object[] mParamValues;
         private System.Type mResultSystemType;
         private IHasValue withEventsField_mResultValue;
-        public IHasValue mResultValue
-        {
-            get { return withEventsField_mResultValue; }
-            set
-            {
-                if (withEventsField_mResultValue != null)
-                {
-                    withEventsField_mResultValue.ValueChanged -= mResultVariable_ValueChanged;
-                }
-                withEventsField_mResultValue = value;
-                if (withEventsField_mResultValue != null)
-                {
-                    withEventsField_mResultValue.ValueChanged += mResultVariable_ValueChanged;
-                }
-            }
-            // just for some
-        }
 
-        internal CallMethodExpr(object baseObject, MemberInfo method, List<IHasValue> @params)
+        public CallMethodExpr(object baseObject, MemberInfo method, List<IHasValue> @params)
         {
             if (@params == null)
                 @params = new List<IHasValue>();
@@ -239,7 +205,7 @@ namespace Eval4.Core
 
             foreach (IHasValue p in newParams)
             {
-                p.ValueChanged += mParamsValueChanged;
+                p.ValueChanged += p_ValueChanged;
             }
             mParams = newParams;
             mParamValues = newParamValues;
@@ -259,12 +225,26 @@ namespace Eval4.Core
                 mResultSystemType = mi.ReturnType;
                 paramInfo = mi.GetParameters();
                 mValueDelegate = GetMethod;
+                //var dlg = (Func<T>)Delegate.CreateDelegate(typeof(Func<T>), (MethodInfo)mi);
+                //mValueDelegate = dlg;
             }
             else if (method is FieldInfo)
             {
                 mResultSystemType = ((FieldInfo)method).FieldType;
                 paramInfo = new ParameterInfo[] { };
                 mValueDelegate = GetField;
+
+                //object res = ((FieldInfo)mMethod).GetValue(mBaseValueObject);
+                //var f = Expression.Field(Expression.Constant(baseObject), (FieldInfo)method);
+
+
+                //     System.Linq.Expressions.Expression<Func<int, bool>> expr = i => i < 5;
+                //     // Compile the expression tree into executable code.
+                //     Func<int, bool> deleg = expr.Compile();
+                //     // Invoke the method and print the output.
+                //     Console.WriteLine("deleg(4) = {0}", deleg(4));
+                //var expr = (Expression<Func<T>>)f;
+                //mValueDelegate = expr.Compile();
             }
 
             for (int i = 0; i <= mParams.Length - 1; i++)
@@ -275,66 +255,113 @@ namespace Eval4.Core
                 }
             }
 
-            if (typeof(IHasValue).IsAssignableFrom(mResultSystemType))
-            {
-                mResultValue = (IHasValue)InternalValue();
-                if (mResultValue is IHasValue)
-                {
-                    mResultSystemType = ((IHasValue)mResultValue).SystemType;
-                }
-                else if (mResultValue == null)
-                {
-                    mResultSystemType = typeof(Object);
-                }
-                else
-                {
-                    object v = mResultValue.ObjectValue;
-                    if (v == null)
-                    {
-                        mResultSystemType = typeof(Object);
-                    }
-                    else
-                    {
-                        mResultSystemType = v.GetType();
-                    }
-                }
-            }
-            else
-            {
-                mResultSystemType = SystemType;
-            }
+            //if (typeof(IHasValue).IsAssignableFrom(mResultSystemType))
+            //{
+            //    mResultValue = (IHasValue)InternalValue();
+            //    if (mResultValue is IHasValue)
+            //    {
+            //        mResultSystemType = ((IHasValue)mResultValue).SystemType;
+            //    }
+            //    else if (mResultValue == null)
+            //    {
+            //        mResultSystemType = typeof(Object);
+            //    }
+            //    else
+            //    {
+            //        object v = mResultValue.ObjectValue;
+            //        if (v == null)
+            //        {
+            //            mResultSystemType = typeof(Object);
+            //        }
+            //        else
+            //        {
+            //            mResultSystemType = v.GetType();
+            //        }
+            //    }
+            //}
+            //else
+            //{
+            //    mResultSystemType = SystemType;
+            //}
         }
 
-        protected static internal IHasValue GetNew(Parser parser, object baseObject, MemberInfo method, List<IHasValue> @params)
+        void p_ValueChanged(object sender, EventArgs e)
         {
-            IHasValue o = null;
-            o = new CallMethodExpr(baseObject, method, @params);
-            return o;
+            throw new NotImplementedException();
         }
 
-        private object GetProperty()
+        public IHasValue mBaseValue
         {
+            get { return withEventsField_mBaseValue; }
+            set
+            {
+                if (withEventsField_mBaseValue != null)
+                {
+                    withEventsField_mBaseValue.ValueChanged -= withEventsField_mBaseValue_ValueChanged;
+                }
+                withEventsField_mBaseValue = value;
+                if (withEventsField_mBaseValue != null)
+                {
+                    withEventsField_mBaseValue.ValueChanged += withEventsField_mBaseValue_ValueChanged;
+                }
+            }
+            // for the events only
+        }
+
+        void withEventsField_mBaseValue_ValueChanged(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IHasValue mResultValue
+        {
+            get { return withEventsField_mResultValue; }
+            set
+            {
+                if (withEventsField_mResultValue != null)
+                {
+                    withEventsField_mResultValue.ValueChanged -= withEventsField_mResultValue_ValueChanged;
+                }
+                withEventsField_mResultValue = value;
+                if (withEventsField_mResultValue != null)
+                {
+                    withEventsField_mResultValue.ValueChanged += withEventsField_mResultValue_ValueChanged;
+                }
+            }
+            // just for some
+        }
+
+        void withEventsField_mResultValue_ValueChanged(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        private T GetProperty()
+        {
+            Recalc();
             object res = ((PropertyInfo)mMethod).GetValue(mBaseValueObject, mParamValues);
-            return res;
+            return (T)res;
         }
 
-        private object GetMethod()
+        private T GetMethod()
         {
+            Recalc();
             object res = ((MethodInfo)mMethod).Invoke(mBaseValueObject, mParamValues);
-            return res;
+            return (T)res;
         }
 
-        private object GetField()
+        private T GetField()
         {
+            Recalc();
             object res = ((FieldInfo)mMethod).GetValue(mBaseValueObject);
-            return res;
+            return (T)res;
         }
 
-        private object InternalValue()
+        private void Recalc()
         {
             for (int i = 0; i <= mParams.Length - 1; i++)
             {
-                mParamValues[i] = System.Convert.ChangeType(mParams[i].ObjectValue, mParams[i].SystemType);
+                mParamValues[i] = mParams[i].ObjectValue;
             }
             if (mBaseObject is IHasValue)
             {
@@ -345,55 +372,94 @@ namespace Eval4.Core
             {
                 mBaseValueObject = mBaseObject;
             }
-            return base.mValueDelegate();
+            //    return base.mValueDelegate();
         }
 
-        public override object ObjectValue
+        //public override object ObjectValue
+        //{
+        //    get
+        //    {
+        //        object res = InternalValue();
+        //        if (res is IHasValue)
+        //        {
+        //            mResultValue = (IHasValue)res;
+        //            res = mResultValue.ObjectValue;
+        //        }
+        //        return res;
+        //    }
+        //}
+
+        //public override System.Type SystemType
+        //{
+        //    get { return mResultSystemType; }
+        //}
+
+        //private void mParamsValueChanged(object sender, System.EventArgs e)
+        //{
+        //    base.RaiseEventValueChanged(sender, e);
+        //}
+
+        //private void mBaseVariable_ValueChanged(object sender, System.EventArgs e)
+        //{
+        //    base.RaiseEventValueChanged(sender, e);
+        //}
+
+        //private void mResultVariable_ValueChanged(object sender, System.EventArgs e)
+        //{
+        //    base.RaiseEventValueChanged(sender, e);
+        //}
+
+        //public override IEnumerable<Dependency> Dependencies
+        //{
+        //    get
+        //    {
+
+        //    }
+        //}
+
+        //public override string ShortName
+        //{
+        //    get { return "CallMethod"; }
+        //}
+
+        //public T Value
+        //{
+        //    get { throw new NotImplementedException(); }
+        //}
+
+
+        public event ValueChangedEventHandler ValueChanged;
+
+        public T Value
         {
-            get
-            {
-                object res = InternalValue();
-                if (res is IHasValue)
-                {
-                    mResultValue = (IHasValue)res;
-                    res = mResultValue.ObjectValue;
-                }
-                return res;
-            }
+            get { return mValueDelegate(); }
         }
 
-        public override System.Type SystemType
+        public object ObjectValue
         {
-            get { return mResultSystemType; }
+            get { return this.mValueDelegate(); }
         }
 
-        private void mParamsValueChanged(object sender, System.EventArgs e)
+        public Type SystemType
         {
-            base.RaiseEventValueChanged(sender, e);
+            get { return typeof(T); }
         }
 
-        private void mBaseVariable_ValueChanged(object sender, System.EventArgs e)
+        public string ShortName
         {
-            base.RaiseEventValueChanged(sender, e);
+            get { return "CallMethod"; }
         }
 
-        private void mResultVariable_ValueChanged(object sender, System.EventArgs e)
-        {
-            base.RaiseEventValueChanged(sender, e);
-        }
-
-        public override IEnumerable<Dependency> Dependencies
+        public IEnumerable<Dependency> Dependencies
         {
             get
             {
                 if (mBaseValue != null) yield return new Dependency("base", mBaseValue);
-
+                for (int i = 0; i < mParams.Length; i++)
+                {
+                    yield return new Dependency("#" + i, mParams[i]);
+                }
             }
-        }
-
-        public override string ShortName
-        {
-            get { return "CallMethod"; }
         }
     }
 
