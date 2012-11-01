@@ -115,7 +115,7 @@ namespace Eval4
             get { return false; }
         }
 
-        public override Token ParseToken(BaseParser parser, bool unary)
+        public override Token ParseToken(BaseParser parser)
         {
             switch (parser.mCurChar)
             {
@@ -170,7 +170,7 @@ namespace Eval4
                     parser.NextChar();
                     return NewToken(TokenType.operator_colon);
                 default:
-                    return base.ParseToken(parser, unary);
+                    return base.ParseToken(parser);
 
             }
         }

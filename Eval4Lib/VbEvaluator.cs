@@ -5,8 +5,17 @@ using Eval4.Core;
 
 namespace Eval4
 {
+
+    public enum CustomTokenType
+    {
+        operator_percent,
+        integer_div
+    }
+
     public class VbToken : Token
     {
+        public CustomTokenType CustomType { get; set; }
+
         public override int GetPrecedence(bool unary)
         {
             var tt = Type;
@@ -38,11 +47,14 @@ namespace Eval4
                     //Unary identity and negation (+, –)
                     return (unary ? 14 : 9);
 
-                case TokenType.operator_percent:
-                    // the percent operator is something I created 
-                    // it allows formula like 10 + 5% 
-                    return 13;
-
+                case TokenType.other:
+                    if (CustomType == CustomTokenType.operator_percent)
+                    {
+                        // the percent operator is something I created 
+                        // it allows formula like 10 + 5% 
+                        return 13;
+                    }
+                    break;
                 case TokenType.operator_mul:
                 case TokenType.operator_div:
                     //Multiplication and floating-point division (*, /)
@@ -95,11 +107,11 @@ namespace Eval4
                     //Exclusive disjunction (Xor)
                     return 2;
 
-                default:
-                    return 1;
             }
+            return 0;
         }
     }
+
     public class VbEvaluator : Core.Evaluator
     {
         protected internal override bool IsCaseSensitive
@@ -112,13 +124,14 @@ namespace Eval4
             get { return true; }
         }
 
-        public override Token ParseToken(BaseParser parser, bool unary)
+        public override Token ParseToken(BaseParser parser)
         {
+            //TODO:Check we advance
             switch (parser.mCurChar)
             {
                 case '%':
                     parser.NextChar();
-                    return NewToken(TokenType.operator_percent);
+                    return NewToken(CustomTokenType.operator_percent);
 
                 case '=':
                     parser.NextChar();
@@ -132,7 +145,7 @@ namespace Eval4
                     return NewToken(TokenType.operator_concat);
 
                 default:
-                    return base.ParseToken(parser, unary);
+                    return base.ParseToken(parser);
 
             }
         }
@@ -252,6 +265,50 @@ namespace Eval4
         public override Token NewToken()
         {
             return new VbToken();
+        }
+
+        private Token NewToken(CustomTokenType customTokenType)
+        {
+            var result = new VbToken();
+            result.Type = TokenType.other;
+            result.CustomType = customTokenType;
+            return result;
+        }
+
+        internal override bool ParseRight(BaseParser parser, Token tk, int opPrecedence, IExpr Acc, ref IExpr ValueLeft)
+        {
+            if (tk.Type == TokenType.other)
+            {
+                IExpr ValueRight;
+                var tk2 = tk as VbToken;
+                switch (tk2.CustomType)
+                {
+                    case CustomTokenType.operator_percent:
+                        parser.NextToken();
+                        //ValueRight = parser.ParseExpr(ValueLeft, opPrecedence);
+                        if (Expr.IsIntOrSmaller(ValueLeft.SystemType) && Expr.IsIntOrSmaller(Acc.SystemType))
+                        {
+                            ValueLeft = TypedExpr.Create<int, int, int>(Acc, ValueLeft, (a, b) => { return a * b / 100; });
+                            return true;
+                        }
+                        else if (Expr.IsDoubleOrSmaller(ValueLeft.SystemType) && Expr.IsDoubleOrSmaller(Acc.SystemType))
+                        {
+                            ValueLeft = TypedExpr.Create<double, double, double>(Acc, ValueLeft, (a, b) => { return a * b / 100.0; });
+                            return true;
+                        }
+                        break;
+                    case CustomTokenType.integer_div:
+                        parser.NextToken();
+                        ValueRight = parser.ParseExpr(ValueLeft, opPrecedence);
+                        if (Expr.IsIntOrSmaller(ValueLeft.SystemType) && Expr.IsIntOrSmaller(ValueRight.SystemType))
+                        {
+                            ValueLeft = TypedExpr.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a / b; });
+                            return true;
+                        }
+                        break;
+                }
+            }
+            return base.ParseRight(parser, tk, opPrecedence, Acc, ref ValueLeft);
         }
     }
 }

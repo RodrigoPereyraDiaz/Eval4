@@ -68,12 +68,12 @@ namespace Eval4.Core
                 throw NewParserException(msg + "Unexpected " + mCurToken.ToString());
         }
 
-        public void NextToken(bool leftSide = false)
+        public void NextToken()
         {
             do
             {
                 startpos = mPos;
-                mCurToken = mEvaluator.ParseToken(this, leftSide);
+                mCurToken = mEvaluator.ParseToken(this);
                 if (mCurToken.Type != TokenType.none)
                     return;
             } while (true);
@@ -168,7 +168,7 @@ namespace Eval4.Core
                         System.Text.StringBuilder SaveValue = sb;
                         int SaveStartPos = startpos;
                         sb = new System.Text.StringBuilder();
-                        this.NextToken(leftSide: true);
+                        this.NextToken();
                         // restart the tokenizer for the subExpr
                         object subExpr = null;
                         try
@@ -237,7 +237,7 @@ namespace Eval4.Core
         {
             if (mCurToken.Type == tokenType)
             {
-                NextToken(leftSide: false);
+                NextToken();
             }
             else
             {
@@ -255,7 +255,7 @@ namespace Eval4.Core
             mPos = 0;
             // start the machine
             NextChar();
-            NextToken(leftSide: true);
+            NextToken();
             IExpr res = ParseExpr(null, 0);
             if (mCurToken.Type == TokenType.end_of_formula)
             {
@@ -627,7 +627,7 @@ namespace Eval4.Core
                         break;
                 }
                 parameters = new List<IExpr>();
-                NextToken(leftSide: true);  //eat the parenthesis
+                NextToken();  //eat the parenthesis
                 do
                 {
                     if (mCurToken.Type == lClosing)
@@ -647,7 +647,7 @@ namespace Eval4.Core
                     }
                     else if (mCurToken.Type == TokenType.comma)
                     {
-                        NextToken(leftSide: true);
+                        NextToken();
                     }
                     else
                     {
@@ -682,7 +682,6 @@ namespace Eval4.Core
         operator_minus,
         operator_mul,
         operator_div,
-        operator_percent,
         operator_mod,
         open_parenthesis,
         comma,
@@ -718,8 +717,7 @@ namespace Eval4.Core
         operator_tilde,
         backslash,
         exponent,
-        operator_integerdiv
-
+        other
     }
 
 }

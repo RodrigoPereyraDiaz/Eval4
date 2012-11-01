@@ -163,7 +163,7 @@ namespace Eval4.Core
         //}
 
         
-        public virtual Token ParseToken(BaseParser parser, bool unary)
+        public virtual Token ParseToken(BaseParser parser)
         {
             switch (parser.mCurChar)
             {
@@ -314,7 +314,7 @@ namespace Eval4.Core
                     }
                 
                 case TokenType.open_parenthesis:
-                    parser.NextToken(leftSide:true);
+                    parser.NextToken();
                     result = parser.ParseExpr(null, 0);
                     if (parser.mCurToken.Type == TokenType.close_parenthesis)
                     {
@@ -331,7 +331,7 @@ namespace Eval4.Core
                     // first check functions
                     List<IExpr> parameters = null;
                     // parameters... 
-                    parser.NextToken(leftSide:true);
+                    parser.NextToken();
                     bool brackets = false;
                     parameters = parser.ParseParameters(ref brackets);
                     return new OperatorIfExpr(parameters[0], parameters[1], parameters[2]);
@@ -363,14 +363,14 @@ namespace Eval4.Core
                 case TokenType.operator_eq:
                 case TokenType.operator_le:
                 case TokenType.operator_lt:
-                    parser.NextToken(leftSide: true);
+                    parser.NextToken();
                     ValueRight = parser.ParseExpr(ValueLeft, opPrecedence);
                     ValueLeft = TypedExpr.BinaryExpr(parser, ValueLeft, tt, ValueRight);
                     return true;
-                case TokenType.operator_percent:
-                    parser.NextToken(leftSide: true);
-                    ValueLeft = TypedExpr.BinaryExpr(parser, ValueLeft, tt, Acc);
-                    return true;
+                //case TokenType.operator_percent:
+                //    parser.NextToken();
+                //    ValueLeft = TypedExpr.BinaryExpr(parser, ValueLeft, tt, Acc);
+                //    return true;
                 default:
                     return false;
             }

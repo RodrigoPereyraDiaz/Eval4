@@ -77,10 +77,6 @@ namespace Eval4.Core
                     else if (Expr.IsDoubleOrSmaller(v1Type) && Expr.IsDoubleOrSmaller(v2Type)) return TypedExpr.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a * b; });
                     break;
 
-                case TokenType.operator_integerdiv:
-                    if (Expr.IsIntOrSmaller(v1Type) && Expr.IsIntOrSmaller(v2Type)) return TypedExpr.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a / b; });
-                    break;
-
                 case TokenType.operator_div:
                     if (Expr.IsDoubleOrSmaller(v1Type) && Expr.IsDoubleOrSmaller(v2Type)) return TypedExpr.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a / b; });
                     break;
@@ -136,10 +132,6 @@ namespace Eval4.Core
                     else if (v1Type == typeof(string)) return CompareToExpr<string>(ValueLeft, ValueRight, tt);
                     else return CompareToExpr<object>(ValueLeft, ValueRight, tt);
 
-                case TokenType.operator_percent:
-                    if (Expr.IsIntOrSmaller(v1Type) && Expr.IsIntOrSmaller(v2Type)) return TypedExpr.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a * b / 100; });
-                    else if (Expr.IsDoubleOrSmaller(v1Type) && Expr.IsDoubleOrSmaller(v2Type)) return TypedExpr.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a * b / 100.0; });
-                    break;
             }
             throw parser.NewParserException("Cannot apply the operator " + tt.ToString().Replace("operator_", "") + " on " + v1Type.ToString() + " and " + v2Type.ToString());
         }
