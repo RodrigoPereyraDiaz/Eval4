@@ -11,108 +11,8 @@ namespace Eval4
         operator_percent,
         integer_div
     }
-
-    public class VbToken : Token
-    {
-        public CustomTokenType CustomType { get; set; }
-
-        public override int GetPrecedence(bool unary)
-        {
-            var tt = Type;
-            //if (unary)
-            //{
-            //    switch (tt)
-            //    {
-            //        case TokenType.operator_plus:
-            //            tt = TokenType.unary_plus;
-            //            break;
-            //        case TokenType.operator_minus:
-            //            tt = TokenType.unary_minus;
-            //            break;
-            //    }
-            //}
-            // http://msdn.microsoft.com/en-us/library/fw84t893(v=vs.80).aspx
-
-            switch (tt)
-            {
-                case TokenType.open_parenthesis:
-                    return 16;
-
-                case TokenType.exponent:
-                    //Exponentiation (^)
-                    return 15;
-
-                case TokenType.operator_minus:
-                case TokenType.operator_plus:
-                    //Unary identity and negation (+, –)
-                    return (unary ? 14 : 9);
-
-                case TokenType.other:
-                    if (CustomType == CustomTokenType.operator_percent)
-                    {
-                        // the percent operator is something I created 
-                        // it allows formula like 10 + 5% 
-                        return 13;
-                    }
-                    break;
-                case TokenType.operator_mul:
-                case TokenType.operator_div:
-                    //Multiplication and floating-point division (*, /)
-                    return 12;
-
-                case TokenType.backslash:
-                    //Integer division (\)
-                    return 11;
-
-                case TokenType.operator_mod:
-                    //Modulus arithmetic (Mod)
-                    return 10;
-
-                //case TokenType.operator_plus:
-                //    //Addition and subtraction (+, –), string concatenation (+)
-                //    return 9;
-
-                case TokenType.operator_concat:
-                    //String concatenation (&)
-                    return 8;
-
-                case TokenType.shift_left:
-                    //Arithmetic bit shift (<<, >>)
-                    return 7;
-
-                case TokenType.operator_eq:
-                case TokenType.operator_ne:
-                case TokenType.operator_ge:
-                case TokenType.operator_gt:
-                case TokenType.operator_le:
-                case TokenType.operator_lt:
-                    //All comparison operators (=, <>, <, <=, >, >=, Is, IsNot, Like, TypeOf...Is)
-                    return 6;
-
-                case TokenType.operator_not:
-                    //Negation (Not)
-                    return 5;
-
-                case TokenType.operator_and:
-                case TokenType.operator_andalso:
-                    //Conjunction (And, AndAlso)
-                    return 4;
-
-                case TokenType.operator_or:
-                case TokenType.operator_orelse:
-                    //Inclusive disjunction (Or, OrElse)
-                    return 3;
-
-                case TokenType.operator_xor:
-                    //Exclusive disjunction (Xor)
-                    return 2;
-
-            }
-            return 0;
-        }
-    }
-
-    public class VbEvaluator : Core.Evaluator
+    
+    public class VbEvaluator : Core.Evaluator<CustomTokenType>
     {
         protected internal override bool IsCaseSensitive
         {
@@ -262,25 +162,13 @@ namespace Eval4
         //    return 0;
         //}
 
-        public override Token NewToken()
-        {
-            return new VbToken();
-        }
-
-        private Token NewToken(CustomTokenType customTokenType)
-        {
-            var result = new VbToken();
-            result.Type = TokenType.other;
-            result.CustomType = customTokenType;
-            return result;
-        }
 
         internal override bool ParseRight(BaseParser parser, Token tk, int opPrecedence, IExpr Acc, ref IExpr ValueLeft)
         {
             if (tk.Type == TokenType.other)
             {
                 IExpr ValueRight;
-                var tk2 = tk as VbToken;
+                var tk2 = tk as Token<CustomTokenType>;
                 switch (tk2.CustomType)
                 {
                     case CustomTokenType.operator_percent:
@@ -309,6 +197,101 @@ namespace Eval4
                 }
             }
             return base.ParseRight(parser, tk, opPrecedence, Acc, ref ValueLeft);
+        }
+
+        public override int GetPrecedence(Token<CustomTokenType> token, bool unary)
+        {
+            var tt = token;
+            //if (unary)
+            //{
+            //    switch (tt)
+            //    {
+            //        case TokenType.operator_plus:
+            //            tt = TokenType.unary_plus;
+            //            break;
+            //        case TokenType.operator_minus:
+            //            tt = TokenType.unary_minus;
+            //            break;
+            //    }
+            //}
+            // http://msdn.microsoft.com/en-us/library/fw84t893(v=vs.80).aspx
+
+            switch (tt.Type)
+            {
+                case TokenType.open_parenthesis:
+                    return 16;
+
+                case TokenType.exponent:
+                    //Exponentiation (^)
+                    return 15;
+
+                case TokenType.operator_minus:
+                case TokenType.operator_plus:
+                    //Unary identity and negation (+, –)
+                    return (unary ? 14 : 9);
+
+                case TokenType.other:
+                    if (tt.CustomType == CustomTokenType.operator_percent)
+                    {
+                        // the percent operator is something I created 
+                        // it allows formula like 10 + 5% 
+                        return 13;
+                    }
+                    break;
+                case TokenType.operator_mul:
+                case TokenType.operator_div:
+                    //Multiplication and floating-point division (*, /)
+                    return 12;
+
+                case TokenType.backslash:
+                    //Integer division (\)
+                    return 11;
+
+                case TokenType.operator_mod:
+                    //Modulus arithmetic (Mod)
+                    return 10;
+
+                //case TokenType.operator_plus:
+                //    //Addition and subtraction (+, –), string concatenation (+)
+                //    return 9;
+
+                case TokenType.operator_concat:
+                    //String concatenation (&)
+                    return 8;
+
+                case TokenType.shift_left:
+                    //Arithmetic bit shift (<<, >>)
+                    return 7;
+
+                case TokenType.operator_eq:
+                case TokenType.operator_ne:
+                case TokenType.operator_ge:
+                case TokenType.operator_gt:
+                case TokenType.operator_le:
+                case TokenType.operator_lt:
+                    //All comparison operators (=, <>, <, <=, >, >=, Is, IsNot, Like, TypeOf...Is)
+                    return 6;
+
+                case TokenType.operator_not:
+                    //Negation (Not)
+                    return 5;
+
+                case TokenType.operator_and:
+                case TokenType.operator_andalso:
+                    //Conjunction (And, AndAlso)
+                    return 4;
+
+                case TokenType.operator_or:
+                case TokenType.operator_orelse:
+                    //Inclusive disjunction (Or, OrElse)
+                    return 3;
+
+                case TokenType.operator_xor:
+                    //Exclusive disjunction (Xor)
+                    return 2;
+
+            }
+            return 0;
         }
     }
 }

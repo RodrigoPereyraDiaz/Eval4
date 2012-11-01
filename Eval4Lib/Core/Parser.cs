@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Eval4.Core
 {
-    public abstract class Token
+    public class Token
     {
         public Token()
         {
@@ -14,12 +14,20 @@ namespace Eval4.Core
         public TokenType Type { get; set; }
         public String Value { get; set; }
 
-        public abstract int GetPrecedence(bool unary);
-
         public override string ToString()
         {
             return Type.ToString() + " " + Value;
         }
+    }
+
+    public class Token<T>:Token
+    {
+        public Token()
+        {
+        }
+
+        public T CustomType { get; set; }
+
     }
 
     public class BaseParser
@@ -288,7 +296,7 @@ namespace Eval4.Core
             {
                 //TokenType tt = default(TokenType);
                 //tt = mCurToken.Type;
-                int opPrecedence = mCurToken.GetPrecedence(unary: false);
+                int opPrecedence = mEvaluator.GetPrecedence(mCurToken, unary: false);
                 if (precedence >= opPrecedence)
                 {
                     // if on we have twice the same operator precedence it is more natural to calculate the left operator first

@@ -8,13 +8,16 @@ namespace Eval4.Core
         internal List<object> mEnvironmentFunctionsList;
         public bool RaiseVariableNotFoundException;
         protected VariableBag mVariableBag;
-        
+        public abstract int GetPrecedence(Token token, bool unary);
+
         public Evaluator()
         {
             mEnvironmentFunctionsList = new List<object>();
             mVariableBag = new VariableBag(this.IsCaseSensitive);
             mEnvironmentFunctionsList.Add(mVariableBag);
         }
+
+        public abstract Token NewToken();
 
         public Token NewToken(TokenType type, string value = null)
         {
@@ -23,9 +26,6 @@ namespace Eval4.Core
             if (value != null) result.Value = value;
             return result;
         }
-
-        public abstract Token NewToken();
-
 
         abstract internal protected bool IsCaseSensitive { get; }
 
@@ -162,7 +162,7 @@ namespace Eval4.Core
 
         //}
 
-        
+
         public virtual Token ParseToken(BaseParser parser)
         {
             switch (parser.mCurChar)
@@ -173,7 +173,7 @@ namespace Eval4.Core
                 case '\n':
                     parser.NextChar();
                     return NewToken(TokenType.none);
-                    
+
                 case '\0': //null:
                     return NewToken(TokenType.end_of_formula);
 
@@ -228,7 +228,7 @@ namespace Eval4.Core
                     return NewToken(TokenType.comma);
                 case '.':
                     parser.NextChar();
-                    if (parser.mCurChar >= '0' && parser.mCurChar <= '9') return parser.ParseNumber(afterDot:true);
+                    if (parser.mCurChar >= '0' && parser.mCurChar <= '9') return parser.ParseNumber(afterDot: true);
                     else return NewToken(TokenType.dot);
                 case '\'':
                 case '"':
@@ -250,7 +250,7 @@ namespace Eval4.Core
         {
 
             IExpr result = null;
-            int opPrecedence = token.GetPrecedence(unary: true);
+            int opPrecedence = GetPrecedence(token, unary: true);
 
             switch (token.Type)
             {
@@ -262,16 +262,16 @@ namespace Eval4.Core
                     result = parser.ParseExpr(null, opPrecedence);
                     result = TypedExpr.UnaryExpr(parser, token.Type, result);
                     return result;
-                
+
                 case TokenType.Value_identifier:
                     parser.ParseIdentifier(ref result);
                     return result;
-                
+
                 case TokenType.Value_true:
                     result = new ImmediateExpr<bool>(true);
                     parser.NextToken();
                     return result;
-                
+
                 case TokenType.Value_false:
                     result = new ImmediateExpr<bool>(false);
                     parser.NextToken();
@@ -281,7 +281,7 @@ namespace Eval4.Core
                     result = new ImmediateExpr<string>(token.Value);
                     parser.NextToken();
                     return result;
-                
+
                 case TokenType.Value_number:
                     string valueString = token.Value;
                     int intValue;
@@ -300,7 +300,7 @@ namespace Eval4.Core
                     }
                     parser.NextToken();
                     return result;
-                
+
                 case TokenType.Value_date:
                     try
                     {
@@ -312,7 +312,7 @@ namespace Eval4.Core
                     {
                         throw parser.NewParserException(string.Format("Invalid date {0}, it should be #DD/MM/YYYY hh:mm:ss#", parser.mCurToken.Value));
                     }
-                
+
                 case TokenType.open_parenthesis:
                     parser.NextToken();
                     result = parser.ParseExpr(null, 0);
@@ -326,7 +326,7 @@ namespace Eval4.Core
                     {
                         throw parser.NewUnexpectedToken("End parenthesis not found");
                     }
-                
+
                 case TokenType.operator_if:
                     // first check functions
                     List<IExpr> parameters = null;
@@ -380,5 +380,36 @@ namespace Eval4.Core
         {
         }
 
+    }
+
+    public abstract class Evaluator<T> : Evaluator
+    {
+        public abstract int GetPrecedence(Token<T> token, bool unary);
+
+        public override int GetPrecedence(Token token, bool unary)
+        {
+            return this.GetPrecedence((Token<T>)token, unary);
+        }
+
+        public Token<T> NewToken(T customTokenType)
+        {
+            var result = new Token<T>();
+            result.Type = TokenType.other;
+            result.CustomType = customTokenType;
+            return result;
+        }
+
+        public Token<T> NewToken(TokenType tokenType, string value = null)
+        {
+            var result = new Token<T>();
+            result.Type = tokenType;
+            if (value != null) result.Value = value;
+            return result;
+        }
+
+        public override Token NewToken()
+        {
+            return new Token<T>();
+        }
     }
 }
