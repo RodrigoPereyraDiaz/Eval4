@@ -17,76 +17,76 @@ namespace Eval4
             get { return false; }
         }
 
-        public override TokenType ParseToken(Parser parser)
+        public override Token ParseToken(BaseParser parser)
         {
             switch (parser.mCurChar)
             {
                 case '%':
                     parser.NextChar();
-                    return TokenType.operator_mod;
+                    return new Token(TokenType.operator_mod);
 
                 case '&':
                     parser.NextChar();
                     if (parser.mCurChar == '&')
                     {
                         parser.NextChar();
-                        return TokenType.operator_andalso;
+                        return new Token(TokenType.operator_andalso);
                     }
-                    return TokenType.operator_and;
+                    return new Token(TokenType.operator_and);
 
                 case '?':
                     parser.NextChar();
-                    return TokenType.operator_if;
+                    return new Token(TokenType.operator_if);
 
                 case '=':
                     parser.NextChar();
                     if (parser.mCurChar == '=')
                     {
                         parser.NextChar();
-                        return TokenType.operator_eq;
+                        return new Token(TokenType.operator_eq);
                     }
-                    return TokenType.operator_assign;
+                    return new Token(TokenType.operator_assign);
 
                 case '!':
                     parser.NextChar();
                     if (parser.mCurChar == '=')
                     {
                         parser.NextChar();
-                        return TokenType.operator_ne;
+                        return new Token(TokenType.operator_ne);
                     }
-                    return TokenType.operator_not;
+                    return new Token(TokenType.operator_not);
 
                 case '^':
                     parser.NextChar();
-                    return TokenType.operator_xor;
+                    return new Token(TokenType.operator_xor);
 
                 case '|':
                     parser.NextChar();
                     if (parser.mCurChar == '|')
                     {
                         parser.NextChar();
-                        return TokenType.operator_orelse;
+                        return new Token(TokenType.operator_orelse);
                     }
-                    return TokenType.operator_or;
+                    return new Token(TokenType.operator_or);
                 case ':':
                     parser.NextChar();
-                    return TokenType.operator_colon;
+                    return new Token(TokenType.operator_colon);
                 default:
                     return base.ParseToken(parser);
 
             }
         }
 
-        public override TokenType CheckKeyword(string keyword)
+        public override Token CheckKeyword(string keyword)
         {
             {
                 switch (keyword.ToString())
                 {
                     case "true":
-                        return TokenType.Value_true;
+                        return new Token(TokenType.Value_true);
 
                     case "false":
-                        return TokenType.Value_false;
+                        return new Token(TokenType.Value_false);
 
                     default:
                         return base.CheckKeyword(keyword);
@@ -94,8 +94,9 @@ namespace Eval4
             }
         }
 
-        internal override bool ParseRight(Parser parser, TokenType tt, int opPrecedence, IExpr Acc, ref IExpr ValueLeft)
+        internal override bool ParseRight(BaseParser parser, Token tk, int opPrecedence, IExpr Acc, ref IExpr ValueLeft)
         {
+            var tt = tk.Type;
             switch (tt)
             {
                 case TokenType.operator_if:
@@ -106,12 +107,13 @@ namespace Eval4
                     ValueLeft = new OperatorIfExpr(ValueLeft, thenExpr, elseExpr);
                     return true;
                 default:
-                    return base.ParseRight(parser, tt, opPrecedence, Acc, ref ValueLeft);
+                    return base.ParseRight(parser, tk, opPrecedence, Acc, ref ValueLeft);
             }
         }
 
-        internal override int GetPrecedence(Parser parser, TokenType tt, bool unary)
+        internal override int GetPrecedence(BaseParser parser, Token tk, bool unary)
         {
+            var tt = tk.Type;
             if (unary)
             {
                 switch (tt)

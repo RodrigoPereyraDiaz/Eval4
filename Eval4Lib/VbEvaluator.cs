@@ -17,25 +17,24 @@ namespace Eval4
             get { return true; }
         }
 
-        public override TokenType ParseToken(Parser parser)
+        public override Token ParseToken(BaseParser parser)
         {
             switch (parser.mCurChar)
             {
                 case '%':
                     parser.NextChar();
-                    return TokenType.operator_percent;
+                    return new Token(TokenType.operator_percent);
 
                 case '=':
                     parser.NextChar();
-                    return TokenType.operator_eq;
+                    return new Token(TokenType.operator_eq);
 
                 case '#':
-                    parser.ParseDate();
-                    return TokenType.Value_date;
+                    return parser.ParseDate();
 
                 case '&':
                     parser.NextChar();
-                    return TokenType.operator_concat;
+                    return new Token(TokenType.operator_concat);
 
                 default:
                     return base.ParseToken(parser);
@@ -43,38 +42,38 @@ namespace Eval4
             }
         }
 
-        public override TokenType CheckKeyword(string keyword)
+        public override Token CheckKeyword(string keyword)
         {
             switch (keyword.ToString())
             {
                 case "and":
-                    return TokenType.operator_and;
+                    return new Token(TokenType.operator_and);
 
                 case "andalso":
-                    return TokenType.operator_andalso;
+                    return new Token(TokenType.operator_andalso);
 
                 case "or":
-                    return TokenType.operator_or;
+                    return new Token(TokenType.operator_or);
 
                 case "orelse":
-                    return TokenType.operator_orelse;
+                    return new Token(TokenType.operator_orelse);
 
                 case "xor":
-                    return TokenType.operator_xor;
+                    return new Token(TokenType.operator_xor);
 
                 case "not":
-                    return TokenType.operator_not;
+                    return new Token(TokenType.operator_not);
 
                 case "true":
                 case "yes":
-                    return TokenType.Value_true;
+                    return new Token(TokenType.Value_true);
 
                 case "if":
-                    return TokenType.operator_if;
+                    return new Token(TokenType.operator_if);
 
                 case "false":
                 case "no":
-                    return TokenType.Value_false;
+                    return new Token(TokenType.Value_false);
 
                 default:
                     return base.CheckKeyword(keyword);
@@ -150,8 +149,9 @@ namespace Eval4
             }
         }
 
-        internal override int GetPrecedence(Parser parser, TokenType tt, bool unary)
+        internal override int GetPrecedence(BaseParser parser, Token tk, bool unary)
         {
+            var tt = tk.Type;
             if (unary)
             {
                 switch (tt)

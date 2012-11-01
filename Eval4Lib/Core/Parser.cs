@@ -1,22 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
 
 namespace Eval4.Core
 {
-    public class Parser
+    public class Token
+    {
+        public Token(TokenType tokenType, string value=null)
+        {
+            this.Type = tokenType;
+            this.Value = value;
+        }
+        public TokenType Type { get; set; }
+
+        public string Value;
+
+    }
+
+    public class BaseParser 
     {
         internal Evaluator mEvaluator;
 
-        private string mString;
-        private int mLen;
-        private int mPos;
-        internal char mCurChar;
+        protected string mString;
+        protected int mLen;
+        protected int mPos;
+        public char mCurChar;
         public int startpos;
-        public TokenType type;
+        public Token mCurToken;
 
-        public System.Text.StringBuilder Value = new System.Text.StringBuilder();
-        private IExpr mParsedExpression;
+        protected IExpr mParsedExpression;
 
         internal SyntaxError NewParserException(string msg, Exception ex = null)
         {
@@ -45,22 +58,20 @@ namespace Eval4.Core
             {
                 msg += "; ";
             }
-            if (Value.Length == 0)
+            if (string.IsNullOrEmpty(mCurToken.Value))
                 throw NewParserException(msg + "Unexpected character '" + mCurChar + "'");
             else
-                throw NewParserException(msg + "Unexpected " + type.ToString().Replace('_', ' ') + " : " + Value.ToString());
+                throw NewParserException(msg + "Unexpected " + mCurToken.ToString().Replace('_', ' ') + " : " + mCurToken.Value);
         }
 
         public void NextToken(bool unary = false)
         {
-            Value.Length = 0;
             do
             {
                 startpos = mPos;
-                type = mEvaluator.ParseToken(this);
-                if (type != TokenType.none)
+                mCurToken = mEvaluator.ParseToken(this);
+                if (mCurToken.Type != TokenType.none)
                     return;
-                NextChar();
             } while (true);
         }
 
@@ -79,14 +90,14 @@ namespace Eval4.Core
             }
         }
 
-        internal TokenType ParseNumber(bool afterDot = false)
+        internal Token ParseNumber(bool afterDot = false)
         {
-            type = TokenType.Value_number;
+            var sb = new StringBuilder();
             if (!afterDot)
             {
                 while (mCurChar >= '0' && mCurChar <= '9')
                 {
-                    Value.Append(mCurChar);
+                    sb.Append(mCurChar);
                     NextChar();
                 }
                 if (mCurChar == '.')
@@ -97,29 +108,31 @@ namespace Eval4.Core
             }
             if (afterDot)
             {
-                Value.Append('.');
+                sb.Append('.');
                 while (mCurChar >= '0' && mCurChar <= '9')
                 {
-                    Value.Append(mCurChar);
+                    sb.Append(mCurChar);
                     NextChar();
                 }
             }
-            return type;
+            return new Token(TokenType.Value_number, sb.ToString());
         }
 
-        internal TokenType ParseIdentifierOrKeyword()
+        internal Token ParseIdentifierOrKeyword()
         {
+            var sb = new StringBuilder();
             while ((mCurChar >= '0' && mCurChar <= '9') || (mCurChar >= 'a' && mCurChar <= 'z') || (mCurChar >= 'A' && mCurChar <= 'Z') || (mCurChar >= 'A' && mCurChar <= 'Z') || (mCurChar >= 128) || (mCurChar == '_'))
             {
-                Value.Append(mCurChar);
+                sb.Append(mCurChar);
                 NextChar();
             }
-            type = mEvaluator.CheckKeyword(Value.ToString());
-            return type;
+            mCurToken = mEvaluator.CheckKeyword(sb.ToString());
+            return mCurToken;
         }
 
-        internal void ParseString(bool InQuote)
+        internal Token ParseString(bool InQuote)
         {
+            var sb = new StringBuilder();
             char OriginalChar = '\0';
             if (InQuote)
             {
@@ -134,12 +147,12 @@ namespace Eval4.Core
                     NextChar();
                     if (mCurChar == OriginalChar)
                     {
-                        Value.Append(mCurChar);
+                        sb.Append(mCurChar);
                     }
                     else
                     {
                         //End of String
-                        return;
+                        return new Token(TokenType.Value_string,sb.ToString());
                     }
                 }
                 else if (mCurChar == '%')
@@ -148,9 +161,9 @@ namespace Eval4.Core
                     if (mCurChar == '[')
                     {
                         NextChar();
-                        System.Text.StringBuilder SaveValue = Value;
+                        System.Text.StringBuilder SaveValue = sb;
                         int SaveStartPos = startpos;
-                        this.Value = new System.Text.StringBuilder();
+                        sb = new System.Text.StringBuilder();
                         this.NextToken();
                         // restart the tokenizer for the subExpr
                         object subExpr = null;
@@ -159,30 +172,30 @@ namespace Eval4.Core
                             // subExpr = mParser.ParseExpr(0, ePriority.none)
                             if (subExpr == null)
                             {
-                                this.Value.Append("<nothing>");
+                                sb.Append("<nothing>");
                             }
                             else
                             {
-                                this.Value.Append(Evaluator.ConvertToString(subExpr));
+                                sb.Append(Evaluator.ConvertToString(subExpr));
                             }
                         }
                         catch (Exception ex)
                         {
                             // XML don't like < and >
-                            this.Value.Append("[Error " + ex.Message + "]");
+                            sb.Append("[Error " + ex.Message + "]");
                         }
-                        SaveValue.Append(Value.ToString());
-                        Value = SaveValue;
+                        SaveValue.Append(sb.ToString());
+                        sb = SaveValue;
                         startpos = SaveStartPos;
                     }
                     else
                     {
-                        Value.Append('%');
+                        sb.Append('%');
                     }
                 }
                 else
                 {
-                    Value.Append(mCurChar);
+                    sb.Append(mCurChar);
                     NextChar();
                 }
             }
@@ -190,15 +203,17 @@ namespace Eval4.Core
             {
                 throw NewParserException("Incomplete string, missing " + OriginalChar + "; String started");
             }
+            return new Token(TokenType.Value_string, sb.ToString());
         }
 
-        internal void ParseDate()
+        internal Token ParseDate()
         {
+            var sb = new StringBuilder();
             NextChar();
             // eat the #
             while ((mCurChar >= '0' && mCurChar <= '9') || (mCurChar == '/') || (mCurChar == ':') || (mCurChar == ' '))
             {
-                Value.Append(mCurChar);
+                sb.Append(mCurChar);
                 NextChar();
             }
             if (mCurChar != '#')
@@ -209,13 +224,14 @@ namespace Eval4.Core
             {
                 NextChar();
             }
-            type = TokenType.Value_date;
+            mCurToken = new Token(TokenType.Value_date, sb.ToString());
+            return mCurToken;
         }
 
 
         internal void Expect(TokenType tokenType, string msg)
         {
-            if (type == tokenType)
+            if (mCurToken.Type == tokenType)
             {
                 NextToken();
             }
@@ -227,7 +243,7 @@ namespace Eval4.Core
 
         public IExpr ParsedExpression { get { return mParsedExpression; } }
 
-        public Parser(Evaluator evaluator, string source)
+        public BaseParser(Evaluator evaluator, string source)
         {
             mEvaluator = evaluator;
             mString = source;
@@ -237,7 +253,7 @@ namespace Eval4.Core
             NextChar();
             NextToken();
             IExpr res = ParseExpr(null, 0);
-            if (type == TokenType.end_of_formula)
+            if (mCurToken.Type == TokenType.end_of_formula)
             {
                 if (res == null)
                     res = new ImmediateExpr<string>(string.Empty);
@@ -262,13 +278,13 @@ namespace Eval4.Core
             return ParseRight(Acc, precedence, ValueLeft);
         }
 
-        private IExpr ParseRight(IExpr Acc, int precedence, IExpr ValueLeft)
+        protected IExpr ParseRight(IExpr Acc, int precedence, IExpr ValueLeft)
         {
             while (true)
             {
-                TokenType tt = default(TokenType);
-                tt = type;
-                int opPrecedence = mEvaluator.GetPrecedence(this, tt, unary: false);
+                //TokenType tt = default(TokenType);
+                //tt = mCurToken.Type;
+                int opPrecedence = mEvaluator.GetPrecedence(this, mCurToken, unary: false);
                 if (precedence >= opPrecedence)
                 {
                     // if on we have twice the same operator precedence it is more natural to calculate the left operator first
@@ -277,7 +293,7 @@ namespace Eval4.Core
                 }
                 else
                 {
-                    if (!mEvaluator.ParseRight(this, tt, opPrecedence, Acc, ref ValueLeft))
+                    if (!mEvaluator.ParseRight(this, mCurToken, opPrecedence, Acc, ref ValueLeft))
                     {
                         return ValueLeft;
                     }
@@ -285,14 +301,14 @@ namespace Eval4.Core
             }
         }
 
-        private IExpr ParseLeft()
+        protected IExpr ParseLeft()
         {
             IExpr result = null;
-            while (type != TokenType.end_of_formula)
+            while (mCurToken.Type != TokenType.end_of_formula)
             {
-                int opPrecedence = mEvaluator.GetPrecedence(this, type, unary: true);
+                int opPrecedence = mEvaluator.GetPrecedence(this, mCurToken, unary: true);
                 // we ignore precedence here, not sure if it is valid
-                result = mEvaluator.ParseLeft(this, type, opPrecedence);
+                result = mEvaluator.ParseLeft(this, mCurToken, opPrecedence);
                 if (result != null) return result;
             }
             return null;
@@ -300,7 +316,7 @@ namespace Eval4.Core
 
 
         [Flags()]
-        private enum CallType
+        protected enum CallType
         {
             field = 1,
             method = 2,
@@ -308,7 +324,7 @@ namespace Eval4.Core
             all = 7
         }
 
-        private bool EmitCallFunction(ref IExpr ValueLeft, string funcName, List<IExpr> parameters, CallType CallType, bool ErrorIfNotFound)
+        protected bool EmitCallFunction(ref IExpr ValueLeft, string funcName, List<IExpr> parameters, CallType CallType, bool ErrorIfNotFound)
         {
             IExpr newExpr = null;
             if (ValueLeft == null)
@@ -316,15 +332,15 @@ namespace Eval4.Core
                 foreach (object environmentFunctions in mEvaluator.mEnvironmentFunctionsList)
                 {
                     if (environmentFunctions is Type)
-                        newExpr = GetMember(null, (Type)environmentFunctions, funcName, parameters, CallType);
-                    else newExpr = GetMember(environmentFunctions, environmentFunctions.GetType(), funcName, parameters, CallType);
+                        newExpr = GetLocalFunction(null, (Type)environmentFunctions, funcName, parameters, CallType);
+                    else newExpr = GetLocalFunction(environmentFunctions, environmentFunctions.GetType(), funcName, parameters, CallType);
 
                     if (newExpr != null) break;
                 }
             }
             else
             {
-                newExpr = GetMember(ValueLeft, ValueLeft.SystemType, funcName, parameters, CallType);
+                newExpr = GetLocalFunction(ValueLeft, ValueLeft.SystemType, funcName, parameters, CallType);
             }
             if ((newExpr != null))
             {
@@ -339,7 +355,7 @@ namespace Eval4.Core
             }
         }
 
-        private IExpr GetMember(object @base, Type baseType, string funcName, List<IExpr> parameters, CallType CallType)
+        protected IExpr GetLocalFunction(object @base, Type baseType, string funcName, List<IExpr> parameters, CallType CallType)
         {
             MemberInfo mi = null;
             mi = GetMemberInfo(baseType, isStatic: true, isInstance: @base != null, func: funcName, parameters: parameters);
@@ -376,7 +392,7 @@ namespace Eval4.Core
             return null;
         }
 
-        private MemberInfo GetMemberInfo(Type objType, bool isStatic, bool isInstance, string func, List<IExpr> parameters)
+        protected MemberInfo GetMemberInfo(Type objType, bool isStatic, bool isInstance, string func, List<IExpr> parameters)
         {
             BindingFlags bindingAttr = default(BindingFlags);
             bindingAttr = BindingFlags.GetProperty | BindingFlags.GetField | BindingFlags.Public | BindingFlags.InvokeMethod;
@@ -466,7 +482,7 @@ namespace Eval4.Core
             return BestMember;
         }
 
-        private static int ParamCompatibility(object value, Type type)
+        protected static int ParamCompatibility(object value, Type type)
         {
             // This function returns a score 1 to 10 to this question
             // Can this Value fit into this type ?
@@ -488,11 +504,11 @@ namespace Eval4.Core
             }
         }
 
-        private void ParseDot(ref IExpr ValueLeft)
+        protected void ParseDot(ref IExpr ValueLeft)
         {
             do
             {
-                switch (type)
+                switch (mCurToken.Type)
                 {
                     case TokenType.dot:
                         NextToken();
@@ -513,7 +529,7 @@ namespace Eval4.Core
             List<IExpr> parameters = null;
             // parameters... 
             //Dim types As New ArrayList
-            string func = Value.ToString();
+            string func = mCurToken.Value;
             NextToken();
             bool isBrackets = false;
             parameters = ParseParameters(ref isBrackets);
@@ -594,10 +610,10 @@ namespace Eval4.Core
             IExpr Valueleft = null;
             TokenType lClosing = default(TokenType);
 
-            if (type == TokenType.open_parenthesis
-                || (type == TokenType.open_bracket && !mEvaluator.UseParenthesisForArrays))
+            if (mCurToken.Type == TokenType.open_parenthesis
+                || (mCurToken.Type == TokenType.open_bracket && !mEvaluator.UseParenthesisForArrays))
             {
-                switch (type)
+                switch (mCurToken.Type)
                 {
                     case TokenType.open_bracket:
                         lClosing = TokenType.close_bracket;
@@ -612,7 +628,7 @@ namespace Eval4.Core
                 //eat the parenthesis
                 do
                 {
-                    if (type == lClosing)
+                    if (mCurToken.Type == lClosing)
                     {
                         // good we eat the end parenthesis and continue ...
                         NextToken();
@@ -621,13 +637,13 @@ namespace Eval4.Core
                     Valueleft = ParseExpr(null, 0);
                     parameters.Add(Valueleft);
 
-                    if (type == lClosing)
+                    if (mCurToken.Type == lClosing)
                     {
                         // good we eat the end parenthesis and continue ...
                         NextToken();
                         return parameters;
                     }
-                    else if (type == TokenType.comma)
+                    else if (mCurToken.Type == TokenType.comma)
                     {
                         NextToken();
                     }
@@ -642,43 +658,19 @@ namespace Eval4.Core
 
     }
 
+    public class Parser : BaseParser
+    {
+        public Parser(Evaluator evaluator, string source)
+            : base(evaluator, source)
+        {
+        }
+    }
+
     public enum ParserSyntax
     {
         CSharp,
         Vb
     }
-
-    //public class VariableNotFoundException : Exception
-    //{
-
-    //    public readonly string VariableName;
-    //    public VariableNotFoundException(string variableName, Exception innerException = null)
-    //        : base(variableName + " was not found", null)
-    //    {
-    //        this.VariableName = variableName;
-    //    }
-    //}
-
-    //public enum Precedence
-    //{
-    //    None,
-    //    Xor,
-    //    Or,
-    //    And,
-    //    Not,
-    //    Equality,
-    //    Arithmeticshift,
-    //    Concat,
-    //    Plusminus,
-    //    Modulo,
-    //    Integerdiv,
-    //    Muldiv,
-    //    Percent, // this is my own opertor here not vb
-    //    Unaryminus,
-    //    Exponent,
-    //    Parenthesis,
-    //    Undefined
-    //}
 
     public enum TokenType
     {

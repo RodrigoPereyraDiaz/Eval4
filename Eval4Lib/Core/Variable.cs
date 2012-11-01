@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Eval4.Core
 {
-    class VariableBag : IVariableBag
+    public class VariableBag : IVariableBag
     {
         Dictionary<string, Variable> mVariables;
 

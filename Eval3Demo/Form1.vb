@@ -715,6 +715,8 @@ Public Class Form1
         'ev.AddEnvironmentFunctions(New class2)
         'Dim code As opCode = ev.Parse("dyn1*field1")
         'MsgBox(code.value & " " & code.value)
+       
+
 
 
         btnEvaluate_Click(Nothing, Nothing)

@@ -47,5 +47,10 @@ namespace Eval4.CSharpTests
             TestFormula("-0.5", -0.5);
         }
 
+        [TestMethod]
+        public void TestPriorities()
+        {
+            TestFormula("-1.5*-2.5", -1.5 * -2.5);
+        }
     }
 }

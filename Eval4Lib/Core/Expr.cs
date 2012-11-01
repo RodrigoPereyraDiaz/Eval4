@@ -340,7 +340,7 @@ namespace Eval4.Core
             }
         }
 
-        protected static internal IExpr GetNew(Parser parser, object baseObject, MemberInfo method, List<IExpr> @params)
+        protected static internal IExpr GetNew(BaseParser parser, object baseObject, MemberInfo method, List<IExpr> @params)
         {
             IExpr o = null;
             o = new CallMethodExpr(baseObject, method, @params);

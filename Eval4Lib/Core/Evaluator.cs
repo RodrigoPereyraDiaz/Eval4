@@ -7,7 +7,7 @@ namespace Eval4.Core
     {
         internal List<object> mEnvironmentFunctionsList;
         public bool RaiseVariableNotFoundException;
-        private VariableBag mVariableBag;
+        protected VariableBag mVariableBag;
         
         public Evaluator()
         {
@@ -122,13 +122,14 @@ namespace Eval4.Core
 
         public abstract bool UseParenthesisForArrays { get; }
 
-        public virtual TokenType CheckKeyword(string keyword)
+        public virtual Token CheckKeyword(string keyword)
         {
-            return TokenType.Value_identifier;
+            return new Token(TokenType.Value_identifier, keyword);
         }
 
-        internal virtual int GetPrecedence(Parser parser, TokenType tt, bool unary)
+        internal virtual int GetPrecedence(BaseParser parser, Token tk, bool unary)
         {
+            var tt = tk.Type;
             switch (tt)
             {
                 case TokenType.unary_minus:
@@ -148,7 +149,7 @@ namespace Eval4.Core
         }
 
         
-        public virtual TokenType ParseToken(Parser parser)
+        public virtual Token ParseToken(BaseParser parser)
         {
             switch (parser.mCurChar)
             {
@@ -156,83 +157,85 @@ namespace Eval4.Core
                 case '\t':
                 case '\r':
                 case '\n':
-                    // ignore
-                    break;
+                    parser.NextChar();
+                    return new Token(TokenType.none);
+                    
                 case '\0': //null:
-                    return TokenType.end_of_formula;
+                    return new Token(TokenType.end_of_formula);
+
                 case '-':
                     parser.NextChar();
-                    return TokenType.operator_minus;
+                    return new Token(TokenType.operator_minus);
                 case '+':
                     parser.NextChar();
-                    return TokenType.operator_plus;
+                    return new Token(TokenType.operator_plus);
                 case '*':
                     parser.NextChar();
-                    return TokenType.operator_mul;
+                    return new Token(TokenType.operator_mul);
                 case '/':
                     parser.NextChar();
-                    return TokenType.operator_div;
+                    return new Token(TokenType.operator_div);
                 case '(':
                     parser.NextChar();
-                    return TokenType.open_parenthesis;
+                    return new Token(TokenType.open_parenthesis);
                 case ')':
                     parser.NextChar();
-                    return TokenType.close_parenthesis;
+                    return new Token(TokenType.close_parenthesis);
                 case '<':
                     parser.NextChar();
                     if (parser.mCurChar == '=')
                     {
                         parser.NextChar();
-                        return TokenType.operator_le;
+                        return new Token(TokenType.operator_le);
                     }
                     else if (parser.mCurChar == '>')
                     {
                         parser.NextChar();
-                        return TokenType.operator_ne;
+                        return new Token(TokenType.operator_ne);
                     }
                     else
                     {
-                        return TokenType.operator_lt;
+                        return new Token(TokenType.operator_lt);
                     }
                 case '>':
                     parser.NextChar();
                     if (parser.mCurChar == '=')
                     {
                         parser.NextChar();
-                        return TokenType.operator_ge;
+                        return new Token(TokenType.operator_ge);
                     }
                     else
                     {
-                        return TokenType.operator_gt;
+                        return new Token(TokenType.operator_gt);
                     }
                 case ',':
                     parser.NextChar();
-                    return TokenType.comma;
+                    return new Token(TokenType.comma);
                 case '.':
                     parser.NextChar();
                     if (parser.mCurChar >= '0' && parser.mCurChar <= '9') return parser.ParseNumber(afterDot:true);
-                    else return TokenType.dot;
+                    else return new Token(TokenType.dot);
                 case '\'':
                 case '"':
-                    parser.ParseString(true);
-                    return TokenType.Value_string;
+                    return parser.ParseString(true);
                 case '[':
                     parser.NextChar();
-                    return TokenType.open_bracket;
+                    return new Token(TokenType.open_bracket);
                 case ']':
                     parser.NextChar();
-                    return TokenType.close_bracket;
+                    return new Token(TokenType.close_bracket);
                 default:
                     if (parser.mCurChar >= '0' && parser.mCurChar <= '9') return parser.ParseNumber();
                     else return parser.ParseIdentifierOrKeyword();
             }
-            return TokenType.none;
+            return new Token(TokenType.none);
         }
 
-        public virtual IExpr ParseLeft(Parser parser, TokenType tokenType, int opPrecedence)
+        public virtual IExpr ParseLeft(BaseParser parser, Token token, int opPrecedence)
         {
+
             IExpr result = null;
-            switch (tokenType)
+            switch (token.Type)
             {
                 case TokenType.operator_minus:
                 case TokenType.operator_plus:
@@ -240,7 +243,7 @@ namespace Eval4.Core
                     // unary minus operator
                     parser.NextToken();
                     result = parser.ParseExpr(null, opPrecedence);
-                    result = TypedExpr.UnaryExpr(parser, tokenType, result);
+                    result = TypedExpr.UnaryExpr(parser, token.Type, result);
                     return result;
                 
                 case TokenType.Value_identifier:
@@ -258,12 +261,12 @@ namespace Eval4.Core
                     return result;
 
                 case TokenType.Value_string:
-                    result = new ImmediateExpr<string>(parser.Value.ToString());
+                    result = new ImmediateExpr<string>(token.Value);
                     parser.NextToken();
                     return result;
                 
                 case TokenType.Value_number:
-                    string valueString = parser.Value.ToString();
+                    string valueString = token.Value;
                     int intValue;
                     double doubleValue;
                     if (int.TryParse(valueString, out intValue))
@@ -276,7 +279,7 @@ namespace Eval4.Core
                     }
                     else
                     {
-                        throw parser.NewParserException(string.Format("Invalid number {0}", parser.Value.ToString()));
+                        throw parser.NewParserException(string.Format("Invalid number {0}", parser.mCurToken.Value));
                     }
                     parser.NextToken();
                     return result;
@@ -284,19 +287,19 @@ namespace Eval4.Core
                 case TokenType.Value_date:
                     try
                     {
-                        result = new ImmediateExpr<DateTime>(DateTime.Parse(parser.Value.ToString()));
+                        result = new ImmediateExpr<DateTime>(DateTime.Parse(parser.mCurToken.Value));
                         parser.NextToken();
                         return result;
                     }
                     catch (Exception) // ex)
                     {
-                        throw parser.NewParserException(string.Format("Invalid date {0}, it should be #DD/MM/YYYY hh:mm:ss#", parser.Value.ToString()));
+                        throw parser.NewParserException(string.Format("Invalid date {0}, it should be #DD/MM/YYYY hh:mm:ss#", parser.mCurToken.Value));
                     }
                 
                 case TokenType.open_parenthesis:
                     parser.NextToken();
                     result = parser.ParseExpr(null, 0);
-                    if (parser.type == TokenType.close_parenthesis)
+                    if (parser.mCurToken.Type == TokenType.close_parenthesis)
                     {
                         // good we eat the end parenthesis and continue ...
                         parser.NextToken();
@@ -315,14 +318,14 @@ namespace Eval4.Core
                     bool brackets = false;
                     parameters = parser.ParseParameters(ref brackets);
                     return new OperatorIfExpr(parameters[0], parameters[1], parameters[2]);
-                default:
-                    throw parser.NewUnexpectedToken();
             }
+            throw parser.NewUnexpectedToken();
         }
 
 
-        internal virtual bool ParseRight(Parser parser, TokenType tt, int opPrecedence, IExpr Acc, ref IExpr ValueLeft)
+        internal virtual bool ParseRight(BaseParser parser, Token tk, int opPrecedence, IExpr Acc, ref IExpr ValueLeft)
         {
+            var tt = tk.Type;
             IExpr ValueRight;
             switch (tt)
             {

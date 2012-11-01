@@ -51,7 +51,7 @@ namespace Eval4.Core
         }
 
 
-        internal static IExpr BinaryExpr(Parser parser, IExpr ValueLeft, TokenType tt, IExpr ValueRight)
+        internal static IExpr BinaryExpr(BaseParser parser, IExpr ValueLeft, TokenType tt, IExpr ValueRight)
         {
             Type v1Type = ValueLeft.SystemType;
             Type v2Type = ValueRight.SystemType;
@@ -145,7 +145,7 @@ namespace Eval4.Core
         }
 
 
-        internal static IExpr UnaryExpr(Parser parser, TokenType tt, IExpr ValueLeft)
+        internal static IExpr UnaryExpr(BaseParser parser, TokenType tt, IExpr ValueLeft)
         {
             var v1Type = ValueLeft.SystemType;
 
