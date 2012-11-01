@@ -166,6 +166,7 @@ namespace Eval4.CSharpTests
         {
             TestFormula("-5 + 10", (-5 + 10));
             TestFormula("5 * -5", (5 * -5));
+            TestFormula("3 - -5 * 4", 3 - -5 * 4);
             TestFormula("10 - -5", (10 - -5));
             TestFormula("1+-2*-3", (1 + -2 * -3));
             TestFormula("1+-2*3", (1 + -2 * 3));

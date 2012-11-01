@@ -5,6 +5,106 @@ using Eval4.Core;
 
 namespace Eval4
 {
+    public class CSharpToken : Token
+    {
+        public override int Precedence
+        {
+            get
+            {
+                var tt = Type;
+                //http://msdn.microsoft.com/en-us/library/aa691323(v=vs.71).aspx
+                switch (tt)
+                {
+                    case TokenType.dot:
+                    case TokenType.open_parenthesis:
+                    case TokenType.open_bracket:
+                    case TokenType.@new:
+
+                        // 	Primary	
+                        //x.y  f(x)  a[x]  x++  x--  new
+                        //typeof  checked  unchecked
+                        return 15;
+
+                    case TokenType.unary_plus:
+                    case TokenType.unary_minus:
+                    case TokenType.unary_not:
+                    case TokenType.unary_tilde:
+                        // 	Unary	
+                        //+  -  !  ~  ++x  --x  (T)x
+                        return 14;
+
+                    case TokenType.operator_mul:
+                    case TokenType.operator_div:
+                    case TokenType.operator_mod:
+                        // 	Multiplicative	
+                        //*  /  %
+                        return 13;
+
+                    case TokenType.operator_plus:
+                    case TokenType.operator_minus:
+                        // 	Additive	
+                        //+  -
+                        return 12;
+
+                    case TokenType.shift_left:
+                    case TokenType.shift_right:
+                        // 	Shift	
+                        //<<  >>
+                        return 11;
+
+                    case TokenType.operator_lt:
+                    case TokenType.operator_le:
+                    case TokenType.operator_ge:
+                    case TokenType.operator_gt:
+                        // 	Relational and type testing	
+                        //<  >  <=  >=  is  as
+                        return 10;
+
+                    case TokenType.operator_eq:
+                    case TokenType.operator_ne:
+                        // 	Equality	
+                        //==  !=
+                        return 9;
+
+                    case TokenType.operator_and:
+                        // 	Logical AND	
+                        //&
+                        return 8;
+
+                    case TokenType.operator_xor:
+                        // 	Logical XOR	
+                        //^
+                        return 7;
+
+                    case TokenType.operator_or:
+                        // 	Logical OR	
+                        //|
+                        return 6;
+
+                    case TokenType.operator_andalso:
+                        // 	Conditional AND	
+                        //&&
+                        return 5;
+                    case TokenType.operator_orelse:
+                        // 	Conditional OR	
+                        //||
+                        return 4;
+                    case TokenType.operator_if:
+                        // 	Conditional	
+                        //?:
+                        return 3;
+                    case TokenType.operator_assign:
+                        // 	Assignment	
+                        //=  *=  /=  %=  +=  -=  <<=  >>=  &=  ^=  |=
+                        return 2;
+                    default:
+                        return 1;
+                }
+
+            }
+        }
+    }
+
     public class CSharpEvaluator : Core.Evaluator
     {
         protected internal override bool IsCaseSensitive
@@ -17,62 +117,62 @@ namespace Eval4
             get { return false; }
         }
 
-        public override Token ParseToken(BaseParser parser)
+        public override Token ParseToken(BaseParser parser, bool unary)
         {
             switch (parser.mCurChar)
             {
                 case '%':
                     parser.NextChar();
-                    return new Token(TokenType.operator_mod);
+                    return NewToken(TokenType.operator_mod);
 
                 case '&':
                     parser.NextChar();
                     if (parser.mCurChar == '&')
                     {
                         parser.NextChar();
-                        return new Token(TokenType.operator_andalso);
+                        return NewToken(TokenType.operator_andalso);
                     }
-                    return new Token(TokenType.operator_and);
+                    return NewToken(TokenType.operator_and);
 
                 case '?':
                     parser.NextChar();
-                    return new Token(TokenType.operator_if);
+                    return NewToken(TokenType.operator_if);
 
                 case '=':
                     parser.NextChar();
                     if (parser.mCurChar == '=')
                     {
                         parser.NextChar();
-                        return new Token(TokenType.operator_eq);
+                        return NewToken(TokenType.operator_eq);
                     }
-                    return new Token(TokenType.operator_assign);
+                    return NewToken(TokenType.operator_assign);
 
                 case '!':
                     parser.NextChar();
                     if (parser.mCurChar == '=')
                     {
                         parser.NextChar();
-                        return new Token(TokenType.operator_ne);
+                        return NewToken(TokenType.operator_ne);
                     }
-                    return new Token(TokenType.operator_not);
+                    return NewToken(TokenType.unary_not);
 
                 case '^':
                     parser.NextChar();
-                    return new Token(TokenType.operator_xor);
+                    return NewToken(TokenType.operator_xor);
 
                 case '|':
                     parser.NextChar();
                     if (parser.mCurChar == '|')
                     {
                         parser.NextChar();
-                        return new Token(TokenType.operator_orelse);
+                        return NewToken(TokenType.operator_orelse);
                     }
-                    return new Token(TokenType.operator_or);
+                    return NewToken(TokenType.operator_or);
                 case ':':
                     parser.NextChar();
-                    return new Token(TokenType.operator_colon);
+                    return NewToken(TokenType.operator_colon);
                 default:
-                    return base.ParseToken(parser);
+                    return base.ParseToken(parser, unary);
 
             }
         }
@@ -83,10 +183,10 @@ namespace Eval4
                 switch (keyword.ToString())
                 {
                     case "true":
-                        return new Token(TokenType.Value_true);
+                        return NewToken(TokenType.Value_true);
 
                     case "false":
-                        return new Token(TokenType.Value_false);
+                        return NewToken(TokenType.Value_false);
 
                     default:
                         return base.CheckKeyword(keyword);
@@ -111,116 +211,9 @@ namespace Eval4
             }
         }
 
-        internal override int GetPrecedence(BaseParser parser, Token tk, bool unary)
+        public override Token NewToken()
         {
-            var tt = tk.Type;
-            if (unary)
-            {
-                switch (tt)
-                {
-                    case TokenType.operator_minus:
-                        tt = TokenType.unary_minus;
-                        break;
-                    case TokenType.operator_plus:
-                        tt = TokenType.unary_plus;
-                        break;
-                    case TokenType.operator_not:
-                        tt = TokenType.unary_not;
-                        break;
-                    case TokenType.operator_tilde:
-                        tt = TokenType.unary_tilde;
-                        break;
-                }
-            }
-            //http://msdn.microsoft.com/en-us/library/aa691323(v=vs.71).aspx
-            switch (tt)
-            {
-                case TokenType.dot:
-                case TokenType.open_parenthesis:
-                case TokenType.open_bracket:
-                case TokenType.@new:
-
-                    // 	Primary	
-                    //x.y  f(x)  a[x]  x++  x--  new
-                    //typeof  checked  unchecked
-                    return 15;
-
-                case TokenType.unary_plus:
-                case TokenType.unary_minus:
-                case TokenType.unary_not:
-                case TokenType.unary_tilde:
-                    // 	Unary	
-                    //+  -  !  ~  ++x  --x  (T)x
-                    return 14;
-
-                case TokenType.operator_mul:
-                case TokenType.operator_div:
-                case TokenType.operator_mod:
-                    // 	Multiplicative	
-                    //*  /  %
-                    return 13;
-
-                case TokenType.operator_plus:
-                case TokenType.operator_minus:
-                    // 	Additive	
-                    //+  -
-                    return 12;
-
-                case TokenType.shift_left:
-                case TokenType.shift_right:
-                    // 	Shift	
-                    //<<  >>
-                    return 11;
-
-                case TokenType.operator_lt:
-                case TokenType.operator_le:
-                case TokenType.operator_ge:
-                case TokenType.operator_gt:
-                    // 	Relational and type testing	
-                    //<  >  <=  >=  is  as
-                    return 10;
-
-                case TokenType.operator_eq:
-                case TokenType.operator_ne:
-                    // 	Equality	
-                    //==  !=
-                    return 9;
-
-                case TokenType.operator_and:
-                    // 	Logical AND	
-                    //&
-                    return 8;
-
-                case TokenType.operator_xor:
-                    // 	Logical XOR	
-                    //^
-                    return 7;
-
-                case TokenType.operator_or:
-                    // 	Logical OR	
-                    //|
-                    return 6;
-
-                case TokenType.operator_andalso:
-                    // 	Conditional AND	
-                    //&&
-                    return 5;
-                case TokenType.operator_orelse:
-                    // 	Conditional OR	
-                    //||
-                    return 4;
-                case TokenType.operator_if:
-                    // 	Conditional	
-                    //?:
-                    return 3;
-                case TokenType.operator_assign:
-                    // 	Assignment	
-                    //=  *=  /=  %=  +=  -=  <<=  >>=  &=  ^=  |=
-                    return 2;
-                default:
-                    return 1;
-            }
-
+            return new CSharpToken();
         }
     }
 }

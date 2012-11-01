@@ -16,6 +16,17 @@ namespace Eval4.Core
             mEnvironmentFunctionsList.Add(mVariableBag);
         }
 
+        public Token NewToken(TokenType type, string value = null)
+        {
+            var result = NewToken();
+            result.Type = type;
+            if (value != null) result.Value = value;
+            return result;
+        }
+
+        public abstract Token NewToken();
+
+
         abstract internal protected bool IsCaseSensitive { get; }
 
         public void AddEnvironmentFunctions(object o)
@@ -124,32 +135,35 @@ namespace Eval4.Core
 
         public virtual Token CheckKeyword(string keyword)
         {
-            return new Token(TokenType.Value_identifier, keyword);
+            return NewToken(TokenType.Value_identifier, keyword);
         }
 
-        internal virtual int GetPrecedence(BaseParser parser, Token tk, bool unary)
-        {
-            var tt = tk.Type;
-            switch (tt)
-            {
-                case TokenType.unary_minus:
-                case TokenType.unary_plus:
-                    return 4;
-                case TokenType.operator_mul:
-                case TokenType.operator_div:
-                    return 3;
+        //internal virtual int GetPrecedence(BaseParser parser, Token tk, bool unary)
+        //{
+        //    var tt = tk.Type;
+        //    if (unary)
+        //    {
+        //        switch (tt)
+        //        {
+        //            case TokenType.operator_minus:
+        //                tt = TokenType.unary_minus;
+        //                break;
+        //            case TokenType.operator_plus:
+        //                tt = TokenType.unary_plus;
+        //                break;
+        //            case TokenType.operator_not:
+        //                tt = TokenType.unary_not;
+        //                break;
+        //            case TokenType.operator_tilde:
+        //                tt = TokenType.unary_tilde;
+        //                break;
+        //        }
+        //    }
 
-                case TokenType.operator_plus:
-                case TokenType.operator_minus:
-                    return 2;
-
-                default:
-                    return 1;
-            }
-        }
+        //}
 
         
-        public virtual Token ParseToken(BaseParser parser)
+        public virtual Token ParseToken(BaseParser parser, bool unary)
         {
             switch (parser.mCurChar)
             {
@@ -158,88 +172,91 @@ namespace Eval4.Core
                 case '\r':
                 case '\n':
                     parser.NextChar();
-                    return new Token(TokenType.none);
+                    return NewToken(TokenType.none);
                     
                 case '\0': //null:
-                    return new Token(TokenType.end_of_formula);
+                    return NewToken(TokenType.end_of_formula);
 
                 case '-':
                     parser.NextChar();
-                    return new Token(TokenType.operator_minus);
+
+                    return NewToken(unary ? TokenType.unary_minus : TokenType.operator_minus);
                 case '+':
                     parser.NextChar();
-                    return new Token(TokenType.operator_plus);
+                    return NewToken(unary? TokenType.unary_plus : TokenType.operator_plus);
                 case '*':
                     parser.NextChar();
-                    return new Token(TokenType.operator_mul);
+                    return NewToken(TokenType.operator_mul);
                 case '/':
                     parser.NextChar();
-                    return new Token(TokenType.operator_div);
+                    return NewToken(TokenType.operator_div);
                 case '(':
                     parser.NextChar();
-                    return new Token(TokenType.open_parenthesis);
+                    return NewToken(TokenType.open_parenthesis);
                 case ')':
                     parser.NextChar();
-                    return new Token(TokenType.close_parenthesis);
+                    return NewToken(TokenType.close_parenthesis);
                 case '<':
                     parser.NextChar();
                     if (parser.mCurChar == '=')
                     {
                         parser.NextChar();
-                        return new Token(TokenType.operator_le);
+                        return NewToken(TokenType.operator_le);
                     }
                     else if (parser.mCurChar == '>')
                     {
                         parser.NextChar();
-                        return new Token(TokenType.operator_ne);
+                        return NewToken(TokenType.operator_ne);
                     }
                     else
                     {
-                        return new Token(TokenType.operator_lt);
+                        return NewToken(TokenType.operator_lt);
                     }
                 case '>':
                     parser.NextChar();
                     if (parser.mCurChar == '=')
                     {
                         parser.NextChar();
-                        return new Token(TokenType.operator_ge);
+                        return NewToken(TokenType.operator_ge);
                     }
                     else
                     {
-                        return new Token(TokenType.operator_gt);
+                        return NewToken(TokenType.operator_gt);
                     }
                 case ',':
                     parser.NextChar();
-                    return new Token(TokenType.comma);
+                    return NewToken(TokenType.comma);
                 case '.':
                     parser.NextChar();
                     if (parser.mCurChar >= '0' && parser.mCurChar <= '9') return parser.ParseNumber(afterDot:true);
-                    else return new Token(TokenType.dot);
+                    else return NewToken(TokenType.dot);
                 case '\'':
                 case '"':
                     return parser.ParseString(true);
                 case '[':
                     parser.NextChar();
-                    return new Token(TokenType.open_bracket);
+                    return NewToken(TokenType.open_bracket);
                 case ']':
                     parser.NextChar();
-                    return new Token(TokenType.close_bracket);
+                    return NewToken(TokenType.close_bracket);
                 default:
                     if (parser.mCurChar >= '0' && parser.mCurChar <= '9') return parser.ParseNumber();
                     else return parser.ParseIdentifierOrKeyword();
             }
-            return new Token(TokenType.none);
+            throw new InvalidProgramException();
         }
 
-        public virtual IExpr ParseLeft(BaseParser parser, Token token, int opPrecedence)
+        public virtual IExpr ParseLeft(BaseParser parser, Token token, int precedence)
         {
 
             IExpr result = null;
+            int opPrecedence = token.Precedence;
+
             switch (token.Type)
             {
-                case TokenType.operator_minus:
-                case TokenType.operator_plus:
-                case TokenType.operator_not:
+                case TokenType.unary_minus:
+                case TokenType.unary_plus:
+                case TokenType.unary_not:
                     // unary minus operator
                     parser.NextToken();
                     result = parser.ParseExpr(null, opPrecedence);
@@ -297,7 +314,7 @@ namespace Eval4.Core
                     }
                 
                 case TokenType.open_parenthesis:
-                    parser.NextToken();
+                    parser.NextToken(leftSide:true);
                     result = parser.ParseExpr(null, 0);
                     if (parser.mCurToken.Type == TokenType.close_parenthesis)
                     {
@@ -314,7 +331,7 @@ namespace Eval4.Core
                     // first check functions
                     List<IExpr> parameters = null;
                     // parameters... 
-                    parser.NextToken();
+                    parser.NextToken(leftSide:true);
                     bool brackets = false;
                     parameters = parser.ParseParameters(ref brackets);
                     return new OperatorIfExpr(parameters[0], parameters[1], parameters[2]);
@@ -346,12 +363,12 @@ namespace Eval4.Core
                 case TokenType.operator_eq:
                 case TokenType.operator_le:
                 case TokenType.operator_lt:
-                    parser.NextToken();
+                    parser.NextToken(leftSide: true);
                     ValueRight = parser.ParseExpr(ValueLeft, opPrecedence);
                     ValueLeft = TypedExpr.BinaryExpr(parser, ValueLeft, tt, ValueRight);
                     return true;
                 case TokenType.operator_percent:
-                    parser.NextToken();
+                    parser.NextToken(leftSide: true);
                     ValueLeft = TypedExpr.BinaryExpr(parser, ValueLeft, tt, Acc);
                     return true;
                 default:

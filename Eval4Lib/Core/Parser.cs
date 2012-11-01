@@ -5,20 +5,24 @@ using System.Text;
 
 namespace Eval4.Core
 {
-    public class Token
+    public abstract class Token
     {
-        public Token(TokenType tokenType, string value=null)
+        public Token()
         {
-            this.Type = tokenType;
-            this.Value = value;
         }
+
         public TokenType Type { get; set; }
+        public String Value { get; set; }
 
-        public string Value;
+        public abstract int Precedence { get; }
 
+        public override string ToString()
+        {
+            return Type.ToString() + " " + Value;
+        }
     }
 
-    public class BaseParser 
+    public class BaseParser
     {
         internal Evaluator mEvaluator;
 
@@ -61,15 +65,15 @@ namespace Eval4.Core
             if (string.IsNullOrEmpty(mCurToken.Value))
                 throw NewParserException(msg + "Unexpected character '" + mCurChar + "'");
             else
-                throw NewParserException(msg + "Unexpected " + mCurToken.ToString().Replace('_', ' ') + " : " + mCurToken.Value);
+                throw NewParserException(msg + "Unexpected " + mCurToken.ToString());
         }
 
-        public void NextToken(bool unary = false)
+        public void NextToken(bool leftSide = false)
         {
             do
             {
                 startpos = mPos;
-                mCurToken = mEvaluator.ParseToken(this);
+                mCurToken = mEvaluator.ParseToken(this, leftSide);
                 if (mCurToken.Type != TokenType.none)
                     return;
             } while (true);
@@ -115,7 +119,7 @@ namespace Eval4.Core
                     NextChar();
                 }
             }
-            return new Token(TokenType.Value_number, sb.ToString());
+            return mEvaluator.NewToken(TokenType.Value_number, sb.ToString());
         }
 
         internal Token ParseIdentifierOrKeyword()
@@ -152,7 +156,7 @@ namespace Eval4.Core
                     else
                     {
                         //End of String
-                        return new Token(TokenType.Value_string,sb.ToString());
+                        return mEvaluator.NewToken(TokenType.Value_string, sb.ToString());
                     }
                 }
                 else if (mCurChar == '%')
@@ -164,7 +168,7 @@ namespace Eval4.Core
                         System.Text.StringBuilder SaveValue = sb;
                         int SaveStartPos = startpos;
                         sb = new System.Text.StringBuilder();
-                        this.NextToken();
+                        this.NextToken(leftSide: true);
                         // restart the tokenizer for the subExpr
                         object subExpr = null;
                         try
@@ -203,7 +207,7 @@ namespace Eval4.Core
             {
                 throw NewParserException("Incomplete string, missing " + OriginalChar + "; String started");
             }
-            return new Token(TokenType.Value_string, sb.ToString());
+            return mEvaluator.NewToken(TokenType.Value_string, sb.ToString());
         }
 
         internal Token ParseDate()
@@ -224,7 +228,7 @@ namespace Eval4.Core
             {
                 NextChar();
             }
-            mCurToken = new Token(TokenType.Value_date, sb.ToString());
+            mCurToken = mEvaluator.NewToken(TokenType.Value_date, sb.ToString());
             return mCurToken;
         }
 
@@ -233,7 +237,7 @@ namespace Eval4.Core
         {
             if (mCurToken.Type == tokenType)
             {
-                NextToken();
+                NextToken(leftSide: false);
             }
             else
             {
@@ -251,7 +255,7 @@ namespace Eval4.Core
             mPos = 0;
             // start the machine
             NextChar();
-            NextToken();
+            NextToken(leftSide: true);
             IExpr res = ParseExpr(null, 0);
             if (mCurToken.Type == TokenType.end_of_formula)
             {
@@ -269,7 +273,7 @@ namespace Eval4.Core
         internal IExpr ParseExpr(IExpr Acc, int precedence)
         {
             IExpr ValueLeft = null;
-            ValueLeft = ParseLeft();
+            ValueLeft = ParseLeft(precedence);
             if (ValueLeft == null)
             {
                 throw NewUnexpectedToken("No Expression found");
@@ -284,7 +288,7 @@ namespace Eval4.Core
             {
                 //TokenType tt = default(TokenType);
                 //tt = mCurToken.Type;
-                int opPrecedence = mEvaluator.GetPrecedence(this, mCurToken, unary: false);
+                int opPrecedence = mCurToken.Precedence;
                 if (precedence >= opPrecedence)
                 {
                     // if on we have twice the same operator precedence it is more natural to calculate the left operator first
@@ -301,14 +305,13 @@ namespace Eval4.Core
             }
         }
 
-        protected IExpr ParseLeft()
+        protected IExpr ParseLeft(int precedence)
         {
             IExpr result = null;
             while (mCurToken.Type != TokenType.end_of_formula)
             {
-                int opPrecedence = mEvaluator.GetPrecedence(this, mCurToken, unary: true);
                 // we ignore precedence here, not sure if it is valid
-                result = mEvaluator.ParseLeft(this, mCurToken, opPrecedence);
+                result = mEvaluator.ParseLeft(this, mCurToken, precedence);
                 if (result != null) return result;
             }
             return null;
@@ -624,8 +627,7 @@ namespace Eval4.Core
                         break;
                 }
                 parameters = new List<IExpr>();
-                NextToken();
-                //eat the parenthesis
+                NextToken(leftSide: true);  //eat the parenthesis
                 do
                 {
                     if (mCurToken.Type == lClosing)
@@ -645,7 +647,7 @@ namespace Eval4.Core
                     }
                     else if (mCurToken.Type == TokenType.comma)
                     {
-                        NextToken();
+                        NextToken(leftSide: true);
                     }
                     else
                     {
@@ -697,7 +699,6 @@ namespace Eval4.Core
         operator_or,
         operator_orelse,
         operator_xor,
-        operator_not,
         operator_concat,
         operator_if,
         operator_colon,
