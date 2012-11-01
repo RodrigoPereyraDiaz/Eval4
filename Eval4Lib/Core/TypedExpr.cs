@@ -151,15 +151,15 @@ namespace Eval4.Core
 
             switch (tt)
             {
-                case TokenType.unary_not:
+                case TokenType.operator_not:
                     if (v1Type == typeof(bool)) return TypedExpr.Create<bool, bool>(ValueLeft, (a) => { return !a; });
                     else if (Expr.IsIntOrSmaller(v1Type)) return TypedExpr.Create<int, int>(ValueLeft, (a) => { return ~a; });
                     break;
-                case TokenType.unary_minus:
+                case TokenType.operator_minus:
                     if (Expr.IsIntOrSmaller(v1Type)) return TypedExpr.Create<int, int>(ValueLeft, (a) => { return -a; });
                     else if (Expr.IsDoubleOrSmaller(v1Type)) return TypedExpr.Create<double, double>(ValueLeft, (a) => { return -a; });
                     break;
-                case TokenType.unary_plus:
+                case TokenType.operator_plus:
                     if (Expr.IsIntOrSmaller(v1Type)) return ValueLeft;
                     else if (Expr.IsDoubleOrSmaller(v1Type)) return ValueLeft;
                     break;

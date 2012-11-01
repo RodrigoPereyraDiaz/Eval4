@@ -180,10 +180,10 @@ namespace Eval4.Core
                 case '-':
                     parser.NextChar();
 
-                    return NewToken(unary ? TokenType.unary_minus : TokenType.operator_minus);
+                    return NewToken(TokenType.operator_minus);
                 case '+':
                     parser.NextChar();
-                    return NewToken(unary? TokenType.unary_plus : TokenType.operator_plus);
+                    return NewToken(TokenType.operator_plus);
                 case '*':
                     parser.NextChar();
                     return NewToken(TokenType.operator_mul);
@@ -250,13 +250,13 @@ namespace Eval4.Core
         {
 
             IExpr result = null;
-            int opPrecedence = token.Precedence;
+            int opPrecedence = token.GetPrecedence(unary: true);
 
             switch (token.Type)
             {
-                case TokenType.unary_minus:
-                case TokenType.unary_plus:
-                case TokenType.unary_not:
+                case TokenType.operator_minus:
+                case TokenType.operator_plus:
+                case TokenType.operator_not:
                     // unary minus operator
                     parser.NextToken();
                     result = parser.ParseExpr(null, opPrecedence);

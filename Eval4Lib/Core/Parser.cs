@@ -14,7 +14,7 @@ namespace Eval4.Core
         public TokenType Type { get; set; }
         public String Value { get; set; }
 
-        public abstract int Precedence { get; }
+        public abstract int GetPrecedence(bool unary);
 
         public override string ToString()
         {
@@ -288,7 +288,7 @@ namespace Eval4.Core
             {
                 //TokenType tt = default(TokenType);
                 //tt = mCurToken.Type;
-                int opPrecedence = mCurToken.Precedence;
+                int opPrecedence = mCurToken.GetPrecedence(unary: false);
                 if (precedence >= opPrecedence)
                 {
                     // if on we have twice the same operator precedence it is more natural to calculate the left operator first
@@ -711,13 +711,10 @@ namespace Eval4.Core
         Value_date,
         open_bracket,
         close_bracket,
-        unary_plus,
-        unary_minus,
         shift_left,
         shift_right,
         @new,
-        unary_not,
-        unary_tilde,
+        operator_not,
         operator_tilde,
         backslash,
         exponent,
