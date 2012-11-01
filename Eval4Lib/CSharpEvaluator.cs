@@ -21,7 +21,7 @@ namespace Eval4
             get { return false; }
         }
 
-        public override Token ParseToken(BaseParser parser)
+        public override Token ParseToken(Parser parser)
         {
             switch (parser.mCurChar)
             {
@@ -98,16 +98,16 @@ namespace Eval4
             }
         }
 
-        internal override bool ParseRight(BaseParser parser, Token tk, int opPrecedence, IExpr Acc, ref IExpr ValueLeft)
+        internal override bool ParseRight(Parser parser, Token tk, int opPrecedence, IHasValue Acc, ref IHasValue ValueLeft)
         {
             var tt = tk.Type;
             switch (tt)
             {
                 case TokenType.operator_if:
                     parser.NextToken();
-                    IExpr thenExpr = parser.ParseExpr(null, 0);
+                    IHasValue thenExpr = parser.ParseExpr(null, 0);
                     parser.Expect(TokenType.operator_colon, "Missing : in ? expression test ? valueIfTrue : valueIfFalse.");
-                    IExpr elseExpr = parser.ParseExpr(null, 0);
+                    IHasValue elseExpr = parser.ParseExpr(null, 0);
                     ValueLeft = new OperatorIfExpr(ValueLeft, thenExpr, elseExpr);
                     return true;
                 default:

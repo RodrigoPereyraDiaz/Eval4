@@ -4,15 +4,7 @@ using System.Reflection;
 
 namespace Eval4.Core
 {
-    public interface IExpr : IHasValue
-    {
-    }
-
-    public interface IExpr<T> : IExpr, IHasValue<T>
-    {
-    }
-
-    public abstract class Expr : IExpr
+    public abstract class DelegatedExpr : IHasValue
     {
 
         protected ValueDelegate mValueDelegate;
@@ -21,7 +13,7 @@ namespace Eval4.Core
         public delegate void RunDelegate();
 
 
-        protected Expr()
+        protected DelegatedExpr()
         {
         }
 
@@ -44,18 +36,8 @@ namespace Eval4.Core
 
         public static bool IsIntOrSmaller(Type v1Type)
         {
-            return v1Type == typeof(sbyte) || v1Type == typeof(Int16) || v1Type == typeof(Int32) 
+            return v1Type == typeof(sbyte) || v1Type == typeof(Int16) || v1Type == typeof(Int32)
                 || v1Type == typeof(byte) || v1Type == typeof(UInt16);
-        }
-        
-        public virtual string Description
-        {
-            get { return "Expr " + this.GetType().Name; }
-        }
-
-        public virtual string Name
-        {
-            get { return "Expr " + this.GetType().Name; }
         }
 
         public virtual object ObjectValue
@@ -101,11 +83,15 @@ namespace Eval4.Core
         }
 
         public event ValueChangedEventHandler ValueChanged;
+
+        public abstract IEnumerable<Dependency> Dependencies { get; }
+
+
+        public abstract string ShortName { get; }
     }
 
-    internal class ImmediateExpr<T> : Expr
+    internal class ImmediateExpr<T> : IHasValue<T>
     {
-
         private T mValue;
 
         public ImmediateExpr(T value)
@@ -113,18 +99,35 @@ namespace Eval4.Core
             mValue = value;
         }
 
-        public override object ObjectValue
+        public object ObjectValue
         {
             get { return mValue; }
         }
 
-        public override Type SystemType
+        public event ValueChangedEventHandler ValueChanged;
+
+        public Type SystemType
         {
             get { return typeof(T); }
         }
+
+        public string ShortName
+        {
+            get { return "Literal"; }
+        }
+
+        public IEnumerable<Dependency> Dependencies
+        {
+            get { return Dependency.None; }
+        }
+
+        public T Value
+        {
+            get { return mValue; }
+        }
     }
 
-    internal class SystemTypeConvertExpr : Expr
+    internal class SystemTypeConvertExpr : DelegatedExpr
     {
         private IHasValue withEventsField_mParam1;
         public IHasValue mParam1
@@ -167,53 +170,19 @@ namespace Eval4.Core
             base.RaiseEventValueChanged(sender, e);
         }
 
+
+        public override IEnumerable<Dependency> Dependencies
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public override string ShortName
+        {
+            get { throw new NotImplementedException(); }
+        }
     }
 
-    public class GetVariableExpr : Expr
-    {
-
-        private IHasValue withEventsField_mParam1;
-        public IHasValue mParam1
-        {
-            get { return withEventsField_mParam1; }
-            set
-            {
-                if (withEventsField_mParam1 != null)
-                {
-                    withEventsField_mParam1.ValueChanged -= mParam1_ValueChanged;
-                }
-                withEventsField_mParam1 = value;
-                if (withEventsField_mParam1 != null)
-                {
-                    withEventsField_mParam1.ValueChanged += mParam1_ValueChanged;
-                }
-            }
-
-        }
-        public GetVariableExpr(IHasValue value)
-        {
-            mParam1 = value;
-        }
-
-
-        public override object ObjectValue
-        {
-            get { return mParam1.ObjectValue; }
-        }
-
-        public override System.Type SystemType
-        {
-            get { return mParam1.SystemType; }
-        }
-
-        private void mParam1_ValueChanged(object sender, System.EventArgs e)
-        {
-            base.RaiseEventValueChanged(sender, e);
-        }
-
-    }
-
-    public class CallMethodExpr : Expr
+    public class CallMethodExpr : DelegatedExpr
     {
 
         private object mBaseObject;
@@ -261,10 +230,10 @@ namespace Eval4.Core
             // just for some
         }
 
-        internal CallMethodExpr(object baseObject, MemberInfo method, List<IExpr> @params)
+        internal CallMethodExpr(object baseObject, MemberInfo method, List<IHasValue> @params)
         {
             if (@params == null)
-                @params = new List<IExpr>();
+                @params = new List<IHasValue>();
             IHasValue[] newParams = @params.ToArray();
             object[] newParamValues = new object[@params.Count];
 
@@ -302,11 +271,7 @@ namespace Eval4.Core
             {
                 if (i < paramInfo.Length)
                 {
-                    var value = mParams[i];
-                    if (ConvertToSystemType(ref value, paramInfo[i].ParameterType))
-                    {
-                        mParams[i] = value;
-                    }
+                    mParams[i] = TypedExpressions.ChangeType(mParams[i], paramInfo[i].ParameterType);
                 }
             }
 
@@ -340,9 +305,9 @@ namespace Eval4.Core
             }
         }
 
-        protected static internal IExpr GetNew(BaseParser parser, object baseObject, MemberInfo method, List<IExpr> @params)
+        protected static internal IHasValue GetNew(Parser parser, object baseObject, MemberInfo method, List<IHasValue> @params)
         {
-            IExpr o = null;
+            IHasValue o = null;
             o = new CallMethodExpr(baseObject, method, @params);
             return o;
         }
@@ -416,13 +381,27 @@ namespace Eval4.Core
         {
             base.RaiseEventValueChanged(sender, e);
         }
+
+        public override IEnumerable<Dependency> Dependencies
+        {
+            get
+            {
+                if (mBaseValue != null) yield return new Dependency("base", mBaseValue);
+
+            }
+        }
+
+        public override string ShortName
+        {
+            get { return "CallMethod"; }
+        }
     }
 
-    public class GetArrayEntryExpr : Expr
+    public class GetArrayEntryExpr : DelegatedExpr
     {
 
-        private IExpr withEventsField_mArray;
-        public IExpr mArray
+        private IHasValue withEventsField_mArray;
+        public IHasValue mArray
         {
             get { return withEventsField_mArray; }
             set
@@ -443,7 +422,7 @@ namespace Eval4.Core
         private int[] mValues;
         private Type mResultSystemType;
 
-        public GetArrayEntryExpr(IExpr array, List<IExpr> @params)
+        public GetArrayEntryExpr(IHasValue array, List<IHasValue> @params)
         {
             IHasValue[] newParams = @params.ToArray();
             int[] newValues = new int[@params.Count];
@@ -481,16 +460,26 @@ namespace Eval4.Core
             base.RaiseEventValueChanged(sender, e);
         }
 
+
+        public override IEnumerable<Dependency> Dependencies
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public override string ShortName
+        {
+            get { throw new NotImplementedException(); }
+        }
     }
 
-    public class OperatorIfExpr : Expr
+    public class OperatorIfExpr : DelegatedExpr
     {
         private Type mSystemType;
-        private IExpr ifExpr;
-        private IExpr thenExpr;
-        private IExpr elseExpr;
+        private IHasValue ifExpr;
+        private IHasValue thenExpr;
+        private IHasValue elseExpr;
 
-        public OperatorIfExpr(IExpr ifExpr, IExpr thenExpr, IExpr elseExpr)
+        public OperatorIfExpr(IHasValue ifExpr, IHasValue thenExpr, IHasValue elseExpr)
         {
             this.ifExpr = ifExpr;
             this.thenExpr = thenExpr;
@@ -516,5 +505,15 @@ namespace Eval4.Core
         }
 
 
+
+        public override IEnumerable<Dependency> Dependencies
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public override string ShortName
+        {
+            get { throw new NotImplementedException(); }
+        }
     }
 }

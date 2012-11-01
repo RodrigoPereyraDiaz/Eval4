@@ -30,7 +30,7 @@ namespace Eval4.Core
 
     }
 
-    public class BaseParser
+    public class Parser
     {
         internal Evaluator mEvaluator;
 
@@ -41,7 +41,7 @@ namespace Eval4.Core
         public int startpos;
         public Token mCurToken;
 
-        protected IExpr mParsedExpression;
+        protected IHasValue mParsedExpression;
 
         internal SyntaxError NewParserException(string msg, Exception ex = null)
         {
@@ -218,29 +218,6 @@ namespace Eval4.Core
             return mEvaluator.NewToken(TokenType.Value_string, sb.ToString());
         }
 
-        internal Token ParseDate()
-        {
-            var sb = new StringBuilder();
-            NextChar();
-            // eat the #
-            while ((mCurChar >= '0' && mCurChar <= '9') || (mCurChar == '/') || (mCurChar == ':') || (mCurChar == ' '))
-            {
-                sb.Append(mCurChar);
-                NextChar();
-            }
-            if (mCurChar != '#')
-            {
-                throw NewParserException("Invalid date should be #dd/mm/yyyy#");
-            }
-            else
-            {
-                NextChar();
-            }
-            mCurToken = mEvaluator.NewToken(TokenType.Value_date, sb.ToString());
-            return mCurToken;
-        }
-
-
         internal void Expect(TokenType tokenType, string msg)
         {
             if (mCurToken.Type == tokenType)
@@ -253,9 +230,9 @@ namespace Eval4.Core
             }
         }
 
-        public IExpr ParsedExpression { get { return mParsedExpression; } }
+        public IHasValue ParsedExpression { get { return mParsedExpression; } }
 
-        public BaseParser(Evaluator evaluator, string source)
+        public Parser(Evaluator evaluator, string source)
         {
             mEvaluator = evaluator;
             mString = source;
@@ -264,7 +241,7 @@ namespace Eval4.Core
             // start the machine
             NextChar();
             NextToken();
-            IExpr res = ParseExpr(null, 0);
+            IHasValue res = ParseExpr(null, 0);
             if (mCurToken.Type == TokenType.end_of_formula)
             {
                 if (res == null)
@@ -278,9 +255,9 @@ namespace Eval4.Core
 
         }
 
-        internal IExpr ParseExpr(IExpr Acc, int precedence)
+        internal IHasValue ParseExpr(IHasValue Acc, int precedence)
         {
-            IExpr ValueLeft = null;
+            IHasValue ValueLeft = null;
             ValueLeft = ParseLeft(precedence);
             if (ValueLeft == null)
             {
@@ -290,7 +267,7 @@ namespace Eval4.Core
             return ParseRight(Acc, precedence, ValueLeft);
         }
 
-        protected IExpr ParseRight(IExpr Acc, int precedence, IExpr ValueLeft)
+        protected IHasValue ParseRight(IHasValue Acc, int precedence, IHasValue ValueLeft)
         {
             while (true)
             {
@@ -313,9 +290,9 @@ namespace Eval4.Core
             }
         }
 
-        protected IExpr ParseLeft(int precedence)
+        protected IHasValue ParseLeft(int precedence)
         {
-            IExpr result = null;
+            IHasValue result = null;
             while (mCurToken.Type != TokenType.end_of_formula)
             {
                 // we ignore precedence here, not sure if it is valid
@@ -335,23 +312,28 @@ namespace Eval4.Core
             all = 7
         }
 
-        protected bool EmitCallFunction(ref IExpr ValueLeft, string funcName, List<IExpr> parameters, CallType CallType, bool ErrorIfNotFound)
+        protected bool EmitCallFunction(ref IHasValue ValueLeft, string funcName, List<IHasValue> parameters, CallType CallType, bool ErrorIfNotFound)
         {
-            IExpr newExpr = null;
+            IHasValue newExpr = null;
+            
             if (ValueLeft == null)
             {
                 foreach (object environmentFunctions in mEvaluator.mEnvironmentFunctionsList)
                 {
                     if (environmentFunctions is Type)
-                        newExpr = GetLocalFunction(null, (Type)environmentFunctions, funcName, parameters, CallType);
-                    else newExpr = GetLocalFunction(environmentFunctions, environmentFunctions.GetType(), funcName, parameters, CallType);
+                        newExpr = GetMember(null, (Type)environmentFunctions, funcName, parameters, CallType);
+                    else newExpr = GetMember(environmentFunctions, environmentFunctions.GetType(), funcName, parameters, CallType);
 
                     if (newExpr != null) break;
                 }
             }
+            else if (ValueLeft.SystemType == typeof(StaticFunctionsWrapper))
+            {
+                newExpr = GetMember(null, (ValueLeft.ObjectValue as StaticFunctionsWrapper).type, funcName, parameters, CallType);
+            }
             else
             {
-                newExpr = GetLocalFunction(ValueLeft, ValueLeft.SystemType, funcName, parameters, CallType);
+                newExpr = GetMember(ValueLeft, ValueLeft.SystemType, funcName, parameters, CallType);
             }
             if ((newExpr != null))
             {
@@ -361,12 +343,12 @@ namespace Eval4.Core
             else
             {
                 if (ErrorIfNotFound)
-                    throw NewParserException("Variable or method '" + funcName + "' was not found");
+                    throw NewParserException("No Variable or public method '" + funcName + "' was not found.");
                 return false;
             }
         }
 
-        protected IExpr GetLocalFunction(object @base, Type baseType, string funcName, List<IExpr> parameters, CallType CallType)
+        protected IHasValue GetMember(object @base, Type baseType, string funcName, List<IHasValue> parameters, CallType CallType)
         {
             MemberInfo mi = null;
             mi = GetMemberInfo(baseType, isStatic: true, isInstance: @base != null, func: funcName, parameters: parameters);
@@ -397,13 +379,13 @@ namespace Eval4.Core
                 IHasValue val = ((IVariableBag)@base).GetVariable(funcName);
                 if ((val != null))
                 {
-                    return new GetVariableExpr(val);
+                    return val; // new GetVariableExpr(val);
                 }
             }
             return null;
         }
 
-        protected MemberInfo GetMemberInfo(Type objType, bool isStatic, bool isInstance, string func, List<IExpr> parameters)
+        protected MemberInfo GetMemberInfo(Type objType, bool isStatic, bool isInstance, string func, List<IHasValue> parameters)
         {
             BindingFlags bindingAttr = default(BindingFlags);
             bindingAttr = BindingFlags.GetProperty | BindingFlags.GetField | BindingFlags.Public | BindingFlags.InvokeMethod;
@@ -456,7 +438,7 @@ namespace Eval4.Core
                 if (plist == null)
                     plist = new ParameterInfo[] { };
                 if (parameters == null)
-                    parameters = new List<IExpr>();
+                    parameters = new List<IHasValue>();
 
                 ParameterInfo pi = null;
                 if (parameters.Count > plist.Length)
@@ -515,7 +497,7 @@ namespace Eval4.Core
             }
         }
 
-        protected void ParseDot(ref IExpr ValueLeft)
+        protected void ParseDot(ref IHasValue ValueLeft)
         {
             do
             {
@@ -534,10 +516,10 @@ namespace Eval4.Core
             } while (true);
         }
 
-        internal void ParseIdentifier(ref IExpr ValueLeft)
+        internal void ParseIdentifier(ref IHasValue ValueLeft)
         {
             // first check functions
-            List<IExpr> parameters = null;
+            List<IHasValue> parameters = null;
             // parameters... 
             //Dim types As New ArrayList
             string func = mCurToken.Value;
@@ -546,7 +528,7 @@ namespace Eval4.Core
             parameters = ParseParameters(ref isBrackets);
             if ((parameters != null))
             {
-                List<IExpr> EmptyParameters = new List<IExpr>();
+                List<IHasValue> EmptyParameters = new List<IHasValue>();
                 bool ParamsNotUsed = false;
                 if (mEvaluator.UseParenthesisForArrays)
                 {
@@ -615,10 +597,10 @@ namespace Eval4.Core
             }
         }
 
-        internal List<IExpr> ParseParameters(ref bool brackets)
+        internal List<IHasValue> ParseParameters(ref bool brackets)
         {
-            List<IExpr> parameters = null;
-            IExpr Valueleft = null;
+            List<IHasValue> parameters = null;
+            IHasValue Valueleft = null;
             TokenType lClosing = default(TokenType);
 
             if (mCurToken.Type == TokenType.open_parenthesis
@@ -634,7 +616,7 @@ namespace Eval4.Core
                         lClosing = TokenType.close_parenthesis;
                         break;
                 }
-                parameters = new List<IExpr>();
+                parameters = new List<IHasValue>();
                 NextToken();  //eat the parenthesis
                 do
                 {
@@ -668,20 +650,6 @@ namespace Eval4.Core
 
     }
 
-    public class Parser : BaseParser
-    {
-        public Parser(Evaluator evaluator, string source)
-            : base(evaluator, source)
-        {
-        }
-    }
-
-    public enum ParserSyntax
-    {
-        CSharp,
-        Vb
-    }
-
     public enum TokenType
     {
         none,
@@ -692,9 +660,6 @@ namespace Eval4.Core
         operator_div,
         operator_mod,
         open_parenthesis,
-        comma,
-        dot,
-        close_parenthesis,
         operator_ne,
         operator_gt,
         operator_ge,
@@ -710,6 +675,8 @@ namespace Eval4.Core
         operator_if,
         operator_colon,
         operator_assign,
+        operator_not,
+        operator_tilde,
         Value_identifier,
         Value_true,
         Value_false,
@@ -718,14 +685,15 @@ namespace Eval4.Core
         Value_date,
         open_bracket,
         close_bracket,
+        comma,
+        dot,
+        close_parenthesis,
         shift_left,
         shift_right,
         @new,
-        operator_not,
-        operator_tilde,
         backslash,
         exponent,
-        other
+        custom
     }
 
 }

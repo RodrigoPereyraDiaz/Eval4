@@ -45,7 +45,7 @@ namespace Eval4.Core
             }
         }
 
-        public IExpr Parse(string str)
+        public IHasValue Parse(string str)
         {
             if (str == null)
                 str = string.Empty;
@@ -107,11 +107,11 @@ namespace Eval4.Core
             return null;
         }
 
-        Dictionary<string, IExpr> mExpressions = new Dictionary<string, IExpr>();
+        Dictionary<string, IHasValue> mExpressions = new Dictionary<string, IHasValue>();
 
         public object Eval(string formula)
         {
-            IExpr parsed;
+            IHasValue parsed;
             if (!mExpressions.TryGetValue(formula, out parsed))
             {
                 parsed = Parse(formula);
@@ -124,6 +124,11 @@ namespace Eval4.Core
         public void SetVariable<T>(string variableName, T variableValue)
         {
             mVariableBag.SetVariable(variableName, variableValue);
+        }
+
+        public void SetVariableFunctions(string variableName, Type type)
+        {
+            SetVariable(variableName, new StaticFunctionsWrapper(type));
         }
 
         public void DeleteVariable(string variableName)
@@ -163,7 +168,7 @@ namespace Eval4.Core
         //}
 
 
-        public virtual Token ParseToken(BaseParser parser)
+        public virtual Token ParseToken(Parser parser)
         {
             switch (parser.mCurChar)
             {
@@ -246,10 +251,10 @@ namespace Eval4.Core
             throw new InvalidProgramException();
         }
 
-        public virtual IExpr ParseLeft(BaseParser parser, Token token, int precedence)
+        public virtual IHasValue ParseLeft(Parser parser, Token token, int precedence)
         {
 
-            IExpr result = null;
+            IHasValue result = null;
             int opPrecedence = GetPrecedence(token, unary: true);
 
             switch (token.Type)
@@ -260,7 +265,7 @@ namespace Eval4.Core
                     // unary minus operator
                     parser.NextToken();
                     result = parser.ParseExpr(null, opPrecedence);
-                    result = TypedExpr.UnaryExpr(parser, token.Type, result);
+                    result = TypedExpressions.UnaryExpr(parser, token.Type, result);
                     return result;
 
                 case TokenType.Value_identifier:
@@ -329,7 +334,7 @@ namespace Eval4.Core
 
                 case TokenType.operator_if:
                     // first check functions
-                    List<IExpr> parameters = null;
+                    List<IHasValue> parameters = null;
                     // parameters... 
                     parser.NextToken();
                     bool brackets = false;
@@ -340,10 +345,10 @@ namespace Eval4.Core
         }
 
 
-        internal virtual bool ParseRight(BaseParser parser, Token tk, int opPrecedence, IExpr Acc, ref IExpr ValueLeft)
+        internal virtual bool ParseRight(Parser parser, Token tk, int opPrecedence, IHasValue Acc, ref IHasValue ValueLeft)
         {
             var tt = tk.Type;
-            IExpr ValueRight;
+            IHasValue ValueRight;
             switch (tt)
             {
                 case TokenType.operator_plus:
@@ -365,7 +370,7 @@ namespace Eval4.Core
                 case TokenType.operator_lt:
                     parser.NextToken();
                     ValueRight = parser.ParseExpr(ValueLeft, opPrecedence);
-                    ValueLeft = TypedExpr.BinaryExpr(parser, ValueLeft, tt, ValueRight);
+                    ValueLeft = TypedExpressions.BinaryExpr(parser, ValueLeft, tt, ValueRight);
                     return true;
                 //case TokenType.operator_percent:
                 //    parser.NextToken();
@@ -378,6 +383,7 @@ namespace Eval4.Core
 
         internal virtual void CleanUpCharacter(ref char mCurChar)
         {
+            // do nothing
         }
 
     }
@@ -391,25 +397,27 @@ namespace Eval4.Core
             return this.GetPrecedence((Token<T>)token, unary);
         }
 
-        public Token<T> NewToken(T customTokenType)
+        public Token NewToken(T customTokenType)
         {
             var result = new Token<T>();
-            result.Type = TokenType.other;
+            result.Type = TokenType.custom;
             result.CustomType = customTokenType;
-            return result;
-        }
-
-        public Token<T> NewToken(TokenType tokenType, string value = null)
-        {
-            var result = new Token<T>();
-            result.Type = tokenType;
-            if (value != null) result.Value = value;
             return result;
         }
 
         public override Token NewToken()
         {
             return new Token<T>();
+        }
+    }
+    public class StaticFunctionsWrapper
+    {
+        public Type type;
+
+        public StaticFunctionsWrapper(Type type)
+        {
+            // TODO: Complete member initialization
+            this.type = type;
         }
     }
 }

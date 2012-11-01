@@ -76,5 +76,17 @@ namespace Eval4.Core
                 ValueChanged(this, new System.EventArgs());
             }
         }
+
+
+        public IEnumerable<Dependency> Dependencies
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+
+        public string ShortName
+        {
+            get { throw new NotImplementedException(); }
+        }
     }
 }

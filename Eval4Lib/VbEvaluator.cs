@@ -24,7 +24,7 @@ namespace Eval4
             get { return true; }
         }
 
-        public override Token ParseToken(BaseParser parser)
+        public override Token ParseToken(Parser parser)
         {
             //TODO:Check we advance
             switch (parser.mCurChar)
@@ -38,7 +38,7 @@ namespace Eval4
                     return NewToken(TokenType.operator_eq);
 
                 case '#':
-                    return parser.ParseDate();
+                    return ParseDate(parser);
 
                 case '&':
                     parser.NextChar();
@@ -49,6 +49,35 @@ namespace Eval4
 
             }
         }
+
+        internal Token ParseDate(Parser parser)
+        {
+            var sb = new StringBuilder();
+            parser.NextChar();
+            // eat the #
+            while ((parser.mCurChar >= '0' && parser.mCurChar <= '9') || (parser.mCurChar == '/') || (parser.mCurChar == ':') || (parser.mCurChar == ' '))
+            {
+                sb.Append(parser.mCurChar);
+                parser.NextChar();
+            }
+            if (parser.mCurChar != '#')
+            {
+                throw parser.NewParserException("Missing character # at the end of the date literal.");
+            }
+            else
+            {
+                parser.NextChar();
+                DateTime ignoreResult;
+
+                if (!DateTime.TryParse(sb.ToString(), out ignoreResult))
+                {
+                    throw parser.NewParserException("Invalid date literal. Expcecting the format #yyyy/mm/dd#");
+                }
+            }
+            return NewToken(TokenType.Value_date, sb.ToString());
+        }
+
+
 
         public override Token CheckKeyword(string keyword)
         {
@@ -163,34 +192,34 @@ namespace Eval4
         //}
 
 
-        internal override bool ParseRight(BaseParser parser, Token tk, int opPrecedence, IExpr Acc, ref IExpr ValueLeft)
+        internal override bool ParseRight(Parser parser, Token tk, int opPrecedence, IHasValue Acc, ref IHasValue ValueLeft)
         {
-            if (tk.Type == TokenType.other)
+            if (tk.Type == TokenType.custom)
             {
-                IExpr ValueRight;
+                IHasValue ValueRight;
                 var tk2 = tk as Token<CustomTokenType>;
                 switch (tk2.CustomType)
                 {
                     case CustomTokenType.operator_percent:
                         parser.NextToken();
                         //ValueRight = parser.ParseExpr(ValueLeft, opPrecedence);
-                        if (Expr.IsIntOrSmaller(ValueLeft.SystemType) && Expr.IsIntOrSmaller(Acc.SystemType))
+                        if (DelegatedExpr.IsIntOrSmaller(ValueLeft.SystemType) && DelegatedExpr.IsIntOrSmaller(Acc.SystemType))
                         {
-                            ValueLeft = TypedExpr.Create<int, int, int>(Acc, ValueLeft, (a, b) => { return a * b / 100; });
+                            ValueLeft = TypedExpressions.Create<int, int, int>(Acc, ValueLeft, (a, b) => { return a * b / 100; });
                             return true;
                         }
-                        else if (Expr.IsDoubleOrSmaller(ValueLeft.SystemType) && Expr.IsDoubleOrSmaller(Acc.SystemType))
+                        else if (DelegatedExpr.IsDoubleOrSmaller(ValueLeft.SystemType) && DelegatedExpr.IsDoubleOrSmaller(Acc.SystemType))
                         {
-                            ValueLeft = TypedExpr.Create<double, double, double>(Acc, ValueLeft, (a, b) => { return a * b / 100.0; });
+                            ValueLeft = TypedExpressions.Create<double, double, double>(Acc, ValueLeft, (a, b) => { return a * b / 100.0; });
                             return true;
                         }
                         break;
                     case CustomTokenType.integer_div:
                         parser.NextToken();
                         ValueRight = parser.ParseExpr(ValueLeft, opPrecedence);
-                        if (Expr.IsIntOrSmaller(ValueLeft.SystemType) && Expr.IsIntOrSmaller(ValueRight.SystemType))
+                        if (DelegatedExpr.IsIntOrSmaller(ValueLeft.SystemType) && DelegatedExpr.IsIntOrSmaller(ValueRight.SystemType))
                         {
-                            ValueLeft = TypedExpr.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a / b; });
+                            ValueLeft = TypedExpressions.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a / b; });
                             return true;
                         }
                         break;
@@ -230,7 +259,7 @@ namespace Eval4
                     //Unary identity and negation (+, –)
                     return (unary ? 14 : 9);
 
-                case TokenType.other:
+                case TokenType.custom:
                     if (tt.CustomType == CustomTokenType.operator_percent)
                     {
                         // the percent operator is something I created 
@@ -294,4 +323,5 @@ namespace Eval4
             return 0;
         }
     }
+
 }

@@ -17,7 +17,7 @@ namespace Eval4.DemoCSharp
         // Required by the Windows Form Designer
         private CSharpEvaluator ev;
         private bool mInitializing;
-        private Eval4.Core.IExpr mFormula3;
+        private Eval4.Core.IHasValue mFormula3;
 
         // Note that these 3 variables are visible from within the evaluator 
         // without needing any assessor 
@@ -584,7 +584,7 @@ namespace Eval4.DemoCSharp
 
         private void btnEvaluate_Click(object sender, System.EventArgs e)
         {
-            Eval4.Core.IExpr lCode = null;
+            Eval4.Core.IHasValue lCode = null;
             try
             {
                 TextBox2.AppendText((tbExpression.Text + "\r\n"));
@@ -630,9 +630,9 @@ namespace Eval4.DemoCSharp
 
         private void btnEvaluate2_Click(object sender, System.EventArgs e)
         {
-            Eval4.Core.IExpr lCodeR = null;
-            Eval4.Core.IExpr lCodeG = null;
-            Eval4.Core.IExpr lCodeB = null;
+            Eval4.Core.IHasValue lCodeR = null;
+            Eval4.Core.IHasValue lCodeG = null;
+            Eval4.Core.IHasValue lCodeB = null;
             try
             {
                 ev.AddEnvironmentFunctions(this);
