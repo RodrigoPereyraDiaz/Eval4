@@ -11,21 +11,26 @@ namespace Eval4ConsoleDemo
     class Program
     {
         static VbEvaluator ev = new VbEvaluator();
-        public static Double X = 12.34;
-        public static Double Y = 34.56;
+        public readonly static Int16 X = 12;
+        public static Single Y = 34.56F;
+        public static Account A = new Account();
+
+        public class Account
+        {
+            public readonly Int16 T = 6;
+        }
 
         static Program()
         {
             ev.AddEnvironmentFunctions(typeof(Program));
             ev.AddEnvironmentFunctions(typeof(Math));
-            //ev.SetVariableFunctions("Math", typeof(Math));
         }
 
         static void Main(string[] args)
         {
             //Eval("1+2*3");
 
-            Eval("Sin(X)*5.1");
+            Eval("A.T*X+Y"); //("Sin(X)*5.1");
             Console.ReadKey(intercept: true);
         }
 

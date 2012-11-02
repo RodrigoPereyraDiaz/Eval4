@@ -245,7 +245,7 @@ namespace Eval4.Core
             if (mCurToken.Type == TokenType.end_of_formula)
             {
                 if (res == null)
-                    res = new ImmediateExpr<string>(string.Empty);
+                    res = new ConstantExpr<string>(string.Empty);
                 mParsedExpression = res;
             }
             else
@@ -262,6 +262,10 @@ namespace Eval4.Core
             if (ValueLeft == null)
             {
                 throw NewUnexpectedToken("No Expression found");
+            }
+            while (typeof(IHasValue).IsAssignableFrom(ValueLeft.SystemType))
+            {
+                ValueLeft = (IHasValue)ValueLeft.ObjectValue;
             }
             ParseDot(ref ValueLeft);
             return ParseRight(Acc, precedence, ValueLeft);
@@ -318,12 +322,30 @@ namespace Eval4.Core
 
             if (ValueLeft == null)
             {
-                foreach (object environmentFunctions in mEvaluator.mEnvironmentFunctionsList)
+                for (int i = mEvaluator.mEnvironmentFunctionsList.Count - 1; i >= 0; i--)
                 {
+                    var environmentFunctions = mEvaluator.mEnvironmentFunctionsList[i];
                     if (environmentFunctions is Type)
+                    {
                         newExpr = GetMember(null, (Type)environmentFunctions, funcName, parameters, CallType);
-                    else newExpr = GetMember(environmentFunctions, environmentFunctions.GetType(), funcName, parameters, CallType);
+                    }
+                    else if (environmentFunctions is IHasValue)
+                    {
+                        var hasValue = environmentFunctions as IHasValue;
+                        newExpr = GetMember(hasValue, hasValue.SystemType, funcName, parameters, CallType);
+                    }
+                    else if (environmentFunctions is IVariableBag)
+                    {
+                        if (parameters == null || parameters.Count == 0)
+                        {
+                            newExpr = (environmentFunctions as IVariableBag).GetVariable(funcName);
+                        }
 
+                    }
+                    else
+                    {
+                        throw NewParserException("Invalid Environment functions.");
+                    }
                     if (newExpr != null) break;
                 }
             }
@@ -348,7 +370,7 @@ namespace Eval4.Core
             }
         }
 
-        protected IHasValue GetMember(object @base, Type baseType, string funcName, List<IHasValue> parameters, CallType CallType)
+        protected IHasValue GetMember(IHasValue @base, Type baseType, string funcName, List<IHasValue> parameters, CallType CallType)
         {
             MemberInfo mi = null;
             Type resultType;
@@ -375,8 +397,11 @@ namespace Eval4.Core
                     default:
                         throw NewUnexpectedToken(mi.MemberType.ToString() + " members are not supported");
                 }
-
-                return GetNewCallMethodExpr(resultType, @base, mi, parameters);
+                var res = GetNewCallMethodExpr(resultType, @base, mi, parameters);
+                if (typeof(IHasValue).IsAssignableFrom(res.SystemType))
+                {
+                }
+                return res;
             }
             if (@base is IVariableBag && (parameters == null || parameters.Count == 0))
             {
@@ -389,7 +414,7 @@ namespace Eval4.Core
             return null;
         }
 
-        private IHasValue GetNewCallMethodExpr(Type resultType, object @base, MemberInfo mi, List<IHasValue> parameters)
+        private IHasValue GetNewCallMethodExpr(Type resultType, IHasValue @base, MemberInfo mi, List<IHasValue> parameters)
         {
             var t = typeof(CallMethodExpr<>).MakeGenericType(resultType);
             return (IHasValue)Activator.CreateInstance(t, @base, mi, parameters);

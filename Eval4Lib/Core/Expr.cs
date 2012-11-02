@@ -51,51 +51,18 @@ namespace Eval4.Core
             get { return SystemType; }
         }
 
-        protected static bool ConvertToSystemType(ref IHasValue param1, Type SystemType)
-        {
-            if (param1.SystemType != SystemType)
-            {
-                if (SystemType == typeof(object))
-                {
-                    //ignore
-                }
-                else
-                {
-                    param1 = new SystemTypeConvertExpr(param1, SystemType);
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        internal static double ToDouble(object o)
-        {
-            if (o == null) return 0.0;
-            if (o is double) return (double)o;
-
-            return System.Convert.ToDouble(o);
-        }
-
-        internal static string ToString(object o)
-        {
-            if (o == null) return string.Empty;
-
-            return System.Convert.ToString(o);
-        }
-
         public event ValueChangedEventHandler ValueChanged;
 
         public abstract IEnumerable<Dependency> Dependencies { get; }
 
-
         public abstract string ShortName { get; }
     }
 
-    internal class ImmediateExpr<T> : IHasValue<T>
+    internal class ConstantExpr<T> : IHasValue<T>
     {
         private T mValue;
 
-        public ImmediateExpr(T value)
+        public ConstantExpr(T value)
         {
             mValue = value;
         }
@@ -128,61 +95,6 @@ namespace Eval4.Core
         }
     }
 
-    internal class SystemTypeConvertExpr : DelegatedExpr
-    {
-        private IHasValue withEventsField_mParam1;
-        public IHasValue mParam1
-        {
-            get { return withEventsField_mParam1; }
-            set
-            {
-                if (withEventsField_mParam1 != null)
-                {
-                    withEventsField_mParam1.ValueChanged -= mParam1_ValueChanged;
-                }
-                withEventsField_mParam1 = value;
-                if (withEventsField_mParam1 != null)
-                {
-                    withEventsField_mParam1.ValueChanged += mParam1_ValueChanged;
-                }
-            }
-        }
-        private Type mSystemType = typeof(object);
-
-        public SystemTypeConvertExpr(IHasValue param1, System.Type Type)
-        {
-            mParam1 = param1;
-            mValueDelegate = CType;
-            mSystemType = Type;
-        }
-
-        private object CType()
-        {
-            return System.Convert.ChangeType(mParam1.ObjectValue, mSystemType);
-        }
-
-        public override Type SystemType
-        {
-            get { return mSystemType; }
-        }
-
-        private void mParam1_ValueChanged(object sender, System.EventArgs e)
-        {
-            base.RaiseEventValueChanged(sender, e);
-        }
-
-
-        public override IEnumerable<Dependency> Dependencies
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public override string ShortName
-        {
-            get { throw new NotImplementedException(); }
-        }
-    }
-
     public class CallMethodExpr<T> : IHasValue<T>
     {
         Func<T> mValueDelegate;
@@ -196,7 +108,7 @@ namespace Eval4.Core
         private System.Type mResultSystemType;
         private IHasValue withEventsField_mResultValue;
 
-        public CallMethodExpr(object baseObject, MemberInfo method, List<IHasValue> @params)
+        public CallMethodExpr(IHasValue baseObject, MemberInfo method, List<IHasValue> @params)
         {
             if (@params == null)
                 @params = new List<IHasValue>();
@@ -232,19 +144,19 @@ namespace Eval4.Core
             {
                 mResultSystemType = ((FieldInfo)method).FieldType;
                 paramInfo = new ParameterInfo[] { };
-                mValueDelegate = GetField;
-
-                //object res = ((FieldInfo)mMethod).GetValue(mBaseValueObject);
-                //var f = Expression.Field(Expression.Constant(baseObject), (FieldInfo)method);
-
-
-                //     System.Linq.Expressions.Expression<Func<int, bool>> expr = i => i < 5;
-                //     // Compile the expression tree into executable code.
-                //     Func<int, bool> deleg = expr.Compile();
-                //     // Invoke the method and print the output.
-                //     Console.WriteLine("deleg(4) = {0}", deleg(4));
-                //var expr = (Expression<Func<T>>)f;
-                //mValueDelegate = expr.Compile();
+                Expression expr = null;
+                if (baseObject != null)
+                {
+                    var expectedType = typeof(IHasValue<>).MakeGenericType(baseObject.SystemType);
+                    expr = Expression.MakeMemberAccess(Expression.Constant(baseObject), expectedType.GetProperty("Value"));
+                    expr = Expression.Field(expr, (FieldInfo)method);
+                }
+                else
+                {
+                    expr = Expression.Field(null, (FieldInfo)method);
+                }
+                var lambda = Expression.Lambda<Func<T>>(expr);
+                mValueDelegate = lambda.Compile();
             }
 
             for (int i = 0; i <= mParams.Length - 1; i++)
@@ -254,35 +166,6 @@ namespace Eval4.Core
                     mParams[i] = TypedExpressions.ChangeType(mParams[i], paramInfo[i].ParameterType);
                 }
             }
-
-            //if (typeof(IHasValue).IsAssignableFrom(mResultSystemType))
-            //{
-            //    mResultValue = (IHasValue)InternalValue();
-            //    if (mResultValue is IHasValue)
-            //    {
-            //        mResultSystemType = ((IHasValue)mResultValue).SystemType;
-            //    }
-            //    else if (mResultValue == null)
-            //    {
-            //        mResultSystemType = typeof(Object);
-            //    }
-            //    else
-            //    {
-            //        object v = mResultValue.ObjectValue;
-            //        if (v == null)
-            //        {
-            //            mResultSystemType = typeof(Object);
-            //        }
-            //        else
-            //        {
-            //            mResultSystemType = v.GetType();
-            //        }
-            //    }
-            //}
-            //else
-            //{
-            //    mResultSystemType = SystemType;
-            //}
         }
 
         void p_ValueChanged(object sender, EventArgs e)
@@ -350,12 +233,12 @@ namespace Eval4.Core
             return (T)res;
         }
 
-        private T GetField()
-        {
-            Recalc();
-            object res = ((FieldInfo)mMethod).GetValue(mBaseValueObject);
-            return (T)res;
-        }
+        //private T GetField()
+        //{
+        //    Recalc();
+        //    object res = ((FieldInfo)mMethod).GetValue(mBaseValueObject);
+        //    return (T)res;
+        //}
 
         private void Recalc()
         {
@@ -372,61 +255,7 @@ namespace Eval4.Core
             {
                 mBaseValueObject = mBaseObject;
             }
-            //    return base.mValueDelegate();
         }
-
-        //public override object ObjectValue
-        //{
-        //    get
-        //    {
-        //        object res = InternalValue();
-        //        if (res is IHasValue)
-        //        {
-        //            mResultValue = (IHasValue)res;
-        //            res = mResultValue.ObjectValue;
-        //        }
-        //        return res;
-        //    }
-        //}
-
-        //public override System.Type SystemType
-        //{
-        //    get { return mResultSystemType; }
-        //}
-
-        //private void mParamsValueChanged(object sender, System.EventArgs e)
-        //{
-        //    base.RaiseEventValueChanged(sender, e);
-        //}
-
-        //private void mBaseVariable_ValueChanged(object sender, System.EventArgs e)
-        //{
-        //    base.RaiseEventValueChanged(sender, e);
-        //}
-
-        //private void mResultVariable_ValueChanged(object sender, System.EventArgs e)
-        //{
-        //    base.RaiseEventValueChanged(sender, e);
-        //}
-
-        //public override IEnumerable<Dependency> Dependencies
-        //{
-        //    get
-        //    {
-
-        //    }
-        //}
-
-        //public override string ShortName
-        //{
-        //    get { return "CallMethod"; }
-        //}
-
-        //public T Value
-        //{
-        //    get { throw new NotImplementedException(); }
-        //}
-
 
         public event ValueChangedEventHandler ValueChanged;
 

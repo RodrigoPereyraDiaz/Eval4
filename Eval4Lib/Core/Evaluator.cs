@@ -31,6 +31,20 @@ namespace Eval4.Core
 
         public void AddEnvironmentFunctions(object o)
         {
+            if (o is Type)
+            {
+                // fine
+            }
+            else if (o is IHasValue)
+            {
+                // fine
+            }
+            else
+            {
+                var t = typeof(ConstantExpr<>).MakeGenericType(o.GetType());
+                o = Activator.CreateInstance(t, o);
+            }
+            
             if (!mEnvironmentFunctionsList.Contains(o))
             {
                 mEnvironmentFunctionsList.Add(o);
@@ -273,17 +287,17 @@ namespace Eval4.Core
                     return result;
 
                 case TokenType.Value_true:
-                    result = new ImmediateExpr<bool>(true);
+                    result = new ConstantExpr<bool>(true);
                     parser.NextToken();
                     return result;
 
                 case TokenType.Value_false:
-                    result = new ImmediateExpr<bool>(false);
+                    result = new ConstantExpr<bool>(false);
                     parser.NextToken();
                     return result;
 
                 case TokenType.Value_string:
-                    result = new ImmediateExpr<string>(token.Value);
+                    result = new ConstantExpr<string>(token.Value);
                     parser.NextToken();
                     return result;
 
@@ -293,11 +307,11 @@ namespace Eval4.Core
                     double doubleValue;
                     if (int.TryParse(valueString, out intValue))
                     {
-                        result = new ImmediateExpr<int>(intValue);
+                        result = new ConstantExpr<int>(intValue);
                     }
                     else if (double.TryParse(valueString, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out doubleValue))
                     {
-                        result = new ImmediateExpr<double>(doubleValue);
+                        result = new ConstantExpr<double>(doubleValue);
                     }
                     else
                     {
@@ -309,7 +323,7 @@ namespace Eval4.Core
                 case TokenType.Value_date:
                     try
                     {
-                        result = new ImmediateExpr<DateTime>(DateTime.Parse(parser.mCurToken.Value));
+                        result = new ConstantExpr<DateTime>(DateTime.Parse(parser.mCurToken.Value));
                         parser.NextToken();
                         return result;
                     }

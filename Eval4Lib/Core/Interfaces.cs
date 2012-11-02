@@ -17,6 +17,11 @@ namespace Eval4.Core
         IEnumerable<Dependency> Dependencies { get; }
     }
 
+    public interface IHasValue<T> : IHasValue
+    {
+        T Value { get; }
+    }
+
     public class Dependency
     {
         public String Name;
@@ -32,11 +37,5 @@ namespace Eval4.Core
         public static IEnumerable<Dependency> None { get { return NoDependencies; } }
     }
 
-    public interface IHasValue<T> : IHasValue
-    {
-        T Value { get; }
-    }
-
     public delegate void ValueChangedEventHandler(object sender, System.EventArgs e);
-
 }
