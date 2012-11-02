@@ -104,8 +104,23 @@
     <Compile Include="AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="DoubleBufferPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="EvalFunctions.cs">
       <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="EvaluatorPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EvaluatorPanel.Designer.cs">
+      <DependentUpon>EvaluatorPanel.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ExcelSheet.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ExcelSheet.Designer.cs">
+      <DependentUpon>ExcelSheet.cs</DependentUpon>
     </Compile>
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
@@ -114,6 +129,12 @@
       <SubType>Code</SubType>
     </Compile>
     <Content Include="App.ico" />
+    <EmbeddedResource Include="EvaluatorPanel.resx">
+      <DependentUpon>EvaluatorPanel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ExcelSheet.resx">
+      <DependentUpon>ExcelSheet.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
       <SubType>Designer</SubType>

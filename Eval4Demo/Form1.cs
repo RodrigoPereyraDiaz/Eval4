@@ -29,13 +29,8 @@ namespace Eval4.DemoCSharp
         // NOTE: The following procedure is required by the Windows Form Designer
         // It can be modified using the Windows Form Designer.  
         // Do not modify it using the code editor.
-        internal System.Windows.Forms.TextBox TextBox2;
-        internal System.Windows.Forms.ComboBox cbSamples;
-        internal System.Windows.Forms.TextBox tbExpression;
-        internal System.Windows.Forms.Button btnEvaluate;
         internal System.Windows.Forms.TabControl TabControl1;
-        internal System.Windows.Forms.TabPage TabPage1;
-        internal System.Windows.Forms.TabPage TabPage2;
+        internal System.Windows.Forms.TabPage TabHeavier;
         internal System.Windows.Forms.ComboBox ComboBox1;
         internal System.Windows.Forms.Button btnEvaluate2;
         internal System.Windows.Forms.PictureBox PictureBox1;
@@ -51,7 +46,7 @@ namespace Eval4.DemoCSharp
         public double X;
         public double Y;
 
-        private System.Windows.Forms.TabPage tabPage3;
+        private System.Windows.Forms.TabPage tabDynamic;
         internal System.Windows.Forms.Button btnEvaluate3;
         internal System.Windows.Forms.TextBox LogBox3;
         internal System.Windows.Forms.Label Label5;
@@ -63,6 +58,24 @@ namespace Eval4.DemoCSharp
         internal System.Windows.Forms.Label Label7;
         internal System.Windows.Forms.Label Label12;
         internal System.Windows.Forms.Label Label8;
+        private TabPage tabVB;
+        private EvaluatorPanel evaluatorPanel1;
+        private TabPage tabCSharp;
+        private EvaluatorPanel evaluatorPanel2;
+        private TabPage tabMatlab;
+        private EvaluatorPanel evaluatorPanel3;
+        private TabPage tabExcel;
+        private TabPage tabExperiments;
+        private EvaluatorPanel evaluatorPanel5;
+        private Panel panel3;
+        private Label label11;
+        private TabControl tabControl2;
+        private TabPage tabSheet1;
+        private TabPage tabSheet2;
+        private TabPage tabSheet3;
+        private ExcelSheet excelSheet2;
+        private ExcelSheet excelSheet3;
+        private ExcelSheet excelSheet1;
         internal System.Windows.Forms.Label lblResults3;
 
         public Form1()
@@ -151,13 +164,23 @@ namespace Eval4.DemoCSharp
         [System.Diagnostics.DebuggerStepThrough()]
         private void InitializeComponent()
         {
-            this.tbExpression = new System.Windows.Forms.TextBox();
-            this.TextBox2 = new System.Windows.Forms.TextBox();
-            this.btnEvaluate = new System.Windows.Forms.Button();
-            this.cbSamples = new System.Windows.Forms.ComboBox();
             this.TabControl1 = new System.Windows.Forms.TabControl();
-            this.TabPage1 = new System.Windows.Forms.TabPage();
-            this.TabPage2 = new System.Windows.Forms.TabPage();
+            this.tabVB = new System.Windows.Forms.TabPage();
+            this.evaluatorPanel1 = new Eval4.DemoCSharp.EvaluatorPanel();
+            this.tabCSharp = new System.Windows.Forms.TabPage();
+            this.evaluatorPanel2 = new Eval4.DemoCSharp.EvaluatorPanel();
+            this.tabExcel = new System.Windows.Forms.TabPage();
+            this.tabControl2 = new System.Windows.Forms.TabControl();
+            this.tabSheet1 = new System.Windows.Forms.TabPage();
+            this.excelSheet2 = new Eval4.DemoCSharp.ExcelSheet();
+            this.tabSheet2 = new System.Windows.Forms.TabPage();
+            this.excelSheet3 = new Eval4.DemoCSharp.ExcelSheet();
+            this.tabSheet3 = new System.Windows.Forms.TabPage();
+            this.tabMatlab = new System.Windows.Forms.TabPage();
+            this.evaluatorPanel3 = new Eval4.DemoCSharp.EvaluatorPanel();
+            this.tabExperiments = new System.Windows.Forms.TabPage();
+            this.evaluatorPanel5 = new Eval4.DemoCSharp.EvaluatorPanel();
+            this.TabHeavier = new System.Windows.Forms.TabPage();
             this.cbAuto = new System.Windows.Forms.CheckBox();
             this.Label1 = new System.Windows.Forms.Label();
             this.PictureBox1 = new System.Windows.Forms.PictureBox();
@@ -169,7 +192,7 @@ namespace Eval4.DemoCSharp
             this.Label3 = new System.Windows.Forms.Label();
             this.tbExpressionBlue = new System.Windows.Forms.TextBox();
             this.Label4 = new System.Windows.Forms.Label();
-            this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.tabDynamic = new System.Windows.Forms.TabPage();
             this.btnEvaluate3 = new System.Windows.Forms.Button();
             this.LogBox3 = new System.Windows.Forms.TextBox();
             this.Label5 = new System.Windows.Forms.Label();
@@ -182,109 +205,217 @@ namespace Eval4.DemoCSharp
             this.Label12 = new System.Windows.Forms.Label();
             this.Label8 = new System.Windows.Forms.Label();
             this.lblResults3 = new System.Windows.Forms.Label();
+            this.panel3 = new System.Windows.Forms.Panel();
+            this.label11 = new System.Windows.Forms.Label();
+            this.excelSheet1 = new Eval4.DemoCSharp.ExcelSheet();
             this.TabControl1.SuspendLayout();
-            this.TabPage1.SuspendLayout();
-            this.TabPage2.SuspendLayout();
-            this.tabPage3.SuspendLayout();
+            this.tabVB.SuspendLayout();
+            this.tabCSharp.SuspendLayout();
+            this.tabExcel.SuspendLayout();
+            this.tabControl2.SuspendLayout();
+            this.tabSheet1.SuspendLayout();
+            this.tabSheet2.SuspendLayout();
+            this.tabSheet3.SuspendLayout();
+            this.tabMatlab.SuspendLayout();
+            this.tabExperiments.SuspendLayout();
+            this.TabHeavier.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.PictureBox1)).BeginInit();
+            this.tabDynamic.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.updownA)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.updownB)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.updownC)).BeginInit();
+            this.panel3.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // tbExpression
-            // 
-            this.tbExpression.Location = new System.Drawing.Point(8, 32);
-            this.tbExpression.Name = "tbExpression";
-            this.tbExpression.Size = new System.Drawing.Size(328, 20);
-            this.tbExpression.TabIndex = 0;
-            this.tbExpression.Text = "4+5";
-            // 
-            // TextBox2
-            // 
-            this.TextBox2.Location = new System.Drawing.Point(8, 56);
-            this.TextBox2.Multiline = true;
-            this.TextBox2.Name = "TextBox2";
-            this.TextBox2.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.TextBox2.Size = new System.Drawing.Size(408, 336);
-            this.TextBox2.TabIndex = 0;
-            this.TextBox2.Text = "";
-            // 
-            // btnEvaluate
-            // 
-            this.btnEvaluate.Location = new System.Drawing.Point(344, 32);
-            this.btnEvaluate.Name = "btnEvaluate";
-            this.btnEvaluate.Size = new System.Drawing.Size(72, 23);
-            this.btnEvaluate.TabIndex = 2;
-            this.btnEvaluate.Text = "Evaluate";
-            this.btnEvaluate.Click += new System.EventHandler(this.btnEvaluate_Click);
-            // 
-            // cbSamples
-            // 
-            this.cbSamples.Items.AddRange(new object[] {
-														   "123+345",
-														   "(2+3)*(4-2)",
-														   "(1+1)==2?\"T\":\"F\"",
-														   "Now",
-														   "Round(Now - Date(2006,1,1))+\" days since new year\"",
-														   "aNumber*5",
-														   "arr[1]+arr[2]",
-														   "theForm.Controls[0].Name",
-														   "theForm.Left"});
-            this.cbSamples.Location = new System.Drawing.Point(8, 8);
-            this.cbSamples.Name = "cbSamples";
-            this.cbSamples.Size = new System.Drawing.Size(408, 21);
-            this.cbSamples.TabIndex = 3;
-            this.cbSamples.Text = "<enter an expression or select a sample>";
-            this.cbSamples.SelectedIndexChanged += new System.EventHandler(this.cbSamples_SelectedIndexChanged);
             // 
             // TabControl1
             // 
-            this.TabControl1.Controls.Add(this.TabPage1);
-            this.TabControl1.Controls.Add(this.TabPage2);
-            this.TabControl1.Controls.Add(this.tabPage3);
+            this.TabControl1.Controls.Add(this.tabExcel);
+            this.TabControl1.Controls.Add(this.tabVB);
+            this.TabControl1.Controls.Add(this.tabCSharp);
+            this.TabControl1.Controls.Add(this.tabMatlab);
+            this.TabControl1.Controls.Add(this.tabExperiments);
+            this.TabControl1.Controls.Add(this.TabHeavier);
+            this.TabControl1.Controls.Add(this.tabDynamic);
             this.TabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.TabControl1.Location = new System.Drawing.Point(5, 5);
+            this.TabControl1.HotTrack = true;
+            this.TabControl1.Location = new System.Drawing.Point(5, 58);
+            this.TabControl1.Multiline = true;
             this.TabControl1.Name = "TabControl1";
             this.TabControl1.SelectedIndex = 0;
-            this.TabControl1.Size = new System.Drawing.Size(432, 422);
+            this.TabControl1.Size = new System.Drawing.Size(508, 490);
             this.TabControl1.TabIndex = 5;
+            this.TabControl1.SelectedIndexChanged += new System.EventHandler(this.TabControl1_SelectedIndexChanged);
             // 
-            // TabPage1
+            // tabVB
             // 
-            this.TabPage1.Controls.Add(this.tbExpression);
-            this.TabPage1.Controls.Add(this.cbSamples);
-            this.TabPage1.Controls.Add(this.btnEvaluate);
-            this.TabPage1.Controls.Add(this.TextBox2);
-            this.TabPage1.Location = new System.Drawing.Point(4, 22);
-            this.TabPage1.Name = "TabPage1";
-            this.TabPage1.Size = new System.Drawing.Size(424, 396);
-            this.TabPage1.TabIndex = 0;
-            this.TabPage1.Text = "Single expression";
+            this.tabVB.Controls.Add(this.evaluatorPanel1);
+            this.tabVB.Location = new System.Drawing.Point(4, 22);
+            this.tabVB.Name = "tabVB";
+            this.tabVB.Size = new System.Drawing.Size(500, 464);
+            this.tabVB.TabIndex = 7;
+            this.tabVB.Text = "VB";
+            this.tabVB.UseVisualStyleBackColor = true;
             // 
-            // TabPage2
+            // evaluatorPanel1
             // 
-            this.TabPage2.Controls.Add(this.cbAuto);
-            this.TabPage2.Controls.Add(this.Label1);
-            this.TabPage2.Controls.Add(this.PictureBox1);
-            this.TabPage2.Controls.Add(this.tbExpressionRed);
-            this.TabPage2.Controls.Add(this.ComboBox1);
-            this.TabPage2.Controls.Add(this.btnEvaluate2);
-            this.TabPage2.Controls.Add(this.tbExpressionGreen);
-            this.TabPage2.Controls.Add(this.Label2);
-            this.TabPage2.Controls.Add(this.Label3);
-            this.TabPage2.Controls.Add(this.tbExpressionBlue);
-            this.TabPage2.Controls.Add(this.Label4);
-            this.TabPage2.Location = new System.Drawing.Point(4, 22);
-            this.TabPage2.Name = "TabPage2";
-            this.TabPage2.Size = new System.Drawing.Size(424, 396);
-            this.TabPage2.TabIndex = 1;
-            this.TabPage2.Text = "heavier evaluation";
+            this.evaluatorPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.evaluatorPanel1.Location = new System.Drawing.Point(3, 3);
+            this.evaluatorPanel1.Name = "evaluatorPanel1";
+            this.evaluatorPanel1.PanelLanguage = Eval4.DemoCSharp.PanelLanguage.vb;
+            this.evaluatorPanel1.Size = new System.Drawing.Size(494, 458);
+            this.evaluatorPanel1.TabIndex = 0;
+            // 
+            // tabCSharp
+            // 
+            this.tabCSharp.Controls.Add(this.evaluatorPanel2);
+            this.tabCSharp.Location = new System.Drawing.Point(4, 22);
+            this.tabCSharp.Name = "tabCSharp";
+            this.tabCSharp.Size = new System.Drawing.Size(500, 464);
+            this.tabCSharp.TabIndex = 8;
+            this.tabCSharp.Text = "C#";
+            this.tabCSharp.UseVisualStyleBackColor = true;
+            // 
+            // evaluatorPanel2
+            // 
+            this.evaluatorPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.evaluatorPanel2.Location = new System.Drawing.Point(3, 3);
+            this.evaluatorPanel2.Name = "evaluatorPanel2";
+            this.evaluatorPanel2.PanelLanguage = Eval4.DemoCSharp.PanelLanguage.csharp;
+            this.evaluatorPanel2.Size = new System.Drawing.Size(494, 458);
+            this.evaluatorPanel2.TabIndex = 0;
+            // 
+            // tabExcel
+            // 
+            this.tabExcel.Controls.Add(this.tabControl2);
+            this.tabExcel.Location = new System.Drawing.Point(4, 22);
+            this.tabExcel.Name = "tabExcel";
+            this.tabExcel.Size = new System.Drawing.Size(500, 464);
+            this.tabExcel.TabIndex = 10;
+            this.tabExcel.Text = "Excel";
+            this.tabExcel.UseVisualStyleBackColor = true;
+            // 
+            // tabControl2
+            // 
+            this.tabControl2.Appearance = System.Windows.Forms.TabAppearance.Buttons;
+            this.tabControl2.Controls.Add(this.tabSheet1);
+            this.tabControl2.Controls.Add(this.tabSheet2);
+            this.tabControl2.Controls.Add(this.tabSheet3);
+            this.tabControl2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tabControl2.Location = new System.Drawing.Point(3, 3);
+            this.tabControl2.Multiline = true;
+            this.tabControl2.Name = "tabControl2";
+            this.tabControl2.SelectedIndex = 0;
+            this.tabControl2.Size = new System.Drawing.Size(494, 458);
+            this.tabControl2.TabIndex = 0;
+            // 
+            // tabSheet1
+            // 
+            this.tabSheet1.Controls.Add(this.excelSheet2);
+            this.tabSheet1.Location = new System.Drawing.Point(4, 25);
+            this.tabSheet1.Name = "tabSheet1";
+            this.tabSheet1.Size = new System.Drawing.Size(486, 429);
+            this.tabSheet1.TabIndex = 0;
+            this.tabSheet1.Text = "Sheet1";
+            this.tabSheet1.UseVisualStyleBackColor = true;
+            // 
+            // excelSheet2
+            // 
+            this.excelSheet2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.excelSheet2.Location = new System.Drawing.Point(3, 3);
+            this.excelSheet2.Name = "excelSheet2";
+            this.excelSheet2.Size = new System.Drawing.Size(480, 423);
+            this.excelSheet2.TabIndex = 1;
+            // 
+            // tabSheet2
+            // 
+            this.tabSheet2.Controls.Add(this.excelSheet3);
+            this.tabSheet2.Location = new System.Drawing.Point(4, 25);
+            this.tabSheet2.Name = "tabSheet2";
+            this.tabSheet2.Size = new System.Drawing.Size(486, 429);
+            this.tabSheet2.TabIndex = 1;
+            this.tabSheet2.Text = "Sheet2";
+            this.tabSheet2.UseVisualStyleBackColor = true;
+            // 
+            // excelSheet3
+            // 
+            this.excelSheet3.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.excelSheet3.Location = new System.Drawing.Point(3, 3);
+            this.excelSheet3.Name = "excelSheet3";
+            this.excelSheet3.Size = new System.Drawing.Size(480, 423);
+            this.excelSheet3.TabIndex = 1;
+            // 
+            // tabSheet3
+            // 
+            this.tabSheet3.Controls.Add(this.excelSheet1);
+            this.tabSheet3.Location = new System.Drawing.Point(4, 25);
+            this.tabSheet3.Name = "tabSheet3";
+            this.tabSheet3.Size = new System.Drawing.Size(486, 429);
+            this.tabSheet3.TabIndex = 2;
+            this.tabSheet3.Text = "Sheet3";
+            this.tabSheet3.UseVisualStyleBackColor = true;
+            // 
+            // tabMatlab
+            // 
+            this.tabMatlab.Controls.Add(this.evaluatorPanel3);
+            this.tabMatlab.Location = new System.Drawing.Point(4, 22);
+            this.tabMatlab.Name = "tabMatlab";
+            this.tabMatlab.Size = new System.Drawing.Size(500, 464);
+            this.tabMatlab.TabIndex = 9;
+            this.tabMatlab.Text = "Matlab";
+            this.tabMatlab.UseVisualStyleBackColor = true;
+            // 
+            // evaluatorPanel3
+            // 
+            this.evaluatorPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.evaluatorPanel3.Location = new System.Drawing.Point(3, 3);
+            this.evaluatorPanel3.Name = "evaluatorPanel3";
+            this.evaluatorPanel3.PanelLanguage = Eval4.DemoCSharp.PanelLanguage.matlab;
+            this.evaluatorPanel3.Size = new System.Drawing.Size(494, 458);
+            this.evaluatorPanel3.TabIndex = 0;
+            // 
+            // tabExperiments
+            // 
+            this.tabExperiments.Controls.Add(this.evaluatorPanel5);
+            this.tabExperiments.Location = new System.Drawing.Point(4, 22);
+            this.tabExperiments.Name = "tabExperiments";
+            this.tabExperiments.Size = new System.Drawing.Size(500, 464);
+            this.tabExperiments.TabIndex = 11;
+            this.tabExperiments.Text = "Experiments";
+            this.tabExperiments.UseVisualStyleBackColor = true;
+            // 
+            // evaluatorPanel5
+            // 
+            this.evaluatorPanel5.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.evaluatorPanel5.Location = new System.Drawing.Point(3, 3);
+            this.evaluatorPanel5.Name = "evaluatorPanel5";
+            this.evaluatorPanel5.PanelLanguage = Eval4.DemoCSharp.PanelLanguage.experiments;
+            this.evaluatorPanel5.Size = new System.Drawing.Size(494, 458);
+            this.evaluatorPanel5.TabIndex = 0;
+            // 
+            // TabHeavier
+            // 
+            this.TabHeavier.Controls.Add(this.cbAuto);
+            this.TabHeavier.Controls.Add(this.Label1);
+            this.TabHeavier.Controls.Add(this.PictureBox1);
+            this.TabHeavier.Controls.Add(this.tbExpressionRed);
+            this.TabHeavier.Controls.Add(this.ComboBox1);
+            this.TabHeavier.Controls.Add(this.btnEvaluate2);
+            this.TabHeavier.Controls.Add(this.tbExpressionGreen);
+            this.TabHeavier.Controls.Add(this.Label2);
+            this.TabHeavier.Controls.Add(this.Label3);
+            this.TabHeavier.Controls.Add(this.tbExpressionBlue);
+            this.TabHeavier.Controls.Add(this.Label4);
+            this.TabHeavier.Location = new System.Drawing.Point(4, 22);
+            this.TabHeavier.Name = "TabHeavier";
+            this.TabHeavier.Size = new System.Drawing.Size(500, 464);
+            this.TabHeavier.TabIndex = 1;
+            this.TabHeavier.Text = "heavier evaluation";
             // 
             // cbAuto
             // 
             this.cbAuto.Checked = true;
             this.cbAuto.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbAuto.Location = new System.Drawing.Point(344, 64);
+            this.cbAuto.Location = new System.Drawing.Point(353, 65);
             this.cbAuto.Name = "cbAuto";
             this.cbAuto.Size = new System.Drawing.Size(64, 24);
             this.cbAuto.TabIndex = 10;
@@ -292,7 +423,7 @@ namespace Eval4.DemoCSharp
             // 
             // Label1
             // 
-            this.Label1.Location = new System.Drawing.Point(8, 112);
+            this.Label1.Location = new System.Drawing.Point(28, 107);
             this.Label1.Name = "Label1";
             this.Label1.Size = new System.Drawing.Size(408, 16);
             this.Label1.TabIndex = 9;
@@ -300,7 +431,7 @@ namespace Eval4.DemoCSharp
             // 
             // PictureBox1
             // 
-            this.PictureBox1.Location = new System.Drawing.Point(56, 128);
+            this.PictureBox1.Location = new System.Drawing.Point(89, 167);
             this.PictureBox1.Name = "PictureBox1";
             this.PictureBox1.Size = new System.Drawing.Size(256, 256);
             this.PictureBox1.TabIndex = 8;
@@ -308,7 +439,7 @@ namespace Eval4.DemoCSharp
             // 
             // tbExpressionRed
             // 
-            this.tbExpressionRed.Location = new System.Drawing.Point(56, 32);
+            this.tbExpressionRed.Location = new System.Drawing.Point(65, 33);
             this.tbExpressionRed.Name = "tbExpressionRed";
             this.tbExpressionRed.Size = new System.Drawing.Size(280, 20);
             this.tbExpressionRed.TabIndex = 4;
@@ -318,11 +449,11 @@ namespace Eval4.DemoCSharp
             // ComboBox1
             // 
             this.ComboBox1.Items.AddRange(new object[] {
-														   "Sample1",
-														   "Sample2",
-														   "Sample3",
-														   "Sample4"});
-            this.ComboBox1.Location = new System.Drawing.Point(8, 8);
+            "Sample1",
+            "Sample2",
+            "Sample3",
+            "Sample4"});
+            this.ComboBox1.Location = new System.Drawing.Point(17, 9);
             this.ComboBox1.Name = "ComboBox1";
             this.ComboBox1.Size = new System.Drawing.Size(408, 21);
             this.ComboBox1.TabIndex = 6;
@@ -331,7 +462,7 @@ namespace Eval4.DemoCSharp
             // 
             // btnEvaluate2
             // 
-            this.btnEvaluate2.Location = new System.Drawing.Point(344, 32);
+            this.btnEvaluate2.Location = new System.Drawing.Point(353, 33);
             this.btnEvaluate2.Name = "btnEvaluate2";
             this.btnEvaluate2.Size = new System.Drawing.Size(72, 23);
             this.btnEvaluate2.TabIndex = 5;
@@ -340,7 +471,7 @@ namespace Eval4.DemoCSharp
             // 
             // tbExpressionGreen
             // 
-            this.tbExpressionGreen.Location = new System.Drawing.Point(56, 56);
+            this.tbExpressionGreen.Location = new System.Drawing.Point(65, 57);
             this.tbExpressionGreen.Name = "tbExpressionGreen";
             this.tbExpressionGreen.Size = new System.Drawing.Size(280, 20);
             this.tbExpressionGreen.TabIndex = 4;
@@ -349,7 +480,7 @@ namespace Eval4.DemoCSharp
             // 
             // Label2
             // 
-            this.Label2.Location = new System.Drawing.Point(8, 35);
+            this.Label2.Location = new System.Drawing.Point(17, 36);
             this.Label2.Name = "Label2";
             this.Label2.Size = new System.Drawing.Size(40, 16);
             this.Label2.TabIndex = 9;
@@ -358,7 +489,7 @@ namespace Eval4.DemoCSharp
             // 
             // Label3
             // 
-            this.Label3.Location = new System.Drawing.Point(8, 59);
+            this.Label3.Location = new System.Drawing.Point(17, 60);
             this.Label3.Name = "Label3";
             this.Label3.Size = new System.Drawing.Size(40, 16);
             this.Label3.TabIndex = 9;
@@ -367,7 +498,7 @@ namespace Eval4.DemoCSharp
             // 
             // tbExpressionBlue
             // 
-            this.tbExpressionBlue.Location = new System.Drawing.Point(56, 80);
+            this.tbExpressionBlue.Location = new System.Drawing.Point(65, 81);
             this.tbExpressionBlue.Name = "tbExpressionBlue";
             this.tbExpressionBlue.Size = new System.Drawing.Size(280, 20);
             this.tbExpressionBlue.TabIndex = 4;
@@ -376,36 +507,36 @@ namespace Eval4.DemoCSharp
             // 
             // Label4
             // 
-            this.Label4.Location = new System.Drawing.Point(8, 83);
+            this.Label4.Location = new System.Drawing.Point(17, 84);
             this.Label4.Name = "Label4";
             this.Label4.Size = new System.Drawing.Size(40, 16);
             this.Label4.TabIndex = 9;
             this.Label4.Text = "Blue";
             this.Label4.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
-            // tabPage3
+            // tabDynamic
             // 
-            this.tabPage3.Controls.Add(this.btnEvaluate3);
-            this.tabPage3.Controls.Add(this.LogBox3);
-            this.tabPage3.Controls.Add(this.Label5);
-            this.tabPage3.Controls.Add(this.updownA);
-            this.tabPage3.Controls.Add(this.tbExpression3);
-            this.tabPage3.Controls.Add(this.updownB);
-            this.tabPage3.Controls.Add(this.updownC);
-            this.tabPage3.Controls.Add(this.Label6);
-            this.tabPage3.Controls.Add(this.Label7);
-            this.tabPage3.Controls.Add(this.Label12);
-            this.tabPage3.Controls.Add(this.Label8);
-            this.tabPage3.Controls.Add(this.lblResults3);
-            this.tabPage3.Location = new System.Drawing.Point(4, 22);
-            this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Size = new System.Drawing.Size(424, 396);
-            this.tabPage3.TabIndex = 2;
-            this.tabPage3.Text = "Dynamic Formulas";
+            this.tabDynamic.Controls.Add(this.btnEvaluate3);
+            this.tabDynamic.Controls.Add(this.LogBox3);
+            this.tabDynamic.Controls.Add(this.Label5);
+            this.tabDynamic.Controls.Add(this.updownA);
+            this.tabDynamic.Controls.Add(this.tbExpression3);
+            this.tabDynamic.Controls.Add(this.updownB);
+            this.tabDynamic.Controls.Add(this.updownC);
+            this.tabDynamic.Controls.Add(this.Label6);
+            this.tabDynamic.Controls.Add(this.Label7);
+            this.tabDynamic.Controls.Add(this.Label12);
+            this.tabDynamic.Controls.Add(this.Label8);
+            this.tabDynamic.Controls.Add(this.lblResults3);
+            this.tabDynamic.Location = new System.Drawing.Point(4, 22);
+            this.tabDynamic.Name = "tabDynamic";
+            this.tabDynamic.Size = new System.Drawing.Size(500, 464);
+            this.tabDynamic.TabIndex = 2;
+            this.tabDynamic.Text = "Dynamic Formulas";
             // 
             // btnEvaluate3
             // 
-            this.btnEvaluate3.Location = new System.Drawing.Point(344, 14);
+            this.btnEvaluate3.Location = new System.Drawing.Point(324, 9);
             this.btnEvaluate3.Name = "btnEvaluate3";
             this.btnEvaluate3.Size = new System.Drawing.Size(72, 23);
             this.btnEvaluate3.TabIndex = 19;
@@ -414,17 +545,20 @@ namespace Eval4.DemoCSharp
             // 
             // LogBox3
             // 
-            this.LogBox3.Location = new System.Drawing.Point(8, 182);
+            this.LogBox3.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.LogBox3.Location = new System.Drawing.Point(8, 168);
             this.LogBox3.Multiline = true;
             this.LogBox3.Name = "LogBox3";
             this.LogBox3.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.LogBox3.Size = new System.Drawing.Size(408, 200);
+            this.LogBox3.Size = new System.Drawing.Size(479, 285);
             this.LogBox3.TabIndex = 18;
             this.LogBox3.Text = "Notice how the formula is refreshed only when involved variables are modified.\r\n";
             // 
             // Label5
             // 
-            this.Label5.Location = new System.Drawing.Point(32, 46);
+            this.Label5.Location = new System.Drawing.Point(12, 41);
             this.Label5.Name = "Label5";
             this.Label5.Size = new System.Drawing.Size(88, 20);
             this.Label5.TabIndex = 16;
@@ -433,25 +567,25 @@ namespace Eval4.DemoCSharp
             // 
             // updownA
             // 
-            this.updownA.Location = new System.Drawing.Point(128, 46);
-            this.updownA.Maximum = new System.Decimal(new int[] {
-																	1000,
-																	0,
-																	0,
-																	0});
+            this.updownA.Location = new System.Drawing.Point(108, 41);
+            this.updownA.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
             this.updownA.Name = "updownA";
             this.updownA.Size = new System.Drawing.Size(72, 20);
             this.updownA.TabIndex = 11;
-            this.updownA.Value = new System.Decimal(new int[] {
-																  23,
-																  0,
-																  0,
-																  0});
+            this.updownA.Value = new decimal(new int[] {
+            23,
+            0,
+            0,
+            0});
             this.updownA.ValueChanged += new System.EventHandler(this.updownA_ValueChanged);
             // 
             // tbExpression3
             // 
-            this.tbExpression3.Location = new System.Drawing.Point(128, 14);
+            this.tbExpression3.Location = new System.Drawing.Point(108, 9);
             this.tbExpression3.Name = "tbExpression3";
             this.tbExpression3.Size = new System.Drawing.Size(208, 20);
             this.tbExpression3.TabIndex = 8;
@@ -459,43 +593,43 @@ namespace Eval4.DemoCSharp
             // 
             // updownB
             // 
-            this.updownB.Location = new System.Drawing.Point(128, 78);
-            this.updownB.Maximum = new System.Decimal(new int[] {
-																	1000,
-																	0,
-																	0,
-																	0});
+            this.updownB.Location = new System.Drawing.Point(108, 73);
+            this.updownB.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
             this.updownB.Name = "updownB";
             this.updownB.Size = new System.Drawing.Size(72, 20);
             this.updownB.TabIndex = 9;
-            this.updownB.Value = new System.Decimal(new int[] {
-																  50,
-																  0,
-																  0,
-																  0});
+            this.updownB.Value = new decimal(new int[] {
+            50,
+            0,
+            0,
+            0});
             this.updownB.ValueChanged += new System.EventHandler(this.updownB_ValueChanged);
             // 
             // updownC
             // 
-            this.updownC.Location = new System.Drawing.Point(128, 110);
-            this.updownC.Maximum = new System.Decimal(new int[] {
-																	1000,
-																	0,
-																	0,
-																	0});
+            this.updownC.Location = new System.Drawing.Point(108, 105);
+            this.updownC.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
             this.updownC.Name = "updownC";
             this.updownC.Size = new System.Drawing.Size(72, 20);
             this.updownC.TabIndex = 10;
-            this.updownC.Value = new System.Decimal(new int[] {
-																  150,
-																  0,
-																  0,
-																  0});
+            this.updownC.Value = new decimal(new int[] {
+            150,
+            0,
+            0,
+            0});
             this.updownC.ValueChanged += new System.EventHandler(this.updownC_ValueChanged);
             // 
             // Label6
             // 
-            this.Label6.Location = new System.Drawing.Point(32, 78);
+            this.Label6.Location = new System.Drawing.Point(12, 73);
             this.Label6.Name = "Label6";
             this.Label6.Size = new System.Drawing.Size(88, 20);
             this.Label6.TabIndex = 17;
@@ -504,7 +638,7 @@ namespace Eval4.DemoCSharp
             // 
             // Label7
             // 
-            this.Label7.Location = new System.Drawing.Point(32, 110);
+            this.Label7.Location = new System.Drawing.Point(12, 105);
             this.Label7.Name = "Label7";
             this.Label7.Size = new System.Drawing.Size(88, 20);
             this.Label7.TabIndex = 13;
@@ -513,7 +647,7 @@ namespace Eval4.DemoCSharp
             // 
             // Label12
             // 
-            this.Label12.Location = new System.Drawing.Point(32, 14);
+            this.Label12.Location = new System.Drawing.Point(12, 9);
             this.Label12.Name = "Label12";
             this.Label12.Size = new System.Drawing.Size(88, 20);
             this.Label12.TabIndex = 12;
@@ -522,7 +656,7 @@ namespace Eval4.DemoCSharp
             // 
             // Label8
             // 
-            this.Label8.Location = new System.Drawing.Point(32, 150);
+            this.Label8.Location = new System.Drawing.Point(12, 145);
             this.Label8.Name = "Label8";
             this.Label8.Size = new System.Drawing.Size(88, 20);
             this.Label8.TabIndex = 15;
@@ -531,29 +665,69 @@ namespace Eval4.DemoCSharp
             // 
             // lblResults3
             // 
-            this.lblResults3.Location = new System.Drawing.Point(128, 150);
+            this.lblResults3.Location = new System.Drawing.Point(108, 145);
             this.lblResults3.Name = "lblResults3";
             this.lblResults3.Size = new System.Drawing.Size(288, 20);
             this.lblResults3.TabIndex = 14;
             this.lblResults3.Text = "Label5";
             this.lblResults3.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
+            // panel3
+            // 
+            this.panel3.BackColor = System.Drawing.SystemColors.Info;
+            this.panel3.Controls.Add(this.label11);
+            this.panel3.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panel3.Location = new System.Drawing.Point(5, 5);
+            this.panel3.Name = "panel3";
+            this.panel3.Size = new System.Drawing.Size(508, 53);
+            this.panel3.TabIndex = 9;
+            // 
+            // label11
+            // 
+            this.label11.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label11.Location = new System.Drawing.Point(5, 5);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(498, 43);
+            this.label11.TabIndex = 0;
+            this.label11.Text = "label11";
+            this.label11.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // excelSheet1
+            // 
+            this.excelSheet1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.excelSheet1.Location = new System.Drawing.Point(0, 0);
+            this.excelSheet1.Name = "excelSheet1";
+            this.excelSheet1.Size = new System.Drawing.Size(486, 429);
+            this.excelSheet1.TabIndex = 2;
+            // 
             // Form1
             // 
             this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
-            this.ClientSize = new System.Drawing.Size(442, 432);
+            this.ClientSize = new System.Drawing.Size(518, 553);
             this.Controls.Add(this.TabControl1);
-            this.DockPadding.All = 5;
+            this.Controls.Add(this.panel3);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Name = "Form1";
             this.Text = "Expression Evaluator 100% managed .net  (C# Version)";
             this.TabControl1.ResumeLayout(false);
-            this.TabPage1.ResumeLayout(false);
-            this.TabPage2.ResumeLayout(false);
-            this.tabPage3.ResumeLayout(false);
+            this.tabVB.ResumeLayout(false);
+            this.tabCSharp.ResumeLayout(false);
+            this.tabExcel.ResumeLayout(false);
+            this.tabControl2.ResumeLayout(false);
+            this.tabSheet1.ResumeLayout(false);
+            this.tabSheet2.ResumeLayout(false);
+            this.tabSheet3.ResumeLayout(false);
+            this.tabMatlab.ResumeLayout(false);
+            this.tabExperiments.ResumeLayout(false);
+            this.TabHeavier.ResumeLayout(false);
+            this.TabHeavier.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.PictureBox1)).EndInit();
+            this.tabDynamic.ResumeLayout(false);
+            this.tabDynamic.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.updownA)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.updownB)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.updownC)).EndInit();
+            this.panel3.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -584,47 +758,12 @@ namespace Eval4.DemoCSharp
 
         private void btnEvaluate_Click(object sender, System.EventArgs e)
         {
-            Eval4.Core.IHasValue lCode = null;
-            try
-            {
-                TextBox2.AppendText((tbExpression.Text + "\r\n"));
-                Timer t = new Timer();
-                lCode = ev.Parse(tbExpression.Text);
-                TextBox2.AppendText(("Parsed in "
-                    + (t.ms() + (" ms" + "\r\n"))));
-            }
-            catch (Exception ex)
-            {
-                TextBox2.AppendText((ex.Message + "\r\n"));
-                return;
-            }
-            try
-            {
-                Timer t = new Timer();
-                object res = lCode.ObjectValue;
-                TextBox2.AppendText(("Run in "
-                    + (t.ms() + (" ms" + "\r\n"))));
-                if ((res == null))
-                {
-                    TextBox2.AppendText(("Result=" + "\r\n"));
-                }
-                else
-                {
-                    TextBox2.AppendText(("Result="
-                        + (VbEvaluator.ConvertToString(res) + (" ("
-                        + (res.GetType().Name + (")" + "\r\n"))))));
-                }
-            }
-            catch (Exception ex)
-            {
-                TextBox2.AppendText((ex.Message + "\r\n"));
-            }
-            TextBox2.AppendText("\r\n");
+
         }
 
         private void cbSamples_SelectedIndexChanged(object sender, System.EventArgs e)
         {
-            tbExpression.Text = cbSamples.Text;
+            //tbExpression.Text = cbSamples.Text;
             btnEvaluate_Click(sender, e);
         }
 
@@ -671,9 +810,9 @@ namespace Eval4.DemoCSharp
                         try
                         {
 
-                            r = (double)lCodeR.ObjectValue;
-                            g = (double)lCodeG.ObjectValue;
-                            b = (double)lCodeB.ObjectValue;
+                            r = Convert.ToDouble(lCodeR.ObjectValue);
+                            g = Convert.ToDouble(lCodeG.ObjectValue);
+                            b = Convert.ToDouble(lCodeB.ObjectValue);
 
                             if (((r < 0)
                                 || double.IsNaN(r)))
@@ -797,6 +936,28 @@ namespace Eval4.DemoCSharp
         private void updownC_ValueChanged(object sender, System.EventArgs e)
         {
             C.Value = (double)updownC.Value;
+        }
+
+        private void TabControl1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (TabControl1.SelectedTab == tabCSharp)
+            {
+            }
+            else if (TabControl1.SelectedTab == tabCSharp)
+            {
+            }
+            else if (TabControl1.SelectedTab == tabCSharp)
+            {
+            }
+            else if (TabControl1.SelectedTab == tabCSharp)
+            {
+            }
+            else if (TabControl1.SelectedTab == tabCSharp)
+            {
+            }
+            else if (TabControl1.SelectedTab == tabCSharp)
+            {
+            }
         }
 
     }

@@ -5,6 +5,403 @@ using System.Reflection;
 
 namespace Eval4.Core
 {
+    class TypedExpressions
+    {
+        public static TypedExpr Create<P1, P2, T>(IHasValue p1, IHasValue p2, Func<P1, P2, T> func)
+        {
+            if (!CanConvert(p1, typeof(P1))) return null;
+            if (!CanConvert(p2, typeof(P2))) return null;
+            return new TypedExpr<P1, P2, T>(ChangeType<P1>(p1), ChangeType<P2>(p2), func);
+        }
+
+        private static bool CanConvert(IHasValue actual, Type targetType)
+        {
+            var actualType = actual.SystemType;
+            if (targetType == actualType) return true;
+            if (targetType.IsAssignableFrom(actualType)) return true;
+            if (targetType == typeof(int)) return DelegatedExpr.IsIntOrSmaller(actualType);
+            if (targetType == typeof(double)) return DelegatedExpr.IsDoubleOrSmaller(actualType);
+            if (targetType == typeof(string)) return true;
+            return false;
+        }
+
+        public static TypedExpr Create<P1, T>(IHasValue p1, Func<P1, T> func)
+        {
+            if(!CanConvert(p1,typeof(P1))) return null;
+            return new TypedExpr<P1, T>(ChangeType<P1>(p1), func);
+        }
+
+        public static IHasValue<P> ChangeType<P>(IHasValue p)
+        {
+            if (!(p is IHasValue<P>))
+            {                
+                p = new ChangeTypeExpr<P>(p);
+            }
+            return (IHasValue<P>)p;
+        }
+
+        public static IHasValue ChangeType(IHasValue expr, Type newType)
+        {
+            if (expr.SystemType == newType) return (IHasValue)expr;
+
+            var t = typeof(ChangeTypeExpr<>).MakeGenericType(newType);
+
+            var i = (TypedExpr)Activator.CreateInstance(t);
+            i.SetP1((IHasValue)expr);
+            return i;
+        }
+
+        private static TypedExpr CompareToExpr<T>(IHasValue p1, IHasValue p2, TokenType tt)
+        {
+
+            switch (tt)
+            {
+                case TokenType.operator_gt:
+                    return TypedExpressions.Create<T, T, bool>(p1, p2, (a, b) => { return ((IComparable<T>)a).CompareTo(b) > 0; });
+                case TokenType.operator_ge:
+                    return TypedExpressions.Create<T, T, bool>(p1, p2, (a, b) => { return ((IComparable<T>)a).CompareTo(b) >= 0; });
+                case TokenType.operator_eq:
+                    return TypedExpressions.Create<T, T, bool>(p1, p2, (a, b) => { return ((IComparable<T>)a).CompareTo(b) == 0; });
+                case TokenType.operator_le:
+                    return TypedExpressions.Create<T, T, bool>(p1, p2, (a, b) => { return ((IComparable<T>)a).CompareTo(b) <= 0; });
+                case TokenType.operator_lt:
+                    return TypedExpressions.Create<T, T, bool>(p1, p2, (a, b) => { return ((IComparable<T>)a).CompareTo(b) < 0; });
+                case TokenType.operator_ne:
+                    return TypedExpressions.Create<T, T, bool>(p1, p2, (a, b) => { return ((IComparable<T>)a).CompareTo(b) != 0; });
+                default:
+                    throw new InvalidOperationException();
+            }
+        }
+
+        internal static IHasValue BinaryExpr(Parser parser, IHasValue ValueLeft, TokenType tt, IHasValue ValueRight)
+        {
+            var result = InternalBinaryExpr(parser, ValueLeft, tt, ValueRight);
+            if (string.IsNullOrEmpty(result.ShortName))
+            {
+                result.ShortName = tt.ToString();
+            }
+            return result;
+        }
+
+        internal static TypedExpr InternalBinaryExpr(Parser parser, IHasValue ValueLeft, TokenType tt, IHasValue ValueRight)
+        {
+            Type v1Type = ValueLeft.SystemType;
+            Type v2Type = ValueRight.SystemType;
+            TypedExpr result = null;
+
+            switch (tt)
+            {
+                case TokenType.operator_plus:
+                    result = TypedExpressions.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a + b; })
+                        ?? TypedExpressions.Create<DateTime, double, DateTime>(ValueLeft, ValueRight, (a, b) => { return a.AddDays(b); })
+                        ?? TypedExpressions.Create<double, DateTime, DateTime>(ValueLeft, ValueRight, (a, b) => { return b.AddDays(a); })
+                        ?? TypedExpressions.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a + b; })
+                        ?? TypedExpressions.Create<string, string, string>(ValueLeft, ValueRight, (a, b) => { return a + b; });
+                    break;
+                case TokenType.operator_minus:
+                    result = TypedExpressions.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a - b; })
+                        ?? TypedExpressions.Create<DateTime, double, DateTime>(ValueLeft, ValueRight, (a, b) => { return a.AddDays(-b); })
+                        ?? TypedExpressions.Create<DateTime, DateTime, double>(ValueLeft, ValueRight, (a, b) => { return a.Subtract(b).TotalDays; })
+                        ?? TypedExpressions.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a - b; });
+                    break;
+
+                case TokenType.operator_mul:
+                    result = TypedExpressions.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a * b; })
+                        ?? TypedExpressions.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a * b; });
+                    break;
+
+                case TokenType.operator_div:
+                    result = TypedExpressions.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a / b; });
+                    break;
+
+                case TokenType.operator_mod:
+                    result = TypedExpressions.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a % b; })
+                        ?? TypedExpressions.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a % b; });
+                    break;
+                case TokenType.operator_and:
+                    result = TypedExpressions.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a & b; })
+                        ?? TypedExpressions.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a & b; });
+                    break;
+
+                case TokenType.operator_or:
+                    result = TypedExpressions.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a | b; })
+                        ?? TypedExpressions.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a | b; });
+                    break;
+
+                case TokenType.operator_xor:
+                    result = TypedExpressions.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a ^ b; })
+                        ?? TypedExpressions.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a ^ b; });
+                    break;
+
+                case TokenType.operator_andalso:
+                    result = TypedExpressions.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a && b; });
+                    break;
+
+                case TokenType.operator_orelse:
+                    result = TypedExpressions.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a || b; });
+                    break;
+
+                case TokenType.operator_eq:
+                    result = TypedExpressions.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a == b; })
+                        ?? TypedExpressions.Create<int, int, bool>(ValueLeft, ValueRight, (a, b) => { return a == b; })
+                        ?? TypedExpressions.Create<string, string, bool>(ValueLeft, ValueRight, (a, b) => { return a == b; })
+                        ?? TypedExpressions.Create<double, double, bool>(ValueLeft, ValueRight, (a, b) => { return a == b; })
+                        ?? TypedExpressions.Create<object, object, bool>(ValueLeft, ValueRight, (a, b) => { return a.Equals(b); });
+                    break;
+                case TokenType.operator_ne:
+                    result = TypedExpressions.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a != b; })
+                        ?? TypedExpressions.Create<int, int, bool>(ValueLeft, ValueRight, (a, b) => { return a != b; })
+                        ?? TypedExpressions.Create<string, string, bool>(ValueLeft, ValueRight, (a, b) => { return a != b; })
+                        ?? TypedExpressions.Create<double, double, bool>(ValueLeft, ValueRight, (a, b) => { return a != b; })
+                        ?? TypedExpressions.Create<object, object, bool>(ValueLeft, ValueRight, (a, b) => { return !a.Equals(b); });
+                    break;
+                case TokenType.operator_ge:
+                case TokenType.operator_gt:
+                case TokenType.operator_le:
+                case TokenType.operator_lt:
+                    result = CompareToExpr<int>(ValueLeft, ValueRight, tt)
+                        ?? CompareToExpr<double>(ValueLeft, ValueRight, tt)
+                        ?? CompareToExpr<bool>(ValueLeft, ValueRight, tt)
+                        ?? CompareToExpr<string>(ValueLeft, ValueRight, tt)
+                        ?? CompareToExpr<object>(ValueLeft, ValueRight, tt);
+                    break;
+            }
+            if (result != null) return result;
+            throw parser.NewParserException("Cannot apply the operator " + tt.ToString().Replace("operator_", "") + " on " + v1Type.ToString() + " and " + v2Type.ToString());
+        }
+
+
+        internal static IHasValue UnaryExpr(Parser parser, TokenType tt, IHasValue ValueLeft)
+        {
+            var v1Type = ValueLeft.SystemType;
+            TypedExpr result = null;
+
+            switch (tt)
+            {
+                case TokenType.operator_not:
+                    result = TypedExpressions.Create<bool, bool>(ValueLeft, (a) => { return !a; })
+                        ?? TypedExpressions.Create<int, int>(ValueLeft, (a) => { return ~a; });
+                    break;
+                case TokenType.operator_minus:
+                    result =  TypedExpressions.Create<int, int>(ValueLeft, (a) => { return -a; })
+                        ?? TypedExpressions.Create<double, double>(ValueLeft, (a) => { return -a; });
+                    break;
+                case TokenType.operator_plus:
+                    if (DelegatedExpr.IsIntOrSmaller(v1Type)) return ValueLeft;
+                    else if (DelegatedExpr.IsDoubleOrSmaller(v1Type)) return ValueLeft;
+                    break;
+            }
+            if (result != null) return result;
+            throw parser.NewParserException("Invalid operator " + tt.ToString().Replace("operator_", ""));
+        }
+    }
+
+    public interface ISetP1 : IHasValue
+    {
+        void SetP1(IHasValue p1);
+    }
+
+    public interface ISetP2 : IHasValue
+    {
+        void SetP2(IHasValue p2);
+    }
+
+    public class ChangeTypeExpr<T> : ISetP1, IHasValue<T>
+    {
+        internal IHasValue mP1;
+
+        public ChangeTypeExpr()
+        {
+        }
+
+        public ChangeTypeExpr(IHasValue p1)
+        {
+            mP1 = p1;
+            mP1.ValueChanged += mP1_ValueChanged;
+        }
+
+        void mP1_ValueChanged(object sender, EventArgs e)
+        {
+            if (ValueChanged != null) ValueChanged(sender, e);
+        }
+
+        public object ObjectValue
+        {
+            get { return Value; }
+        }
+
+        public event ValueChangedEventHandler ValueChanged;
+
+        public Type SystemType
+        {
+            get { return typeof(T); }
+        }
+
+        public T Value
+        {
+            get
+            {
+                return (T)System.Convert.ChangeType(mP1.ObjectValue, typeof(T));
+            }
+        }
+
+        public IEnumerable<Dependency> Dependencies
+        {
+            get
+            {
+                yield return new Dependency("p1", mP1);
+            }
+        }
+
+
+        public string ShortName
+        {
+            get { return "ChangeType"; }
+        }
+
+
+        public void SetP1(IHasValue p1)
+        {
+            mP1 = p1;
+            p1.ValueChanged += mP1_ValueChanged;
+        }
+    }
+
+    public abstract class TypedExpr : IHasValue, ISetP1, ISetP2
+    {
+
+        public abstract object ObjectValue { get; }
+
+        public event ValueChangedEventHandler ValueChanged;
+
+        public abstract Type SystemType { get; }
+
+        public string ShortName { get; set; }
+
+        public abstract IEnumerable<Dependency> Dependencies { get; }
+
+        internal void RaiseValueChanged(object sender, EventArgs e)
+        {
+            if (ValueChanged != null) ValueChanged(sender, e);
+        }
+
+        public abstract void SetP1(IHasValue newP1);
+        public abstract void SetP2(IHasValue newP2);
+    }
+
+    public class TypedExpr<P1, P2, T> : TypedExpr, IHasValue<T>
+    {
+        private IHasValue<P1> mP1;
+        private IHasValue<P2> mP2;
+        private Func<P1, P2, T> mFunc;
+
+        public TypedExpr(IHasValue<P1> p1, IHasValue<P2> p2, Func<P1, P2, T> func)
+        {
+            mP1 = p1;
+            mP2 = p2;
+            mFunc = func;
+            mP1.ValueChanged += mP_ValueChanged;
+            mP2.ValueChanged += mP_ValueChanged;
+        }
+
+        void mP_ValueChanged(object sender, EventArgs e)
+        {
+            base.RaiseValueChanged(sender, e);
+        }
+
+
+        public override object ObjectValue
+        {
+            get
+            {
+                return mFunc(mP1.Value, mP2.Value);
+            }
+        }
+
+        public override Type SystemType
+        {
+            get { return typeof(T); }
+        }
+
+        public T Value
+        {
+            get { return mFunc(mP1.Value, mP2.Value); }
+        }
+
+
+        public override IEnumerable<Dependency> Dependencies
+        {
+            get
+            {
+                yield return new Dependency("P1", mP1);
+                yield return new Dependency("P2", mP2);
+            }
+        }
+
+        public override void SetP1(IHasValue newP1)
+        {
+            mP1 = (IHasValue<P1>)newP1;
+        }
+
+        public override void SetP2(IHasValue newP2)
+        {
+            mP2 = (IHasValue<P2>)newP2;
+        }
+    }
+
+    public class TypedExpr<P1, T> : TypedExpr, IHasValue<T>
+    {
+        private IHasValue<P1> mP1;
+        private Func<P1, T> mFunc;
+
+        public TypedExpr(IHasValue<P1> p1, Func<P1, T> func)
+        {
+            mP1 = p1;
+            mFunc = func;
+            mP1.ValueChanged += mP_ValueChanged;
+        }
+
+        void mP_ValueChanged(object Sender, EventArgs e)
+        {
+            if (ValueChanged != null) ValueChanged(Sender, e);
+        }
+
+        public event ValueChangedEventHandler ValueChanged;
+
+        public T Value
+        {
+            get { return mFunc(mP1.Value); }
+        }
+
+        public override object ObjectValue
+        {
+            get { return mFunc(mP1.Value); }
+        }
+
+        public override Type SystemType
+        {
+            get { return typeof(T); }
+        }
+
+        public override IEnumerable<Dependency> Dependencies
+        {
+            get
+            {
+                yield return new Dependency("p1", mP1);
+            }
+        }
+
+        public override void SetP1(IHasValue newP1)
+        {
+            mP1 = (IHasValue<P1>)newP1;
+        }
+
+        public override void SetP2(IHasValue newP2)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     public abstract class DelegatedExpr : IHasValue
     {
 
