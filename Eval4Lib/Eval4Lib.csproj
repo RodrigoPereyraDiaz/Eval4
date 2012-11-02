@@ -35,6 +35,7 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Core\Token.cs" />
     <Compile Include="Core\TypedExpr.cs" />
     <Compile Include="Core\Variable.cs" />
     <Compile Include="CSharpEvaluator.cs" />

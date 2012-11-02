@@ -23,7 +23,7 @@ namespace Eval4.Core
         {
             var result = NewToken();
             result.Type = type;
-            if (value != null) result.Value = value;
+            if (value != null) result.ValueString = value;
             return result;
         }
 
@@ -59,12 +59,21 @@ namespace Eval4.Core
             }
         }
 
-        public IHasValue Parse(string str)
+        public IHasValue Parse(string formula, bool stringTemplate = false)
         {
-            if (str == null)
-                str = string.Empty;
-            var p = new Parser(this, str);
-            return p.ParsedExpression;
+            if (formula == null)
+                formula = string.Empty;
+
+            IHasValue parsed;
+            var dict = (stringTemplate ? mTemplates : mExpressions);
+            if (!dict.TryGetValue(formula, out parsed))
+            {
+                var p = new Parser(this, formula, stringTemplate);
+                parsed = p.ParsedExpression;
+                dict[formula] = parsed;
+                if (dict.Count > 100) dict.Clear(); //  I know this is crude
+            }
+            return parsed;
         }
 
 
@@ -122,18 +131,26 @@ namespace Eval4.Core
         }
 
         Dictionary<string, IHasValue> mExpressions = new Dictionary<string, IHasValue>();
+        Dictionary<string, IHasValue> mTemplates = new Dictionary<string, IHasValue>();
 
         public object Eval(string formula)
         {
-            IHasValue parsed;
-            if (!mExpressions.TryGetValue(formula, out parsed))
-            {
-                parsed = Parse(formula);
-                mExpressions[formula] = parsed;
-                if (mExpressions.Count > 1000) mExpressions.Clear(); //  I know this is crude
-            }
+            IHasValue parsed = Parse(formula);
             return parsed.ObjectValue;
         }
+
+        public string EvalTemplate(string template)
+        {
+            IHasValue parsed = ParseTemplate(template);
+            return parsed.ObjectValue.ToString();
+        }
+
+        public IHasValue ParseTemplate(string template)
+        {
+            IHasValue parsed = Parse(template, stringTemplate: true);
+            return parsed;
+        }
+            
 
         public void SetVariable<T>(string variableName, T variableValue)
         {
@@ -297,12 +314,12 @@ namespace Eval4.Core
                     return result;
 
                 case TokenType.Value_string:
-                    result = new ConstantExpr<string>(token.Value);
+                    result = new ConstantExpr<string>(token.ValueString);
                     parser.NextToken();
                     return result;
 
                 case TokenType.Value_number:
-                    string valueString = token.Value;
+                    string valueString = token.ValueString;
                     int intValue;
                     double doubleValue;
                     if (int.TryParse(valueString, out intValue))
@@ -315,7 +332,7 @@ namespace Eval4.Core
                     }
                     else
                     {
-                        throw parser.NewParserException(string.Format("Invalid number {0}", parser.mCurToken.Value));
+                        throw parser.NewParserException(string.Format("Invalid number {0}", parser.mCurToken.ValueString));
                     }
                     parser.NextToken();
                     return result;
@@ -323,13 +340,13 @@ namespace Eval4.Core
                 case TokenType.Value_date:
                     try
                     {
-                        result = new ConstantExpr<DateTime>(DateTime.Parse(parser.mCurToken.Value));
+                        result = new ConstantExpr<DateTime>(DateTime.Parse(parser.mCurToken.ValueString));
                         parser.NextToken();
                         return result;
                     }
                     catch (Exception) // ex)
                     {
-                        throw parser.NewParserException(string.Format("Invalid date {0}, it should be #DD/MM/YYYY hh:mm:ss#", parser.mCurToken.Value));
+                        throw parser.NewParserException(string.Format("Invalid date {0}, it should be #DD/MM/YYYY hh:mm:ss#", parser.mCurToken.ValueString));
                     }
 
                 case TokenType.open_parenthesis:

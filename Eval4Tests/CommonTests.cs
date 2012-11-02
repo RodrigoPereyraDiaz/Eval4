@@ -36,6 +36,18 @@ namespace Eval4.CSharpTests
             TestFormula(evVB, formula, expectedResult);
         }
 
+        private void TestTemplate(string formula, string expectedResult)
+        {
+            TestTemplate(evCSharp, formula, expectedResult);
+            formula = formula.Replace("[", "(").Replace("]", ")");
+            TestTemplate(evVB, formula, expectedResult);
+        }
+
+        private void TestTemplate(Core.Evaluator ev, string formula, string expectedResult)
+        {
+            string result = ev.EvalTemplate(formula);
+            Assert.AreEqual(expectedResult, result, "Template " + formula);
+        }
 
         [TestMethod]
         public void TestDecimal()
@@ -52,5 +64,12 @@ namespace Eval4.CSharpTests
         {
             TestFormula("-1.5*-2.5", -1.5 * -2.5);
         }
+
+        [TestMethod]
+        public void TestTemplate()
+        {
+            TestTemplate("<p>Hello</p>", "<p>Hello</p>");
+        }
+
     }
 }

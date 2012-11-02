@@ -5,31 +5,7 @@ using System.Text;
 
 namespace Eval4.Core
 {
-    public class Token
-    {
-        public Token()
-        {
-        }
-
-        public TokenType Type { get; set; }
-        public String Value { get; set; }
-
-        public override string ToString()
-        {
-            return Type.ToString() + " " + Value;
-        }
-    }
-
-    public class Token<T> : Token
-    {
-        public Token()
-        {
-        }
-
-        public T CustomType { get; set; }
-
-    }
-
+ 
     public class Parser
     {
         internal Evaluator mEvaluator;
@@ -70,7 +46,7 @@ namespace Eval4.Core
             {
                 msg += "; ";
             }
-            if (string.IsNullOrEmpty(mCurToken.Value))
+            if (string.IsNullOrEmpty(mCurToken.ValueString))
                 throw NewParserException(msg + "Unexpected character '" + mCurChar + "'");
             else
                 throw NewParserException(msg + "Unexpected " + mCurToken.ToString());
@@ -151,6 +127,7 @@ namespace Eval4.Core
                 OriginalChar = mCurChar;
                 NextChar();
             }
+            List<object> bits = new List<object>();
 
             while (mCurChar != '\0')
             {
@@ -211,9 +188,19 @@ namespace Eval4.Core
                     NextChar();
                 }
             }
+
             if (InQuote)
             {
                 throw NewParserException("Incomplete string, missing " + OriginalChar + "; String started");
+            }
+            if (sb.Length > 0 && bits.Count>0) {
+                bits.Add(sb.ToString());
+                sb.Length = 0;
+                foreach (object o in bits)
+                {
+                    if (o is string) sb.Append(o as string);
+                    else sb.Append((o as IHasValue).ObjectValue);
+                }
             }
             return mEvaluator.NewToken(TokenType.Value_string, sb.ToString());
         }
@@ -232,7 +219,7 @@ namespace Eval4.Core
 
         public IHasValue ParsedExpression { get { return mParsedExpression; } }
 
-        public Parser(Evaluator evaluator, string source)
+        public Parser(Evaluator evaluator, string source, bool sourceIsTextTemplate=false)
         {
             mEvaluator = evaluator;
             mString = source;
@@ -241,7 +228,9 @@ namespace Eval4.Core
             // start the machine
             NextChar();
             NextToken();
-            IHasValue res = ParseExpr(null, 0);
+            IHasValue res;
+            if (sourceIsTextTemplate) res = ParseTemplate();
+            else res = ParseExpr(null, 0);
             if (mCurToken.Type == TokenType.end_of_formula)
             {
                 if (res == null)
@@ -253,6 +242,12 @@ namespace Eval4.Core
                 throw NewUnexpectedToken();
             }
 
+        }
+
+        private IHasValue ParseTemplate()
+        {
+            var token = ParseString(false);
+            return (IHasValue)token.ValueObject;
         }
 
         internal IHasValue ParseExpr(IHasValue Acc, int precedence)
@@ -398,9 +393,6 @@ namespace Eval4.Core
                         throw NewUnexpectedToken(mi.MemberType.ToString() + " members are not supported");
                 }
                 var res = GetNewCallMethodExpr(resultType, @base, mi, parameters);
-                if (typeof(IHasValue).IsAssignableFrom(res.SystemType))
-                {
-                }
                 return res;
             }
             if (@base is IVariableBag && (parameters == null || parameters.Count == 0))
@@ -562,7 +554,7 @@ namespace Eval4.Core
             List<IHasValue> parameters = null;
             // parameters... 
             //Dim types As New ArrayList
-            string func = mCurToken.Value;
+            string func = mCurToken.ValueString;
             NextToken();
             bool isBrackets = false;
             Type resultType;
