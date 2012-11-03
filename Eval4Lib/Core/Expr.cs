@@ -28,14 +28,14 @@ namespace Eval4.Core
 
         public static TypedExpr Create<P1, T>(IHasValue p1, Func<P1, T> func)
         {
-            if(!CanConvert(p1,typeof(P1))) return null;
+            if (!CanConvert(p1, typeof(P1))) return null;
             return new TypedExpr<P1, T>(ChangeType<P1>(p1), func);
         }
 
         public static IHasValue<P> ChangeType<P>(IHasValue p)
         {
             if (!(p is IHasValue<P>))
-            {                
+            {
                 p = new ChangeTypeExpr<P>(p);
             }
             return (IHasValue<P>)p;
@@ -184,7 +184,7 @@ namespace Eval4.Core
                         ?? TypedExpressions.Create<int, int>(ValueLeft, (a) => { return ~a; });
                     break;
                 case TokenType.OperatorMinus:
-                    result =  TypedExpressions.Create<int, int>(ValueLeft, (a) => { return -a; })
+                    result = TypedExpressions.Create<int, int>(ValueLeft, (a) => { return -a; })
                         ?? TypedExpressions.Create<double, double>(ValueLeft, (a) => { return -a; });
                     break;
                 case TokenType.OperatorPlus:
@@ -756,12 +756,19 @@ namespace Eval4.Core
 
         public override IEnumerable<Dependency> Dependencies
         {
-            get { throw new NotImplementedException(); }
+            get
+            {
+                yield return new Dependency("Array", mArray);
+                for (int i = 0; i < mValues.Length; i++)
+                {
+                    yield return new Dependency("P" + i, mParams[i]);
+                }
+            }
         }
 
         public override string ShortName
         {
-            get { throw new NotImplementedException(); }
+            get { return "ArrayEntry[]"; }
         }
     }
 
@@ -801,12 +808,18 @@ namespace Eval4.Core
 
         public override IEnumerable<Dependency> Dependencies
         {
-            get { throw new NotImplementedException(); }
+            get
+            {
+                yield return new Dependency("if", ifExpr);
+                yield return new Dependency("then ", thenExpr);
+                yield return new Dependency("else", elseExpr);
+
+            }
         }
 
         public override string ShortName
         {
-            get { throw new NotImplementedException(); }
+            get { return "OperatorIf"; }
         }
     }
 }

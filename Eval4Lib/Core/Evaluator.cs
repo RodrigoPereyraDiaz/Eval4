@@ -9,13 +9,29 @@ namespace Eval4.Core
         public bool RaiseVariableNotFoundException;
         protected VariableBag mVariableBag;
         public abstract int GetPrecedence(Token token, bool unary);
-        internal Dictionary<TokenType, List<Declaration>> mDeclarations;
-        internal Dictionary<TypePair, Declaration> mCasts;
+        internal Dictionary<TokenType, List<Declaration>> mBinaryDeclarations;
+        internal Dictionary<TokenType, List<Declaration>> mUnaryDeclarations;
+        internal Dictionary<TypePair, Declaration> mImplicitCasts;
+        internal Dictionary<TypePair, Declaration> mExplicitCasts;
 
-        internal class TypePair
+        internal class TypePair : IEquatable<TypePair>
         {
             public Type Actual;
             public Type Target;
+            public override string ToString()
+            {
+                return "(" + Target.Name + ")" + Actual.Name;
+            }
+
+            public bool Equals(TypePair other)
+            {
+                return other.Actual == this.Actual && other.Target == this.Target;
+            }
+
+            public override int GetHashCode()
+            {
+                return Actual.GetHashCode() ^ Target.GetHashCode();
+            }
         }
         public Evaluator()
         {
@@ -28,9 +44,10 @@ namespace Eval4.Core
         protected virtual List<TypeHandler> GetTypeHandlers()
         {
             var typeHandlers = new List<TypeHandler>();
+            typeHandlers.Add(new BoolTypeHandler());
             typeHandlers.Add(new IntTypeHandler());
-            typeHandlers.Add(new DateTimeTypeHandler());
             typeHandlers.Add(new DoubleTypeHandler());
+            typeHandlers.Add(new DateTimeTypeHandler());
             typeHandlers.Add(new StringTypeHandler());
             typeHandlers.Add(new ObjectTypeHandler());
             return typeHandlers;
@@ -38,8 +55,10 @@ namespace Eval4.Core
 
         protected virtual void CompileTypeHandlers(List<TypeHandler> typeHandlers)
         {
-            mDeclarations = new Dictionary<TokenType, List<Declaration>>();
-            mCasts = new Dictionary<TypePair, Declaration>();
+            mUnaryDeclarations = new Dictionary<TokenType, List<Declaration>>();
+            mBinaryDeclarations = new Dictionary<TokenType, List<Declaration>>();
+            mImplicitCasts = new Dictionary<TypePair, Declaration>();
+            mExplicitCasts = new Dictionary<TypePair, Declaration>();
             foreach (var th in typeHandlers)
             {
                 foreach (var decl in th.mDeclarations)
@@ -49,19 +68,21 @@ namespace Eval4.Core
                     {
                         var typePair = new TypePair() { Actual = decl.P1, Target = decl.T };
                         Declaration curDecl;
-                        if (!mCasts.TryGetValue(typePair, out curDecl) ||
+                        var casts = (tk == TokenType.ImplicitCast ? mImplicitCasts : mExplicitCasts);
+                        if (!casts.TryGetValue(typePair, out curDecl) ||
                             (curDecl.tk == TokenType.ExplicitCast && decl.tk == TokenType.ImplicitCast))
                         {
-                            mCasts[typePair] = decl;
+                            casts[typePair] = decl;
                         }
                     }
-                    else
+                    else 
                     {
+                        var declarations = (decl.P2 == null ? mUnaryDeclarations: mBinaryDeclarations);
                         List<Declaration> tokenDeclarations;
-                        if (!mDeclarations.TryGetValue(tk, out tokenDeclarations))
+                        if (!declarations.TryGetValue(tk, out tokenDeclarations))
                         {
                             tokenDeclarations = new List<Declaration>();
-                            mDeclarations[tk] = tokenDeclarations;
+                            declarations[tk] = tokenDeclarations;
                         }
                         tokenDeclarations.Add(decl);
                     }
@@ -330,16 +351,16 @@ namespace Eval4.Core
                     return NewToken(TokenType.CloseBracket);
                 default:
                     if (parser.mCurChar >= '0' && parser.mCurChar <= '9') return parser.ParseNumber();
-                    else return parser.ParseIdentifierOrKeyword();
+                    else if (IsIdentifierFirstLetter(parser.mCurChar)) return parser.ParseIdentifierOrKeyword();
+                    break;
             }
-            throw new InvalidProgramException();
+            throw parser.NewParserException("Unexpected character " + parser.mCurChar);
         }
 
         public virtual IHasValue ParseLeft(Parser parser, Token token, int precedence)
         {
 
             IHasValue result = null;
-            int opPrecedence = GetPrecedence(token, unary: true);
 
             switch (token.Type)
             {
@@ -348,6 +369,7 @@ namespace Eval4.Core
                 case TokenType.OperatorNot:
                     // unary minus operator
                     parser.NextToken();
+                    int opPrecedence = GetPrecedence(token, unary: true);
                     result = parser.ParseExpr(null, opPrecedence);
                     result = TypedExpressions.UnaryExpr(parser, token.Type, result);
                     return result;
@@ -433,72 +455,94 @@ namespace Eval4.Core
         {
             var tt = tk.Type;
             IHasValue ValueRight;
-            switch (tt)
+            parser.NextToken();
+            ValueRight = parser.ParseExpr(ValueLeft, opPrecedence);
+            if (!FindOperation(ref ValueLeft, tt, ValueRight))
             {
-                case TokenType.OperatorPlus:
-                case TokenType.OperatorMinus:
-                case TokenType.OperatorConcat:
-                case TokenType.OperatorMultiply:
-                case TokenType.OperatorDivide:
-                case TokenType.OperatorOr:
-                case TokenType.OperatorOrElse:
-                case TokenType.OperatorAnd:
-                case TokenType.OperatorAndAlso:
-                case TokenType.OperatorXor:
-                case TokenType.OperatorModulo:
-                case TokenType.OperatorNE:
-                case TokenType.OperatorGT:
-                case TokenType.OperatorGE:
-                case TokenType.OperatorEQ:
-                case TokenType.OperatorLE:
-                case TokenType.OperatorLT:
-                    parser.NextToken();
-                    ValueRight = parser.ParseExpr(ValueLeft, opPrecedence);
-                                yield return new Dependency("p1", mP1);
-        //ValueLeft = TypedExpressions.BinaryExpr(parser, ValueLeft, tt, ValueRight);
-                    ValueLeft = FindOperation(ValueLeft, tt, ValueRight);
-                    return true;
-                //case TokenType.Operator_percent:
-                //    parser.NextToken();
-                //    ValueLeft = TypedExpr.BinaryExpr(parser, ValueLeft, tt, Acc);
-                //    return true;
-                default:
-                    return false;
+                throw parser.NewParserException(string.Format("Cannot find operation {0} {1} {2}", ValueLeft.SystemType, tt, ValueRight.SystemType));
             }
+            return true;
         }
 
-        private IHasValue FindOperation(IHasValue ValueLeft, TokenType tt, IHasValue ValueRight)
+        private bool FindOperation(ref IHasValue ValueLeft, TokenType tt, IHasValue ValueRight)
         {
             var leftType = ValueLeft.SystemType;
             var rightType = ValueRight.SystemType;
             List<Declaration> declarations;
-            if (this.mDeclarations.TryGetValue(tt, out declarations))
+            if (this.mBinaryDeclarations.TryGetValue(tt, out declarations))
             {
                 foreach (var decl in declarations)
                 {
                     Declaration cast1, cast2;
                     if (CanCast(ValueLeft.SystemType, decl.P1, out cast1) && CanCast(ValueRight.SystemType, decl.P2, out cast2))
                     {
-                        return CreateIHasValue(ValueLeft, ValueRight, cast1, cast2, decl);
+                        ValueLeft = CreateIHasValue(ValueLeft, ValueRight, cast1, cast2, decl);
+                        return true;
                     }
                 }
             }
-            return null;
+            return false;
         }
 
         private IHasValue CreateIHasValue(IHasValue ValueLeft, IHasValue ValueRight, Declaration cast1, Declaration cast2, Declaration decl)
         {
-            var x = typeof(NewTypedExpr<,,>).MakeGenericType(decl.P1, decl.P2, decl.T);
             if (cast1 != null)
             {
+                var c1 = typeof(NewTypedExpr<,>).MakeGenericType(cast1.P1, cast1.T);
+                ValueLeft = (IHasValue)Activator.CreateInstance(c1, ValueLeft, cast1.dlg);
             }
             if (cast2 != null)
             {
+                var c2 = typeof(NewTypedExpr<,>).MakeGenericType(cast2.P1, cast2.T);
+                ValueRight = (IHasValue)Activator.CreateInstance(c2, ValueRight, cast2.dlg);
             }
-            //        public TypedExpr(IHasValue<P1> p1, IHasValue<P2> p2, Func<P1, P2, T> func)
-
+        
+            var x = typeof(NewTypedExpr<,,>).MakeGenericType(decl.P1, decl.P2, decl.T);
             return (IHasValue)Activator.CreateInstance(x, ValueLeft, ValueRight, decl.dlg);
 
+        }
+
+        private class NewTypedExpr<P1, T> : IHasValue<T>
+        {
+            private IHasValue<P1> mP1;
+            private Func<P1, T> mFunc;
+
+            public NewTypedExpr(IHasValue<P1> p1, Func<P1, T> func)
+            {
+                mP1 = p1;
+                mFunc = func;
+            }
+
+
+            public T Value
+            {
+                get { return mFunc(mP1.Value); }
+            }
+
+            public object ObjectValue
+            {
+                get { return mFunc(mP1.Value); }
+            }
+
+            public event ValueChangedEventHandler ValueChanged;
+
+            public Type SystemType
+            {
+                get { return typeof(T); }
+            }
+
+            public string ShortName
+            {
+                get { return "NewTypedExpr"; }
+            }
+
+            public IEnumerable<Dependency> Dependencies
+            {
+                get
+                {
+                    yield return new Dependency("p1", mP1);
+                }
+            }
         }
 
         private class NewTypedExpr<P1, P2, T> : IHasValue<T>
@@ -539,7 +583,8 @@ namespace Eval4.Core
 
             public IEnumerable<Dependency> Dependencies
             {
-                get {
+                get
+                {
                     yield return new Dependency("p1", mP1);
                     yield return new Dependency("p2", mP2);
                 }
@@ -549,9 +594,10 @@ namespace Eval4.Core
         private bool CanCast(Type type1, Type type2, out Declaration cast)
         {
             cast = null;
+            if (type2 == null) return false;
             if (type1 == type2 || type2.IsAssignableFrom(type1)) return true;
             Declaration decl;
-            if (mCasts.TryGetValue(new TypePair() { Actual = type1, Target = type2 }, out decl))
+            if (mImplicitCasts.TryGetValue(new TypePair() { Actual = type1, Target = type2 }, out decl))
             {
                 cast = decl;
                 return true;
@@ -564,6 +610,16 @@ namespace Eval4.Core
             // do nothing
         }
 
+
+        protected virtual bool IsIdentifierFirstLetter(char mCurChar)
+        {
+            return (mCurChar >= 'a' && mCurChar <= 'z') || (mCurChar >= 'A' && mCurChar <= 'Z') || (mCurChar >= 'A' && mCurChar <= 'Z') || (mCurChar >= 128) || (mCurChar == '_');
+        }
+
+        internal protected virtual bool IsIdentifierLetter(char mCurChar)
+        {
+            return (mCurChar >= '0' && mCurChar <= '9') || (mCurChar >= 'a' && mCurChar <= 'z') || (mCurChar >= 'A' && mCurChar <= 'Z') || (mCurChar >= 'A' && mCurChar <= 'Z') || (mCurChar >= 128) || (mCurChar == '_');
+        }
     }
 
     public abstract class Evaluator<T> : Evaluator

@@ -21,7 +21,7 @@ namespace Eval4.CSharpTests
             TestFormula("3 + 2", 5);
             TestFormula("3 - 2", 1);
             TestFormula("3 * 2", 6);
-            TestFormula("3 / 2", 1.5);
+            TestFormula("3 / 2", 3 / 2);
             TestFormula("1*2*3*4*5*6*7*8*9", 1 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9);
         }
 
@@ -94,7 +94,7 @@ namespace Eval4.CSharpTests
         [TestMethod]
         public void TestTimeSpan()
         {
-            TestFormula("#2012/12/25# - #2013/01/01#", -7.0);
+            TestFormula("#2012/12/25# - #2013/01/01#", new TimeSpan(-7,0,0,0));
         }
 
         [TestMethod]

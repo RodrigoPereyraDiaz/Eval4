@@ -19,12 +19,12 @@ namespace Eval4.CSharpTests
 
         }
 
-        private static void InitEvaluator(Eval4.Core.Evaluator res)
+        private static void InitEvaluator(Eval4.Core.Evaluator ev)
         {
-            res.SetVariable("pascal", new int[] { 1, 8, 28, 56, 70, 56, 28, 8, 1 });
-            res.SetVariable("fibonacci", new int[] { 1, 1, 2, 3, 5, 8, 13, 21, 34 });
-            res.SetVariable("mult", new int[,] { { 0, 0, 0, 0 }, { 0, 1, 2, 3 }, { 0, 2, 4, 6 }, { 0, 3, 6, 9 } });
-            res.SetVariable("accounts", new Accounts());
+            ev.SetVariable("pascal", new int[] { 1, 8, 28, 56, 70, 56, 28, 8, 1 });
+            ev.SetVariable("fibonacci", new int[] { 1, 1, 2, 3, 5, 8, 13, 21, 34 });
+            ev.SetVariable("mult", new int[,] { { 0, 0, 0, 0 }, { 0, 1, 2, 3 }, { 0, 2, 4, 6 }, { 0, 3, 6, 9 } });
+            ev.SetVariable("accounts", new Accounts());
         }
 
         public class Accounts

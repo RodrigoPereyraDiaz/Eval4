@@ -5,7 +5,8 @@ using Eval4.Core;
 
 namespace Eval4
 {
-    public enum CSharpCustomToken{
+    public enum CSharpCustomToken
+    {
         None
     }
 
@@ -114,7 +115,7 @@ namespace Eval4
                     return base.ParseRight(parser, tk, opPrecedence, Acc, ref ValueLeft);
             }
         }
-       
+
         public override int GetPrecedence(Token<CSharpCustomToken> token, bool unary)
         {
             var tt = token.Type;
@@ -205,8 +206,12 @@ namespace Eval4
                     // 	Assignment	
                     //=  *=  /=  %=  +=  -=  <<=  >>=  &=  ^=  |=
                     return 2;
+                case TokenType.OperatorColon:
+                case TokenType.CloseParenthesis:
+                case TokenType.CloseBracket:
+                    return 0;
                 default:
-                    return 1;
+                    throw new NotImplementedException();
             }
         }
     }

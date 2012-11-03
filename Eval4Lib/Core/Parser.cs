@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Eval4.Core
 {
- 
+
     public class Parser
     {
         internal Evaluator mEvaluator;
@@ -47,9 +47,14 @@ namespace Eval4.Core
                 msg += "; ";
             }
             if (string.IsNullOrEmpty(mCurToken.ValueString))
-                throw NewParserException(msg + "Unexpected character '" + mCurChar + "'");
+            {
+                //if (mCurChar == '\0') throw NewParserException(msg + "Unexpected end of formula.");
+                throw NewParserException(msg + "Unexpected " + mCurToken.Type);
+            }
             else
-                throw NewParserException(msg + "Unexpected " + mCurToken.ToString());
+            {
+                throw NewParserException(msg + "Unexpected " + mCurToken.Type + " \"" + mCurToken.ValueString + "\"");
+            }
         }
 
         public void NextToken()
@@ -109,7 +114,11 @@ namespace Eval4.Core
         internal Token ParseIdentifierOrKeyword()
         {
             var sb = new StringBuilder();
-            while ((mCurChar >= '0' && mCurChar <= '9') || (mCurChar >= 'a' && mCurChar <= 'z') || (mCurChar >= 'A' && mCurChar <= 'Z') || (mCurChar >= 'A' && mCurChar <= 'Z') || (mCurChar >= 128) || (mCurChar == '_'))
+            // we eat at least one character
+            sb.Append(mCurChar);
+            NextChar();
+
+            while (mEvaluator.IsIdentifierLetter(mCurChar))
             {
                 sb.Append(mCurChar);
                 NextChar();
@@ -193,7 +202,8 @@ namespace Eval4.Core
             {
                 throw NewParserException("Incomplete string, missing " + OriginalChar + "; String started");
             }
-            if (sb.Length > 0 && bits.Count>0) {
+            if (sb.Length > 0 && bits.Count > 0)
+            {
                 bits.Add(sb.ToString());
                 sb.Length = 0;
                 foreach (object o in bits)
@@ -219,7 +229,7 @@ namespace Eval4.Core
 
         public IHasValue ParsedExpression { get { return mParsedExpression; } }
 
-        public Parser(Evaluator evaluator, string source, bool sourceIsTextTemplate=false)
+        public Parser(Evaluator evaluator, string source, bool sourceIsTextTemplate = false)
         {
             mEvaluator = evaluator;
             mString = source;
@@ -272,7 +282,8 @@ namespace Eval4.Core
             {
                 //TokenType tt = default(TokenType);
                 //tt = mCurToken.Type;
-                int opPrecedence = mEvaluator.GetPrecedence(mCurToken, unary: false);
+                int opPrecedence = (mCurToken.Type == TokenType.EndOfFormula ? 0 : mEvaluator.GetPrecedence(mCurToken, unary: false));
+
                 if (precedence >= opPrecedence)
                 {
                     // if on we have twice the same operator precedence it is more natural to calculate the left operator first

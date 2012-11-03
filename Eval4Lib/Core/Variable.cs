@@ -51,19 +51,6 @@ namespace Eval4.Core
         public abstract Type SystemType { get; }
         public event ValueChangedEventHandler ValueChanged;
 
-
-        //public string Description
-        //{
-        //    get { return mDescription; }
-        //    set { mDescription = value; }
-        //}
-
-        //public string Name
-        //{
-        //    get { return mName; }
-        //    set { mName = value; }
-        //}
-
         public Variable(string description)
         {
             mDescription = description;
@@ -80,13 +67,15 @@ namespace Eval4.Core
 
         public IEnumerable<Dependency> Dependencies
         {
-            get { throw new NotImplementedException(); }
+            get {
+                yield break;
+            }
         }
 
 
         public string ShortName
         {
-            get { throw new NotImplementedException(); }
+            get { return "Variable " + mName; }
         }
     }
 }

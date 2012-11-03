@@ -66,6 +66,7 @@ namespace Eval4.Core
             AddOperation<int, int, int>(TokenType.OperatorMinus, (a, b) => { return a - b; });
             AddOperation<int, int, int>(TokenType.OperatorMultiply, (a, b) => { return a * b; });
             AddOperation<int, int, int>(TokenType.OperatorDivide, (a, b) => { return a / b; });
+            AddOperation<int, int, int>(TokenType.OperatorModulo, (a, b) => { return a % b; });
             AddOperation<int, int, int>(TokenType.OperatorAnd, (a, b) => { return a & b; });
             AddOperation<int, int, int>(TokenType.OperatorOr, (a, b) => { return a | b; });
             AddOperation<int, int, int>(TokenType.OperatorXor, (a, b) => { return a ^ b; });
@@ -163,6 +164,8 @@ namespace Eval4.Core
 
             AddOperation<TimeSpan, TimeSpan>(TokenType.OperatorMinus, (a) => { return -a; });
             AddOperation<TimeSpan, TimeSpan>(TokenType.OperatorPlus, (a) => { return a; });
+
+            AddImplicitCast<int, TimeSpan>((a) => { return TimeSpan.FromDays(a); });
             AddImplicitCast<double, TimeSpan>((a) => { return TimeSpan.FromDays(a); });
         }
     }
