@@ -209,6 +209,7 @@ namespace Eval4
                 case TokenType.OperatorColon:
                 case TokenType.CloseParenthesis:
                 case TokenType.CloseBracket:
+                case TokenType.Comma:
                     return 0;
                 default:
                     throw new NotImplementedException();

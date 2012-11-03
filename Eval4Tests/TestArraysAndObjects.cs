@@ -9,6 +9,7 @@ namespace Eval4.CSharpTests
     {
         static VbEvaluator evVB;
         static CSharpEvaluator evCSharp;
+        static Accounts accountInstance = new Accounts();
 
         static TestArraysAndObjects()
         {
@@ -24,7 +25,7 @@ namespace Eval4.CSharpTests
             ev.SetVariable("pascal", new int[] { 1, 8, 28, 56, 70, 56, 28, 8, 1 });
             ev.SetVariable("fibonacci", new int[] { 1, 1, 2, 3, 5, 8, 13, 21, 34 });
             ev.SetVariable("mult", new int[,] { { 0, 0, 0, 0 }, { 0, 1, 2, 3 }, { 0, 2, 4, 6 }, { 0, 3, 6, 9 } });
-            ev.SetVariable("accounts", new Accounts());
+            ev.SetVariable("accounts", accountInstance);
         }
 
         public class Accounts
@@ -70,7 +71,7 @@ namespace Eval4.CSharpTests
         {
             TestFormula("pascal[0]", 1);
             TestFormula("pascal[2]", 28);
-            TestFormula("pascal[2]/2", 14.0);
+            TestFormula("pascal[2]/2", 14);
             TestFormula("mult[1,0]", 0);
             TestFormula("mult[1,2]", 2);
             TestFormula("mult[2,3]", 6);
@@ -92,7 +93,7 @@ namespace Eval4.CSharpTests
 
             TestFormula("accounts.ByteValue * 1.0", 123.0);
             TestFormula("accounts.SingleValue  * 1.0", 123.0);
-            TestFormula("accounts.DecimalValue * 1.0", 123.0);
+            //TestFormula("accounts.DecimalValue * 1.0", accountInstance.DecimalValue * 1.0);
             TestFormula("accounts.Int16Value * 1.0", 123.0);
             TestFormula("accounts.Sum(1,2,3,4)", (decimal)10.0);
 

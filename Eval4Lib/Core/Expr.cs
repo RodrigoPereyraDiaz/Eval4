@@ -46,8 +46,7 @@ namespace Eval4.Core
             if (expr.SystemType == newType) return (IHasValue)expr;
 
             var t = typeof(ChangeTypeExpr<>).MakeGenericType(newType);
-
-            var i = (TypedExpr)Activator.CreateInstance(t);
+            var i = (ISetP1)Activator.CreateInstance(t);
             i.SetP1((IHasValue)expr);
             return i;
         }
@@ -690,7 +689,7 @@ namespace Eval4.Core
         }
     }
 
-    public class GetArrayEntryExpr : DelegatedExpr
+    public class GetArrayEntryExpr<T> : IHasValue<T>
     {
 
         private IHasValue withEventsField_mArray;
@@ -726,7 +725,7 @@ namespace Eval4.Core
             mResultSystemType = array.SystemType.GetElementType();
         }
 
-        public override object ObjectValue
+        public object ObjectValue
         {
             get
             {
@@ -743,18 +742,18 @@ namespace Eval4.Core
             }
         }
 
-        public override System.Type SystemType
+        public System.Type SystemType
         {
-            get { return mResultSystemType; }
+            get { return typeof(T); }
         }
 
         private void mBaseVariable_ValueChanged(object sender, System.EventArgs e)
         {
-            base.RaiseEventValueChanged(sender, e);
+            if (ValueChanged != null) ValueChanged(sender, e);
         }
 
 
-        public override IEnumerable<Dependency> Dependencies
+        public IEnumerable<Dependency> Dependencies
         {
             get
             {
@@ -766,10 +765,18 @@ namespace Eval4.Core
             }
         }
 
-        public override string ShortName
+        public string ShortName
         {
             get { return "ArrayEntry[]"; }
         }
+
+        public T Value
+        {
+            get { return (T)ObjectValue; }
+        }
+
+
+        public event ValueChangedEventHandler ValueChanged;
     }
 
     public class OperatorIfExpr : DelegatedExpr

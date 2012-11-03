@@ -613,7 +613,9 @@ namespace Eval4.Core
                     {
                         if (parameters.Count == t.GetArrayRank())
                         {
-                            ValueLeft = new GetArrayEntryExpr(ValueLeft, parameters);
+                            var t2 = typeof(GetArrayEntryExpr<>).MakeGenericType(t.GetElementType());
+
+                            ValueLeft = (IHasValue)Activator.CreateInstance(t2, ValueLeft, parameters);
                         }
                         else
                         {
