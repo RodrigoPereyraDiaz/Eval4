@@ -8,10 +8,10 @@ namespace Eval4
 
     public enum CustomTokenType
     {
-        Operator_percent,
-        integer_div
+        OperatorPercent,
+        IntegerDiv
     }
-    
+
     public class VbEvaluator : Core.Evaluator<CustomTokenType>
     {
         protected internal override bool IsCaseSensitive
@@ -31,7 +31,7 @@ namespace Eval4
             {
                 case '%':
                     parser.NextChar();
-                    return NewToken(CustomTokenType.Operator_percent);
+                    return NewToken(CustomTokenType.OperatorPercent);
 
                 case '=':
                     parser.NextChar();
@@ -192,40 +192,36 @@ namespace Eval4
         //}
 
 
-        internal override bool ParseRight(Parser parser, Token tk, int opPrecedence, IHasValue Acc, ref IHasValue ValueLeft)
+        internal override void ParseRight(Parser parser, Token tk, int opPrecedence, IHasValue Acc, ref IHasValue valueLeft)
         {
-            if (tk.Type == TokenType.Custom)
+            switch (tk.Type)
             {
-                IHasValue ValueRight;
-                var tk2 = tk as Token<CustomTokenType>;
-                switch (tk2.CustomType)
-                {
-                    case CustomTokenType.Operator_percent:
-                        parser.NextToken();
-                        //ValueRight = parser.ParseExpr(ValueLeft, opPrecedence);
-                        if (DelegatedExpr.IsIntOrSmaller(ValueLeft.SystemType) && DelegatedExpr.IsIntOrSmaller(Acc.SystemType))
-                        {
-                            ValueLeft = TypedExpressions.Create<int, int, int>(Acc, ValueLeft, (a, b) => { return a * b / 100; });
-                            return true;
-                        }
-                        else if (DelegatedExpr.IsDoubleOrSmaller(ValueLeft.SystemType) && DelegatedExpr.IsDoubleOrSmaller(Acc.SystemType))
-                        {
-                            ValueLeft = TypedExpressions.Create<double, double, double>(Acc, ValueLeft, (a, b) => { return a * b / 100.0; });
-                            return true;
-                        }
-                        break;
-                    case CustomTokenType.integer_div:
-                        parser.NextToken();
-                        ValueRight = parser.ParseExpr(ValueLeft, opPrecedence);
-                        if (DelegatedExpr.IsIntOrSmaller(ValueLeft.SystemType) && DelegatedExpr.IsIntOrSmaller(ValueRight.SystemType))
-                        {
-                            ValueLeft = TypedExpressions.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a / b; });
-                            return true;
-                        }
-                        break;
-                }
+                case TokenType.Custom:
+
+                    IHasValue valueRight;
+                    var tk2 = tk as Token<CustomTokenType>;
+                    switch (tk2.CustomType)
+                    {
+                        case CustomTokenType.OperatorPercent:
+                            parser.NextToken();
+                            if (ApplyMethod(ref valueLeft, Acc, new Func<double, double, double>((a, b) => a * b / 100))) return;
+                            break;
+
+                        case CustomTokenType.IntegerDiv:
+                            parser.NextToken();
+                            valueRight = parser.ParseExpr(valueLeft, opPrecedence);
+                            if (ApplyMethod(ref valueLeft, Acc, new Func<int, int, int>((a, b) => a / b))) return;
+                            break;
+                    }
+                    break;
+                case TokenType.OperatorDivide:
+                    parser.NextToken();
+                    valueRight = parser.ParseExpr(valueLeft, opPrecedence);
+                    if (ApplyMethod(ref valueLeft, valueRight, new Func<double, double, double>((a, b) => a / (double)b))) return;
+                    break;
             }
-            return base.ParseRight(parser, tk, opPrecedence, Acc, ref ValueLeft);
+            base.ParseRight(parser, tk, opPrecedence, Acc, ref valueLeft);
+
         }
 
         public override int GetPrecedence(Token<CustomTokenType> token, bool unary)
@@ -260,7 +256,7 @@ namespace Eval4
                     return (unary ? 14 : 9);
 
                 case TokenType.Custom:
-                    if (tt.CustomType == CustomTokenType.Operator_percent)
+                    if (tt.CustomType == CustomTokenType.OperatorPercent)
                     {
                         // the percent operator is something I created 
                         // it allows formula like 10 + 5% 

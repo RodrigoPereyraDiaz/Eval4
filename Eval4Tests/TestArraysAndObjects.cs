@@ -71,7 +71,7 @@ namespace Eval4.CSharpTests
         {
             TestFormula("pascal[0]", 1);
             TestFormula("pascal[2]", 28);
-            TestFormula("pascal[2]/2", 14);
+            TestFormula("pascal[2]*2", 56);
             TestFormula("mult[1,0]", 0);
             TestFormula("mult[1,2]", 2);
             TestFormula("mult[2,3]", 6);

@@ -11,6 +11,7 @@ Public Class Form1
 
     Public Sub New()
         MyBase.New()
+
         mInitializing = True
         ev = New Eval3.Evaluator
         ev.AddEnvironmentFunctions(Me)

@@ -51,149 +51,29 @@ namespace Eval4.Core
             return i;
         }
 
-        private static TypedExpr CompareToExpr<T>(IHasValue p1, IHasValue p2, TokenType tt)
-        {
+        //internal static IHasValue UnaryExpr(Parser parser, TokenType tt, IHasValue ValueLeft)
+        //{
+        //var v1Type = ValueLeft.SystemType;
+        //TypedExpr result = null;
 
-            switch (tt)
-            {
-                case TokenType.OperatorGT:
-                    return TypedExpressions.Create<T, T, bool>(p1, p2, (a, b) => { return ((IComparable<T>)a).CompareTo(b) > 0; });
-                case TokenType.OperatorGE:
-                    return TypedExpressions.Create<T, T, bool>(p1, p2, (a, b) => { return ((IComparable<T>)a).CompareTo(b) >= 0; });
-                case TokenType.OperatorEQ:
-                    return TypedExpressions.Create<T, T, bool>(p1, p2, (a, b) => { return ((IComparable<T>)a).CompareTo(b) == 0; });
-                case TokenType.OperatorLE:
-                    return TypedExpressions.Create<T, T, bool>(p1, p2, (a, b) => { return ((IComparable<T>)a).CompareTo(b) <= 0; });
-                case TokenType.OperatorLT:
-                    return TypedExpressions.Create<T, T, bool>(p1, p2, (a, b) => { return ((IComparable<T>)a).CompareTo(b) < 0; });
-                case TokenType.OperatorNE:
-                    return TypedExpressions.Create<T, T, bool>(p1, p2, (a, b) => { return ((IComparable<T>)a).CompareTo(b) != 0; });
-                default:
-                    throw new InvalidOperationException();
-            }
-        }
-
-        internal static IHasValue BinaryExpr(Parser parser, IHasValue ValueLeft, TokenType tt, IHasValue ValueRight)
-        {
-            var result = InternalBinaryExpr(parser, ValueLeft, tt, ValueRight);
-            if (string.IsNullOrEmpty(result.ShortName))
-            {
-                result.ShortName = tt.ToString();
-            }
-            return result;
-        }
-
-        internal static TypedExpr InternalBinaryExpr(Parser parser, IHasValue ValueLeft, TokenType tt, IHasValue ValueRight)
-        {
-            Type v1Type = ValueLeft.SystemType;
-            Type v2Type = ValueRight.SystemType;
-            TypedExpr result = null;
-
-            switch (tt)
-            {
-                case TokenType.OperatorPlus:
-                    result = TypedExpressions.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a + b; })
-                        ?? TypedExpressions.Create<DateTime, double, DateTime>(ValueLeft, ValueRight, (a, b) => { return a.AddDays(b); })
-                        ?? TypedExpressions.Create<double, DateTime, DateTime>(ValueLeft, ValueRight, (a, b) => { return b.AddDays(a); })
-                        ?? TypedExpressions.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a + b; })
-                        ?? TypedExpressions.Create<string, string, string>(ValueLeft, ValueRight, (a, b) => { return a + b; });
-                    break;
-                case TokenType.OperatorMinus:
-                    result = TypedExpressions.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a - b; })
-                        ?? TypedExpressions.Create<DateTime, double, DateTime>(ValueLeft, ValueRight, (a, b) => { return a.AddDays(-b); })
-                        ?? TypedExpressions.Create<DateTime, DateTime, double>(ValueLeft, ValueRight, (a, b) => { return a.Subtract(b).TotalDays; })
-                        ?? TypedExpressions.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a - b; });
-                    break;
-
-                case TokenType.OperatorMultiply:
-                    result = TypedExpressions.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a * b; })
-                        ?? TypedExpressions.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a * b; });
-                    break;
-
-                case TokenType.OperatorDivide:
-                    result = TypedExpressions.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a / b; });
-                    break;
-
-                case TokenType.OperatorModulo:
-                    result = TypedExpressions.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a % b; })
-                        ?? TypedExpressions.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a % b; });
-                    break;
-                case TokenType.OperatorAnd:
-                    result = TypedExpressions.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a & b; })
-                        ?? TypedExpressions.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a & b; });
-                    break;
-
-                case TokenType.OperatorOr:
-                    result = TypedExpressions.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a | b; })
-                        ?? TypedExpressions.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a | b; });
-                    break;
-
-                case TokenType.OperatorXor:
-                    result = TypedExpressions.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a ^ b; })
-                        ?? TypedExpressions.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a ^ b; });
-                    break;
-
-                case TokenType.OperatorAndAlso:
-                    result = TypedExpressions.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a && b; });
-                    break;
-
-                case TokenType.OperatorOrElse:
-                    result = TypedExpressions.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a || b; });
-                    break;
-
-                case TokenType.OperatorEQ:
-                    result = TypedExpressions.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a == b; })
-                        ?? TypedExpressions.Create<int, int, bool>(ValueLeft, ValueRight, (a, b) => { return a == b; })
-                        ?? TypedExpressions.Create<string, string, bool>(ValueLeft, ValueRight, (a, b) => { return a == b; })
-                        ?? TypedExpressions.Create<double, double, bool>(ValueLeft, ValueRight, (a, b) => { return a == b; })
-                        ?? TypedExpressions.Create<object, object, bool>(ValueLeft, ValueRight, (a, b) => { return a.Equals(b); });
-                    break;
-                case TokenType.OperatorNE:
-                    result = TypedExpressions.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a != b; })
-                        ?? TypedExpressions.Create<int, int, bool>(ValueLeft, ValueRight, (a, b) => { return a != b; })
-                        ?? TypedExpressions.Create<string, string, bool>(ValueLeft, ValueRight, (a, b) => { return a != b; })
-                        ?? TypedExpressions.Create<double, double, bool>(ValueLeft, ValueRight, (a, b) => { return a != b; })
-                        ?? TypedExpressions.Create<object, object, bool>(ValueLeft, ValueRight, (a, b) => { return !a.Equals(b); });
-                    break;
-                case TokenType.OperatorGE:
-                case TokenType.OperatorGT:
-                case TokenType.OperatorLE:
-                case TokenType.OperatorLT:
-                    result = CompareToExpr<int>(ValueLeft, ValueRight, tt)
-                        ?? CompareToExpr<double>(ValueLeft, ValueRight, tt)
-                        ?? CompareToExpr<bool>(ValueLeft, ValueRight, tt)
-                        ?? CompareToExpr<string>(ValueLeft, ValueRight, tt)
-                        ?? CompareToExpr<object>(ValueLeft, ValueRight, tt);
-                    break;
-            }
-            if (result != null) return result;
-            throw parser.NewParserException("Cannot apply the operator " + tt.ToString().Replace("Operator_", "") + " on " + v1Type.ToString() + " and " + v2Type.ToString());
-        }
-
-
-        internal static IHasValue UnaryExpr(Parser parser, TokenType tt, IHasValue ValueLeft)
-        {
-            var v1Type = ValueLeft.SystemType;
-            TypedExpr result = null;
-
-            switch (tt)
-            {
-                case TokenType.OperatorNot:
-                    result = TypedExpressions.Create<bool, bool>(ValueLeft, (a) => { return !a; })
-                        ?? TypedExpressions.Create<int, int>(ValueLeft, (a) => { return ~a; });
-                    break;
-                case TokenType.OperatorMinus:
-                    result = TypedExpressions.Create<int, int>(ValueLeft, (a) => { return -a; })
-                        ?? TypedExpressions.Create<double, double>(ValueLeft, (a) => { return -a; });
-                    break;
-                case TokenType.OperatorPlus:
-                    if (DelegatedExpr.IsIntOrSmaller(v1Type)) return ValueLeft;
-                    else if (DelegatedExpr.IsDoubleOrSmaller(v1Type)) return ValueLeft;
-                    break;
-            }
-            if (result != null) return result;
-            throw parser.NewParserException("Invalid operator " + tt.ToString().Replace("Operator_", ""));
-        }
+        //switch (tt)
+        //{
+        //    case TokenType.OperatorNot:
+        //        result = TypedExpressions.Create<bool, bool>(ValueLeft, (a) => { return !a; })
+        //            ?? TypedExpressions.Create<int, int>(ValueLeft, (a) => { return ~a; });
+        //        break;
+        //    case TokenType.OperatorMinus:
+        //        result = TypedExpressions.Create<int, int>(ValueLeft, (a) => { return -a; })
+        //            ?? TypedExpressions.Create<double, double>(ValueLeft, (a) => { return -a; });
+        //        break;
+        //    case TokenType.OperatorPlus:
+        //        if (DelegatedExpr.IsIntOrSmaller(v1Type)) return ValueLeft;
+        //        else if (DelegatedExpr.IsDoubleOrSmaller(v1Type)) return ValueLeft;
+        //        break;
+        //}
+        //if (result != null) return result;
+        //throw parser.NewParserException("Invalid operator " + tt.ToString().Replace("Operator_", ""));
+        //}
     }
 
     public interface ISetP1 : IHasValue

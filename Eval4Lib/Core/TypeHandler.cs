@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Eval4.Core
 {
-    internal class Declaration
+    public class Declaration
     {
         public TokenType tk;
         public Delegate dlg;

@@ -99,7 +99,7 @@ namespace Eval4
             }
         }
 
-        internal override bool ParseRight(Parser parser, Token tk, int opPrecedence, IHasValue Acc, ref IHasValue ValueLeft)
+        internal override void ParseRight(Parser parser, Token tk, int opPrecedence, IHasValue Acc, ref IHasValue valueLeft)
         {
             var tt = tk.Type;
             switch (tt)
@@ -109,10 +109,11 @@ namespace Eval4
                     IHasValue thenExpr = parser.ParseExpr(null, 0);
                     parser.Expect(TokenType.OperatorColon, "Missing : in ? expression test ? valueIfTrue : valueIfFalse.");
                     IHasValue elseExpr = parser.ParseExpr(null, 0);
-                    ValueLeft = new OperatorIfExpr(ValueLeft, thenExpr, elseExpr);
-                    return true;
+                    valueLeft = new OperatorIfExpr(valueLeft, thenExpr, elseExpr);
+                    break;
                 default:
-                    return base.ParseRight(parser, tk, opPrecedence, Acc, ref ValueLeft);
+                    base.ParseRight(parser, tk, opPrecedence, Acc, ref valueLeft);
+                    break;
             }
         }
 

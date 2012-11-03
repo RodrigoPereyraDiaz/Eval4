@@ -52,6 +52,7 @@ namespace Eval4.Core
                 throw NewParserException(msg + "Unexpected " + mCurToken.Type);
             }
             else
+
             {
                 throw NewParserException(msg + "Unexpected " + mCurToken.Type + " \"" + mCurToken.ValueString + "\"");
             }
@@ -260,23 +261,23 @@ namespace Eval4.Core
             return (IHasValue)token.ValueObject;
         }
 
-        internal IHasValue ParseExpr(IHasValue Acc, int precedence)
+        internal IHasValue ParseExpr(IHasValue acc, int precedence)
         {
-            IHasValue ValueLeft = null;
-            ValueLeft = ParseLeft(precedence);
-            if (ValueLeft == null)
+            IHasValue valueLeft = null;
+            valueLeft = ParseLeft(precedence);
+            if (valueLeft == null)
             {
                 throw NewUnexpectedToken("No Expression found");
             }
-            while (typeof(IHasValue).IsAssignableFrom(ValueLeft.SystemType))
+            while (typeof(IHasValue).IsAssignableFrom(valueLeft.SystemType))
             {
-                ValueLeft = (IHasValue)ValueLeft.ObjectValue;
+                valueLeft = (IHasValue)valueLeft.ObjectValue;
             }
-            ParseDot(ref ValueLeft);
-            return ParseRight(Acc, precedence, ValueLeft);
+            ParseDot(ref valueLeft);
+            return ParseRight(acc, precedence, valueLeft);
         }
 
-        protected IHasValue ParseRight(IHasValue Acc, int precedence, IHasValue ValueLeft)
+        protected IHasValue ParseRight(IHasValue acc, int precedence, IHasValue valueLeft)
         {
             while (true)
             {
@@ -288,14 +289,11 @@ namespace Eval4.Core
                 {
                     // if on we have twice the same operator precedence it is more natural to calculate the left operator first
                     // ie 1+2+3-4 will be calculated ((1+2)+3)-4
-                    return ValueLeft;
+                    return valueLeft;
                 }
                 else
                 {
-                    if (!mEvaluator.ParseRight(this, mCurToken, opPrecedence, Acc, ref ValueLeft))
-                    {
-                        return ValueLeft;
-                    }
+                    mEvaluator.ParseRight(this, mCurToken, opPrecedence, acc, ref valueLeft);
                 }
             }
         }
@@ -322,23 +320,23 @@ namespace Eval4.Core
             all = 7
         }
 
-        protected bool EmitCallFunction(ref IHasValue ValueLeft, string funcName, List<IHasValue> parameters, CallType CallType, bool ErrorIfNotFound)
+        protected bool EmitCallFunction(ref IHasValue valueLeft, string funcName, List<IHasValue> parameters, CallType callType, bool errorIfNotFound)
         {
             IHasValue newExpr = null;
 
-            if (ValueLeft == null)
+            if (valueLeft == null)
             {
                 for (int i = mEvaluator.mEnvironmentFunctionsList.Count - 1; i >= 0; i--)
                 {
                     var environmentFunctions = mEvaluator.mEnvironmentFunctionsList[i];
                     if (environmentFunctions is Type)
                     {
-                        newExpr = GetMember(null, (Type)environmentFunctions, funcName, parameters, CallType);
+                        newExpr = GetMember(null, (Type)environmentFunctions, funcName, parameters, callType);
                     }
                     else if (environmentFunctions is IHasValue)
                     {
                         var hasValue = environmentFunctions as IHasValue;
-                        newExpr = GetMember(hasValue, hasValue.SystemType, funcName, parameters, CallType);
+                        newExpr = GetMember(hasValue, hasValue.SystemType, funcName, parameters, callType);
                     }
                     else if (environmentFunctions is IVariableBag)
                     {
@@ -355,22 +353,22 @@ namespace Eval4.Core
                     if (newExpr != null) break;
                 }
             }
-            else if (ValueLeft.SystemType == typeof(StaticFunctionsWrapper))
+            else if (valueLeft.SystemType == typeof(StaticFunctionsWrapper))
             {
-                newExpr = GetMember(null, (ValueLeft.ObjectValue as StaticFunctionsWrapper).type, funcName, parameters, CallType);
+                newExpr = GetMember(null, (valueLeft.ObjectValue as StaticFunctionsWrapper).type, funcName, parameters, callType);
             }
             else
             {
-                newExpr = GetMember(ValueLeft, ValueLeft.SystemType, funcName, parameters, CallType);
+                newExpr = GetMember(valueLeft, valueLeft.SystemType, funcName, parameters, callType);
             }
             if ((newExpr != null))
             {
-                ValueLeft = newExpr;
+                valueLeft = newExpr;
                 return true;
             }
             else
             {
-                if (ErrorIfNotFound)
+                if (errorIfNotFound)
                     throw NewParserException("No Variable or public method '" + funcName + "' was not found.");
                 return false;
             }
@@ -559,7 +557,7 @@ namespace Eval4.Core
             } while (true);
         }
 
-        internal void ParseIdentifier(ref IHasValue ValueLeft)
+        internal void ParseIdentifier(ref IHasValue valueLeft)
         {
             // first check functions
             List<IHasValue> parameters = null;
@@ -578,10 +576,10 @@ namespace Eval4.Core
                 {
                     // in vb we don't know if it is array or not as we have only parenthesis
                     // so we try with parameters first
-                    if (!EmitCallFunction(ref ValueLeft, func, parameters, CallType.all, ErrorIfNotFound: false))
+                    if (!EmitCallFunction(ref valueLeft, func, parameters, CallType.all, errorIfNotFound: false))
                     {
                         // and if not found we try as array or default member
-                        EmitCallFunction(ref ValueLeft, func, EmptyParameters, CallType.all, ErrorIfNotFound: true);
+                        EmitCallFunction(ref valueLeft, func, EmptyParameters, CallType.all, errorIfNotFound: true);
                         ParamsNotUsed = true;
                     }
                 }
@@ -589,24 +587,24 @@ namespace Eval4.Core
                 {
                     if (isBrackets)
                     {
-                        if (!EmitCallFunction(ref ValueLeft, func, parameters, CallType.property, ErrorIfNotFound: false))
+                        if (!EmitCallFunction(ref valueLeft, func, parameters, CallType.property, errorIfNotFound: false))
                         {
-                            EmitCallFunction(ref ValueLeft, func, EmptyParameters, CallType.all, ErrorIfNotFound: true);
+                            EmitCallFunction(ref valueLeft, func, EmptyParameters, CallType.all, errorIfNotFound: true);
                             ParamsNotUsed = true;
                         }
                     }
                     else
                     {
-                        if (!EmitCallFunction(ref ValueLeft, func, parameters, CallType.field | CallType.method, ErrorIfNotFound: false))
+                        if (!EmitCallFunction(ref valueLeft, func, parameters, CallType.field | CallType.method, errorIfNotFound: false))
                         {
-                            EmitCallFunction(ref ValueLeft, func, EmptyParameters, CallType.all, ErrorIfNotFound: true);
+                            EmitCallFunction(ref valueLeft, func, EmptyParameters, CallType.all, errorIfNotFound: true);
                             ParamsNotUsed = true;
                         }
                     }
                 }
                 // we found a function without parameters 
                 // so our parameters must be default property or an array
-                Type t = ValueLeft.SystemType;
+                Type t = valueLeft.SystemType;
                 if (ParamsNotUsed)
                 {
                     if (t.IsArray)
@@ -615,7 +613,7 @@ namespace Eval4.Core
                         {
                             var t2 = typeof(GetArrayEntryExpr<>).MakeGenericType(t.GetElementType());
 
-                            ValueLeft = (IHasValue)Activator.CreateInstance(t2, ValueLeft, parameters);
+                            valueLeft = (IHasValue)Activator.CreateInstance(t2, valueLeft, parameters);
                         }
                         else
                         {
@@ -627,7 +625,7 @@ namespace Eval4.Core
                         MemberInfo mi = null;
                         if (GetMemberInfo(t, isStatic: true, isInstance: true, func: null, parameters: parameters, mi: out mi, resultType: out resultType))
                         {
-                            ValueLeft = GetNewCallMethodExpr(resultType, ValueLeft, mi, parameters);
+                            valueLeft = GetNewCallMethodExpr(resultType, valueLeft, mi, parameters);
                         }
                         else
                         {
@@ -638,14 +636,14 @@ namespace Eval4.Core
             }
             else
             {
-                EmitCallFunction(ref ValueLeft, func, parameters, CallType.all, ErrorIfNotFound: true);
+                EmitCallFunction(ref valueLeft, func, parameters, CallType.all, errorIfNotFound: true);
             }
         }
 
         internal List<IHasValue> ParseParameters(ref bool brackets)
         {
             List<IHasValue> parameters = null;
-            IHasValue Valueleft = null;
+            IHasValue valueleft = null;
             TokenType lClosing = default(TokenType);
 
             if (mCurToken.Type == TokenType.OpenParenthesis
@@ -671,8 +669,8 @@ namespace Eval4.Core
                         NextToken();
                         return parameters;
                     }
-                    Valueleft = ParseExpr(null, 0);
-                    parameters.Add(Valueleft);
+                    valueleft = ParseExpr(null, 0);
+                    parameters.Add(valueleft);
 
                     if (mCurToken.Type == lClosing)
                     {

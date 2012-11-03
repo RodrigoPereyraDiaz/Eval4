@@ -75,9 +75,9 @@ namespace Eval4.Core
                             casts[typePair] = decl;
                         }
                     }
-                    else 
+                    else
                     {
-                        var declarations = (decl.P2 == null ? mUnaryDeclarations: mBinaryDeclarations);
+                        var declarations = (decl.P2 == null ? mUnaryDeclarations : mBinaryDeclarations);
                         List<Declaration> tokenDeclarations;
                         if (!declarations.TryGetValue(tk, out tokenDeclarations))
                         {
@@ -361,19 +361,27 @@ namespace Eval4.Core
         {
 
             IHasValue result = null;
+            List<Declaration> declarations;
+            if (mUnaryDeclarations.TryGetValue(token.Type, out declarations))
+            {
+                var tt = token;
+                var opPrecedence = GetPrecedence(tt, true);
+                parser.NextToken();
+                var ValueRight = parser.ParseExpr(null, opPrecedence);
 
+                foreach (var decl in declarations)
+                {
+                    Declaration cast1;
+                    if (CanCast(ValueRight.SystemType, decl.P1, out cast1))
+                    {
+                        ApplyMethod(ref ValueRight, decl.dlg);
+                        return ValueRight;
+                    }
+
+                }
+            }
             switch (token.Type)
             {
-                case TokenType.OperatorMinus:
-                case TokenType.OperatorPlus:
-                case TokenType.OperatorNot:
-                    // unary minus operator
-                    parser.NextToken();
-                    int opPrecedence = GetPrecedence(token, unary: true);
-                    result = parser.ParseExpr(null, opPrecedence);
-                    result = TypedExpressions.UnaryExpr(parser, token.Type, result);
-                    return result;
-
                 case TokenType.ValueIdentifier:
                     parser.ParseIdentifier(ref result);
                     return result;
@@ -451,56 +459,85 @@ namespace Eval4.Core
         }
 
 
-        internal virtual bool ParseRight(Parser parser, Token tk, int opPrecedence, IHasValue Acc, ref IHasValue ValueLeft)
+        internal virtual void ParseRight(Parser parser, Token tk, int opPrecedence, IHasValue acc, ref IHasValue valueLeft)
         {
             var tt = tk.Type;
-            IHasValue ValueRight;
+            IHasValue valueRight;
             parser.NextToken();
-            ValueRight = parser.ParseExpr(ValueLeft, opPrecedence);
-            if (!FindOperation(ref ValueLeft, tt, ValueRight))
-            {
-                throw parser.NewParserException(string.Format("Cannot find operation {0} {1} {2}", ValueLeft.SystemType, tt, ValueRight.SystemType));
-            }
-            return true;
-        }
-
-        private bool FindOperation(ref IHasValue ValueLeft, TokenType tt, IHasValue ValueRight)
-        {
-            var leftType = ValueLeft.SystemType;
-            var rightType = ValueRight.SystemType;
+            valueRight = parser.ParseExpr(valueLeft, opPrecedence);
+            var leftType = valueLeft.SystemType;
+            var rightType = valueRight.SystemType;
             List<Declaration> declarations;
             if (this.mBinaryDeclarations.TryGetValue(tt, out declarations))
             {
                 foreach (var decl in declarations)
                 {
-                    Declaration cast1, cast2;
-                    if (CanCast(ValueLeft.SystemType, decl.P1, out cast1) && CanCast(ValueRight.SystemType, decl.P2, out cast2))
-                    {
-                        ValueLeft = CreateIHasValue(ValueLeft, ValueRight, cast1, cast2, decl);
-                        return true;
-                    }
+                    if (ApplyMethod(ref valueLeft, valueRight, decl.dlg)) return;
                 }
+            }
+            throw parser.NewParserException(string.Format("Cannot find operation {0} {1} {2}", valueLeft.SystemType, tt, valueRight.SystemType));
+        }
+
+        protected bool ApplyMethod(ref IHasValue valueLeft, IHasValue valueRight, Delegate dlg)
+        {
+            Declaration cast1, cast2;
+            var parameters = dlg.Method.GetParameters();
+            Type p1 = parameters.Length > 0 ? parameters[0].ParameterType : null;
+            Type p2 = parameters.Length > 1 ? parameters[1].ParameterType : null;
+
+            if (CanCast(valueLeft.SystemType, p1, out cast1) && CanCast(valueRight.SystemType, p2, out cast2))
+            {
+                if (cast1 != null)
+                {
+                    var c1 = typeof(NewTypedExpr<,>).MakeGenericType(cast1.P1, cast1.T);
+                    valueLeft = (IHasValue)Activator.CreateInstance(c1, valueLeft, cast1.dlg);
+                }
+                if (cast2 != null)
+                {
+                    var c2 = typeof(NewTypedExpr<,>).MakeGenericType(cast2.P1, cast2.T);
+                    valueRight = (IHasValue)Activator.CreateInstance(c2, valueRight, cast2.dlg);
+                }
+
+                var x = typeof(NewTypedExpr<,,>).MakeGenericType(valueLeft.SystemType, valueRight.SystemType, dlg.Method.ReturnType);
+                valueLeft = (IHasValue)Activator.CreateInstance(x, valueLeft, valueRight, dlg);
+                return true;
             }
             return false;
         }
 
-        private IHasValue CreateIHasValue(IHasValue ValueLeft, IHasValue ValueRight, Declaration cast1, Declaration cast2, Declaration decl)
-        {
-            if (cast1 != null)
-            {
-                var c1 = typeof(NewTypedExpr<,>).MakeGenericType(cast1.P1, cast1.T);
-                ValueLeft = (IHasValue)Activator.CreateInstance(c1, ValueLeft, cast1.dlg);
-            }
-            if (cast2 != null)
-            {
-                var c2 = typeof(NewTypedExpr<,>).MakeGenericType(cast2.P1, cast2.T);
-                ValueRight = (IHasValue)Activator.CreateInstance(c2, ValueRight, cast2.dlg);
-            }
-        
-            var x = typeof(NewTypedExpr<,,>).MakeGenericType(decl.P1, decl.P2, decl.T);
-            return (IHasValue)Activator.CreateInstance(x, ValueLeft, ValueRight, decl.dlg);
 
+        protected bool ApplyMethod(ref IHasValue valueLeft, Delegate dlg)
+        {
+            Declaration cast1;
+            var parameters = dlg.Method.GetParameters();
+            Type p1 = parameters.Length > 0 ? parameters[0].ParameterType : null;
+
+            if (CanCast(valueLeft.SystemType, p1, out cast1))
+            {
+                if (cast1 != null)
+                {
+                    var c1 = typeof(NewTypedExpr<,>).MakeGenericType(cast1.P1, cast1.T);
+                    valueLeft = (IHasValue)Activator.CreateInstance(c1, valueLeft, cast1.dlg);
+                }
+
+                var x = typeof(NewTypedExpr<,>).MakeGenericType(valueLeft.SystemType, dlg.Method.ReturnType);
+                valueLeft = (IHasValue)Activator.CreateInstance(x, valueLeft, dlg);
+                return true;
+            }
+            return false;
         }
+
+        //protected IHasValue CreateIHasValue(IHasValue ValueLeft, Declaration cast1, Declaration decl)
+        //{
+        //    if (cast1 != null)
+        //    {
+        //        var c1 = typeof(NewTypedExpr<,>).MakeGenericType(cast1.P1, cast1.T);
+        //        ValueLeft = (IHasValue)Activator.CreateInstance(c1, ValueLeft, cast1.dlg);
+        //    }
+        //    var x = typeof(NewTypedExpr<,>).MakeGenericType(decl.P1, decl.T);
+        //    return (IHasValue)Activator.CreateInstance(x, ValueLeft, decl.dlg);
+
+        //}
 
         private class NewTypedExpr<P1, T> : IHasValue<T>
         {

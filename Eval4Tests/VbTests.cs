@@ -21,15 +21,15 @@ namespace Eval4.CSharpTests
             TestFormula("3 + 2", 5);
             TestFormula("3 - 2", 1);
             TestFormula("3 * 2", 6);
-            TestFormula("3 / 2", 3 / 2);
+            TestFormula("3 / 2", 3 / 2.0);
             TestFormula("1*2*3*4*5*6*7*8*9", 1 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9);
         }
 
         [TestMethod]
         public void TestPercent()
         {
-            TestFormula("200 + 5%", 210);
-            TestFormula("200 - 5%", 190);
+            TestFormula("200 + 5%", 210.0);
+            TestFormula("200 - 5%", 190.0);
         }
 
         [TestMethod]
