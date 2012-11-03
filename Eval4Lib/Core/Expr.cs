@@ -7,6 +7,7 @@ namespace Eval4.Core
 {
     class TypedExpressions
     {
+
         public static TypedExpr Create<P1, P2, T>(IHasValue p1, IHasValue p2, Func<P1, P2, T> func)
         {
             if (!CanConvert(p1, typeof(P1))) return null;
@@ -56,17 +57,17 @@ namespace Eval4.Core
 
             switch (tt)
             {
-                case TokenType.operator_gt:
+                case TokenType.OperatorGT:
                     return TypedExpressions.Create<T, T, bool>(p1, p2, (a, b) => { return ((IComparable<T>)a).CompareTo(b) > 0; });
-                case TokenType.operator_ge:
+                case TokenType.OperatorGE:
                     return TypedExpressions.Create<T, T, bool>(p1, p2, (a, b) => { return ((IComparable<T>)a).CompareTo(b) >= 0; });
-                case TokenType.operator_eq:
+                case TokenType.OperatorEQ:
                     return TypedExpressions.Create<T, T, bool>(p1, p2, (a, b) => { return ((IComparable<T>)a).CompareTo(b) == 0; });
-                case TokenType.operator_le:
+                case TokenType.OperatorLE:
                     return TypedExpressions.Create<T, T, bool>(p1, p2, (a, b) => { return ((IComparable<T>)a).CompareTo(b) <= 0; });
-                case TokenType.operator_lt:
+                case TokenType.OperatorLT:
                     return TypedExpressions.Create<T, T, bool>(p1, p2, (a, b) => { return ((IComparable<T>)a).CompareTo(b) < 0; });
-                case TokenType.operator_ne:
+                case TokenType.OperatorNE:
                     return TypedExpressions.Create<T, T, bool>(p1, p2, (a, b) => { return ((IComparable<T>)a).CompareTo(b) != 0; });
                 default:
                     throw new InvalidOperationException();
@@ -91,74 +92,74 @@ namespace Eval4.Core
 
             switch (tt)
             {
-                case TokenType.operator_plus:
+                case TokenType.OperatorPlus:
                     result = TypedExpressions.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a + b; })
                         ?? TypedExpressions.Create<DateTime, double, DateTime>(ValueLeft, ValueRight, (a, b) => { return a.AddDays(b); })
                         ?? TypedExpressions.Create<double, DateTime, DateTime>(ValueLeft, ValueRight, (a, b) => { return b.AddDays(a); })
                         ?? TypedExpressions.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a + b; })
                         ?? TypedExpressions.Create<string, string, string>(ValueLeft, ValueRight, (a, b) => { return a + b; });
                     break;
-                case TokenType.operator_minus:
+                case TokenType.OperatorMinus:
                     result = TypedExpressions.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a - b; })
                         ?? TypedExpressions.Create<DateTime, double, DateTime>(ValueLeft, ValueRight, (a, b) => { return a.AddDays(-b); })
                         ?? TypedExpressions.Create<DateTime, DateTime, double>(ValueLeft, ValueRight, (a, b) => { return a.Subtract(b).TotalDays; })
                         ?? TypedExpressions.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a - b; });
                     break;
 
-                case TokenType.operator_mul:
+                case TokenType.OperatorMultiply:
                     result = TypedExpressions.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a * b; })
                         ?? TypedExpressions.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a * b; });
                     break;
 
-                case TokenType.operator_div:
+                case TokenType.OperatorDivide:
                     result = TypedExpressions.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a / b; });
                     break;
 
-                case TokenType.operator_mod:
+                case TokenType.OperatorModulo:
                     result = TypedExpressions.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a % b; })
                         ?? TypedExpressions.Create<double, double, double>(ValueLeft, ValueRight, (a, b) => { return a % b; });
                     break;
-                case TokenType.operator_and:
+                case TokenType.OperatorAnd:
                     result = TypedExpressions.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a & b; })
                         ?? TypedExpressions.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a & b; });
                     break;
 
-                case TokenType.operator_or:
+                case TokenType.OperatorOr:
                     result = TypedExpressions.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a | b; })
                         ?? TypedExpressions.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a | b; });
                     break;
 
-                case TokenType.operator_xor:
+                case TokenType.OperatorXor:
                     result = TypedExpressions.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a ^ b; })
                         ?? TypedExpressions.Create<int, int, int>(ValueLeft, ValueRight, (a, b) => { return a ^ b; });
                     break;
 
-                case TokenType.operator_andalso:
+                case TokenType.OperatorAndAlso:
                     result = TypedExpressions.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a && b; });
                     break;
 
-                case TokenType.operator_orelse:
+                case TokenType.OperatorOrElse:
                     result = TypedExpressions.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a || b; });
                     break;
 
-                case TokenType.operator_eq:
+                case TokenType.OperatorEQ:
                     result = TypedExpressions.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a == b; })
                         ?? TypedExpressions.Create<int, int, bool>(ValueLeft, ValueRight, (a, b) => { return a == b; })
                         ?? TypedExpressions.Create<string, string, bool>(ValueLeft, ValueRight, (a, b) => { return a == b; })
                         ?? TypedExpressions.Create<double, double, bool>(ValueLeft, ValueRight, (a, b) => { return a == b; })
                         ?? TypedExpressions.Create<object, object, bool>(ValueLeft, ValueRight, (a, b) => { return a.Equals(b); });
                     break;
-                case TokenType.operator_ne:
+                case TokenType.OperatorNE:
                     result = TypedExpressions.Create<bool, bool, bool>(ValueLeft, ValueRight, (a, b) => { return a != b; })
                         ?? TypedExpressions.Create<int, int, bool>(ValueLeft, ValueRight, (a, b) => { return a != b; })
                         ?? TypedExpressions.Create<string, string, bool>(ValueLeft, ValueRight, (a, b) => { return a != b; })
                         ?? TypedExpressions.Create<double, double, bool>(ValueLeft, ValueRight, (a, b) => { return a != b; })
                         ?? TypedExpressions.Create<object, object, bool>(ValueLeft, ValueRight, (a, b) => { return !a.Equals(b); });
                     break;
-                case TokenType.operator_ge:
-                case TokenType.operator_gt:
-                case TokenType.operator_le:
-                case TokenType.operator_lt:
+                case TokenType.OperatorGE:
+                case TokenType.OperatorGT:
+                case TokenType.OperatorLE:
+                case TokenType.OperatorLT:
                     result = CompareToExpr<int>(ValueLeft, ValueRight, tt)
                         ?? CompareToExpr<double>(ValueLeft, ValueRight, tt)
                         ?? CompareToExpr<bool>(ValueLeft, ValueRight, tt)
@@ -167,7 +168,7 @@ namespace Eval4.Core
                     break;
             }
             if (result != null) return result;
-            throw parser.NewParserException("Cannot apply the operator " + tt.ToString().Replace("operator_", "") + " on " + v1Type.ToString() + " and " + v2Type.ToString());
+            throw parser.NewParserException("Cannot apply the operator " + tt.ToString().Replace("Operator_", "") + " on " + v1Type.ToString() + " and " + v2Type.ToString());
         }
 
 
@@ -178,21 +179,21 @@ namespace Eval4.Core
 
             switch (tt)
             {
-                case TokenType.operator_not:
+                case TokenType.OperatorNot:
                     result = TypedExpressions.Create<bool, bool>(ValueLeft, (a) => { return !a; })
                         ?? TypedExpressions.Create<int, int>(ValueLeft, (a) => { return ~a; });
                     break;
-                case TokenType.operator_minus:
+                case TokenType.OperatorMinus:
                     result =  TypedExpressions.Create<int, int>(ValueLeft, (a) => { return -a; })
                         ?? TypedExpressions.Create<double, double>(ValueLeft, (a) => { return -a; });
                     break;
-                case TokenType.operator_plus:
+                case TokenType.OperatorPlus:
                     if (DelegatedExpr.IsIntOrSmaller(v1Type)) return ValueLeft;
                     else if (DelegatedExpr.IsDoubleOrSmaller(v1Type)) return ValueLeft;
                     break;
             }
             if (result != null) return result;
-            throw parser.NewParserException("Invalid operator " + tt.ToString().Replace("operator_", ""));
+            throw parser.NewParserException("Invalid operator " + tt.ToString().Replace("Operator_", ""));
         }
     }
 
@@ -514,7 +515,7 @@ namespace Eval4.Core
 
             foreach (IHasValue p in newParams)
             {
-                p.ValueChanged += p_ValueChanged;
+                if (p != null) p.ValueChanged += p_ValueChanged;
             }
             mParams = newParams;
             mParamValues = newParamValues;

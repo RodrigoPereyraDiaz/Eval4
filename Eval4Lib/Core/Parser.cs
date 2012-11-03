@@ -58,7 +58,7 @@ namespace Eval4.Core
             {
                 startpos = mPos;
                 mCurToken = mEvaluator.ParseToken(this);
-                if (mCurToken.Type != TokenType.none)
+                if (mCurToken.Type != TokenType.None)
                     return;
             } while (true);
         }
@@ -103,7 +103,7 @@ namespace Eval4.Core
                     NextChar();
                 }
             }
-            return mEvaluator.NewToken(TokenType.Value_number, sb.ToString());
+            return mEvaluator.NewToken(TokenType.ValueNumber, sb.ToString());
         }
 
         internal Token ParseIdentifierOrKeyword()
@@ -141,7 +141,7 @@ namespace Eval4.Core
                     else
                     {
                         //End of String
-                        return mEvaluator.NewToken(TokenType.Value_string, sb.ToString());
+                        return mEvaluator.NewToken(TokenType.ValueString, sb.ToString());
                     }
                 }
                 else if (mCurChar == '%')
@@ -202,7 +202,7 @@ namespace Eval4.Core
                     else sb.Append((o as IHasValue).ObjectValue);
                 }
             }
-            return mEvaluator.NewToken(TokenType.Value_string, sb.ToString());
+            return mEvaluator.NewToken(TokenType.ValueString, sb.ToString());
         }
 
         internal void Expect(TokenType tokenType, string msg)
@@ -231,7 +231,7 @@ namespace Eval4.Core
             IHasValue res;
             if (sourceIsTextTemplate) res = ParseTemplate();
             else res = ParseExpr(null, 0);
-            if (mCurToken.Type == TokenType.end_of_formula)
+            if (mCurToken.Type == TokenType.EndOfFormula)
             {
                 if (res == null)
                     res = new ConstantExpr<string>(string.Empty);
@@ -292,7 +292,7 @@ namespace Eval4.Core
         protected IHasValue ParseLeft(int precedence)
         {
             IHasValue result = null;
-            while (mCurToken.Type != TokenType.end_of_formula)
+            while (mCurToken.Type != TokenType.EndOfFormula)
             {
                 // we ignore precedence here, not sure if it is valid
                 result = mEvaluator.ParseLeft(this, mCurToken, precedence);
@@ -535,10 +535,10 @@ namespace Eval4.Core
             {
                 switch (mCurToken.Type)
                 {
-                    case TokenType.dot:
+                    case TokenType.Dot:
                         NextToken();
                         break;
-                    case TokenType.open_parenthesis:
+                    case TokenType.OpenParenthesis:
                         break;
                     // fine this is either an array or a default property
                     default:
@@ -635,17 +635,17 @@ namespace Eval4.Core
             IHasValue Valueleft = null;
             TokenType lClosing = default(TokenType);
 
-            if (mCurToken.Type == TokenType.open_parenthesis
-                || (mCurToken.Type == TokenType.open_bracket && !mEvaluator.UseParenthesisForArrays))
+            if (mCurToken.Type == TokenType.OpenParenthesis
+                || (mCurToken.Type == TokenType.OpenBracket && !mEvaluator.UseParenthesisForArrays))
             {
                 switch (mCurToken.Type)
                 {
-                    case TokenType.open_bracket:
-                        lClosing = TokenType.close_bracket;
+                    case TokenType.OpenBracket:
+                        lClosing = TokenType.CloseBracket;
                         brackets = true;
                         break;
-                    case TokenType.open_parenthesis:
-                        lClosing = TokenType.close_parenthesis;
+                    case TokenType.OpenParenthesis:
+                        lClosing = TokenType.CloseParenthesis;
                         break;
                 }
                 parameters = new List<IHasValue>();
@@ -667,7 +667,7 @@ namespace Eval4.Core
                         NextToken();
                         return parameters;
                     }
-                    else if (mCurToken.Type == TokenType.comma)
+                    else if (mCurToken.Type == TokenType.Comma)
                     {
                         NextToken();
                     }
@@ -684,48 +684,50 @@ namespace Eval4.Core
 
     public enum TokenType
     {
-        none,
-        end_of_formula,
-        operator_plus,
-        operator_minus,
-        operator_mul,
-        operator_div,
-        operator_mod,
-        open_parenthesis,
-        operator_ne,
-        operator_gt,
-        operator_ge,
-        operator_eq,
-        operator_le,
-        operator_lt,
-        operator_and,
-        operator_andalso,
-        operator_or,
-        operator_orelse,
-        operator_xor,
-        operator_concat,
-        operator_if,
-        operator_colon,
-        operator_assign,
-        operator_not,
-        operator_tilde,
-        Value_identifier,
-        Value_true,
-        Value_false,
-        Value_number,
-        Value_string,
-        Value_date,
-        open_bracket,
-        close_bracket,
-        comma,
-        dot,
-        close_parenthesis,
-        shift_left,
-        shift_right,
-        @new,
-        backslash,
-        exponent,
-        custom
+        None,
+        EndOfFormula,
+        OperatorPlus,
+        OperatorMinus,
+        OperatorMultiply,
+        OperatorDivide,
+        OperatorModulo,
+        OpenParenthesis,
+        OperatorNE,
+        OperatorGT,
+        OperatorGE,
+        OperatorEQ,
+        OperatorLE,
+        OperatorLT,
+        OperatorAnd,
+        OperatorAndAlso,
+        OperatorOr,
+        OperatorOrElse,
+        OperatorXor,
+        OperatorConcat,
+        OperatorIf,
+        OperatorColon,
+        OperatorAssign,
+        OperatorNot,
+        OperatorTilde,
+        ValueIdentifier,
+        ValueTrue,
+        ValueFalse,
+        ValueNumber,
+        ValueString,
+        ValueDate,
+        OpenBracket,
+        CloseBracket,
+        Comma,
+        Dot,
+        CloseParenthesis,
+        ShiftLeft,
+        ShiftRight,
+        New,
+        BackSlash,
+        Exponent,
+        ImplicitCast,
+        ExplicitCast,
+        Custom,
     }
 
 }

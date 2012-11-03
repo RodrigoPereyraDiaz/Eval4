@@ -27,54 +27,54 @@ namespace Eval4
             {
                 case '%':
                     parser.NextChar();
-                    return NewToken(TokenType.operator_mod);
+                    return NewToken(TokenType.OperatorModulo);
 
                 case '&':
                     parser.NextChar();
                     if (parser.mCurChar == '&')
                     {
                         parser.NextChar();
-                        return NewToken(TokenType.operator_andalso);
+                        return NewToken(TokenType.OperatorAndAlso);
                     }
-                    return NewToken(TokenType.operator_and);
+                    return NewToken(TokenType.OperatorAnd);
 
                 case '?':
                     parser.NextChar();
-                    return NewToken(TokenType.operator_if);
+                    return NewToken(TokenType.OperatorIf);
 
                 case '=':
                     parser.NextChar();
                     if (parser.mCurChar == '=')
                     {
                         parser.NextChar();
-                        return NewToken(TokenType.operator_eq);
+                        return NewToken(TokenType.OperatorEQ);
                     }
-                    return NewToken(TokenType.operator_assign);
+                    return NewToken(TokenType.OperatorAssign);
 
                 case '!':
                     parser.NextChar();
                     if (parser.mCurChar == '=')
                     {
                         parser.NextChar();
-                        return NewToken(TokenType.operator_ne);
+                        return NewToken(TokenType.OperatorNE);
                     }
-                    return NewToken(TokenType.operator_not);
+                    return NewToken(TokenType.OperatorNot);
 
                 case '^':
                     parser.NextChar();
-                    return NewToken(TokenType.operator_xor);
+                    return NewToken(TokenType.OperatorXor);
 
                 case '|':
                     parser.NextChar();
                     if (parser.mCurChar == '|')
                     {
                         parser.NextChar();
-                        return NewToken(TokenType.operator_orelse);
+                        return NewToken(TokenType.OperatorOrElse);
                     }
-                    return NewToken(TokenType.operator_or);
+                    return NewToken(TokenType.OperatorOr);
                 case ':':
                     parser.NextChar();
-                    return NewToken(TokenType.operator_colon);
+                    return NewToken(TokenType.OperatorColon);
                 default:
                     return base.ParseToken(parser);
 
@@ -87,10 +87,10 @@ namespace Eval4
                 switch (keyword.ToString())
                 {
                     case "true":
-                        return NewToken(TokenType.Value_true);
+                        return NewToken(TokenType.ValueTrue);
 
                     case "false":
-                        return NewToken(TokenType.Value_false);
+                        return NewToken(TokenType.ValueFalse);
 
                     default:
                         return base.CheckKeyword(keyword);
@@ -103,10 +103,10 @@ namespace Eval4
             var tt = tk.Type;
             switch (tt)
             {
-                case TokenType.operator_if:
+                case TokenType.OperatorIf:
                     parser.NextToken();
                     IHasValue thenExpr = parser.ParseExpr(null, 0);
-                    parser.Expect(TokenType.operator_colon, "Missing : in ? expression test ? valueIfTrue : valueIfFalse.");
+                    parser.Expect(TokenType.OperatorColon, "Missing : in ? expression test ? valueIfTrue : valueIfFalse.");
                     IHasValue elseExpr = parser.ParseExpr(null, 0);
                     ValueLeft = new OperatorIfExpr(ValueLeft, thenExpr, elseExpr);
                     return true;
@@ -121,87 +121,87 @@ namespace Eval4
             //http://msdn.microsoft.com/en-us/library/aa691323(v=vs.71).aspx
             switch (tt)
             {
-                case TokenType.dot:
-                case TokenType.open_parenthesis:
-                case TokenType.open_bracket:
-                case TokenType.@new:
+                case TokenType.Dot:
+                case TokenType.OpenParenthesis:
+                case TokenType.OpenBracket:
+                case TokenType.New:
 
                     // 	Primary	
                     //x.y  f(x)  a[x]  x++  x--  new
                     //typeof  checked  unchecked
                     return 15;
 
-                case TokenType.operator_plus:
-                case TokenType.operator_minus:
+                case TokenType.OperatorPlus:
+                case TokenType.OperatorMinus:
                     return (unary ? 14 : 12);
 
-                case TokenType.operator_not:
-                case TokenType.operator_tilde:
+                case TokenType.OperatorNot:
+                case TokenType.OperatorTilde:
                     // 	Unary	
                     //+  -  !  ~  ++x  --x  (T)x
                     return 14;
 
-                case TokenType.operator_mul:
-                case TokenType.operator_div:
-                case TokenType.operator_mod:
+                case TokenType.OperatorMultiply:
+                case TokenType.OperatorDivide:
+                case TokenType.OperatorModulo:
                     // 	Multiplicative	
                     //*  /  %
                     return 13;
 
-                //case TokenType.operator_plus:
-                //case TokenType.operator_minus:
+                //case TokenType.Operator_plus:
+                //case TokenType.Operator_minus:
                 // 	Additive	
                 //  +  -
                 //  return 12;
 
-                case TokenType.shift_left:
-                case TokenType.shift_right:
+                case TokenType.ShiftLeft:
+                case TokenType.ShiftRight:
                     // 	Shift	
                     //<<  >>
                     return 11;
 
-                case TokenType.operator_lt:
-                case TokenType.operator_le:
-                case TokenType.operator_ge:
-                case TokenType.operator_gt:
+                case TokenType.OperatorLT:
+                case TokenType.OperatorLE:
+                case TokenType.OperatorGE:
+                case TokenType.OperatorGT:
                     // 	Relational and type testing	
                     //<  >  <=  >=  is  as
                     return 10;
 
-                case TokenType.operator_eq:
-                case TokenType.operator_ne:
+                case TokenType.OperatorEQ:
+                case TokenType.OperatorNE:
                     // 	Equality	
                     //==  !=
                     return 9;
 
-                case TokenType.operator_and:
+                case TokenType.OperatorAnd:
                     // 	Logical AND	
                     //&
                     return 8;
 
-                case TokenType.operator_xor:
+                case TokenType.OperatorXor:
                     // 	Logical XOR	
                     //^
                     return 7;
 
-                case TokenType.operator_or:
+                case TokenType.OperatorOr:
                     // 	Logical OR	
                     //|
                     return 6;
 
-                case TokenType.operator_andalso:
+                case TokenType.OperatorAndAlso:
                     // 	Conditional AND	
                     //&&
                     return 5;
-                case TokenType.operator_orelse:
+                case TokenType.OperatorOrElse:
                     // 	Conditional OR	
                     //||
                     return 4;
-                case TokenType.operator_if:
+                case TokenType.OperatorIf:
                     // 	Conditional	
                     //?:
                     return 3;
-                case TokenType.operator_assign:
+                case TokenType.OperatorAssign:
                     // 	Assignment	
                     //=  *=  /=  %=  +=  -=  <<=  >>=  &=  ^=  |=
                     return 2;

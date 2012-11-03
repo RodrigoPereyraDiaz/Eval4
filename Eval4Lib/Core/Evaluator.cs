@@ -9,13 +9,66 @@ namespace Eval4.Core
         public bool RaiseVariableNotFoundException;
         protected VariableBag mVariableBag;
         public abstract int GetPrecedence(Token token, bool unary);
+        internal Dictionary<TokenType, List<Declaration>> mDeclarations;
+        internal Dictionary<TypePair, Declaration> mCasts;
 
+        internal class TypePair
+        {
+            public Type Actual;
+            public Type Target;
+        }
         public Evaluator()
         {
             mEnvironmentFunctionsList = new List<object>();
             mVariableBag = new VariableBag(this.IsCaseSensitive);
             mEnvironmentFunctionsList.Add(mVariableBag);
+            CompileTypeHandlers(GetTypeHandlers());
         }
+
+        protected virtual List<TypeHandler> GetTypeHandlers()
+        {
+            var typeHandlers = new List<TypeHandler>();
+            typeHandlers.Add(new IntTypeHandler());
+            typeHandlers.Add(new DateTimeTypeHandler());
+            typeHandlers.Add(new DoubleTypeHandler());
+            typeHandlers.Add(new StringTypeHandler());
+            typeHandlers.Add(new ObjectTypeHandler());
+            return typeHandlers;
+        }
+
+        protected virtual void CompileTypeHandlers(List<TypeHandler> typeHandlers)
+        {
+            mDeclarations = new Dictionary<TokenType, List<Declaration>>();
+            mCasts = new Dictionary<TypePair, Declaration>();
+            foreach (var th in typeHandlers)
+            {
+                foreach (var decl in th.mDeclarations)
+                {
+                    var tk = decl.tk;
+                    if (tk == TokenType.ImplicitCast || tk == TokenType.ExplicitCast)
+                    {
+                        var typePair = new TypePair() { Actual = decl.P1, Target = decl.T };
+                        Declaration curDecl;
+                        if (!mCasts.TryGetValue(typePair, out curDecl) ||
+                            (curDecl.tk == TokenType.ExplicitCast && decl.tk == TokenType.ImplicitCast))
+                        {
+                            mCasts[typePair] = decl;
+                        }
+                    }
+                    else
+                    {
+                        List<Declaration> tokenDeclarations;
+                        if (!mDeclarations.TryGetValue(tk, out tokenDeclarations))
+                        {
+                            tokenDeclarations = new List<Declaration>();
+                            mDeclarations[tk] = tokenDeclarations;
+                        }
+                        tokenDeclarations.Add(decl);
+                    }
+                }
+            }
+        }
+
 
         public abstract Token NewToken();
 
@@ -44,7 +97,7 @@ namespace Eval4.Core
                 var t = typeof(ConstantExpr<>).MakeGenericType(o.GetType());
                 o = Activator.CreateInstance(t, o);
             }
-            
+
             if (!mEnvironmentFunctionsList.Contains(o))
             {
                 mEnvironmentFunctionsList.Add(o);
@@ -150,7 +203,7 @@ namespace Eval4.Core
             IHasValue parsed = Parse(template, stringTemplate: true);
             return parsed;
         }
-            
+
 
         public void SetVariable<T>(string variableName, T variableValue)
         {
@@ -171,7 +224,7 @@ namespace Eval4.Core
 
         public virtual Token CheckKeyword(string keyword)
         {
-            return NewToken(TokenType.Value_identifier, keyword);
+            return NewToken(TokenType.ValueIdentifier, keyword);
         }
 
         //internal virtual int GetPrecedence(BaseParser parser, Token tk, bool unary)
@@ -181,16 +234,16 @@ namespace Eval4.Core
         //    {
         //        switch (tt)
         //        {
-        //            case TokenType.operator_minus:
+        //            case TokenType.Operator_minus:
         //                tt = TokenType.unary_minus;
         //                break;
-        //            case TokenType.operator_plus:
+        //            case TokenType.Operator_plus:
         //                tt = TokenType.unary_plus;
         //                break;
-        //            case TokenType.operator_not:
+        //            case TokenType.Operator_not:
         //                tt = TokenType.unary_not;
         //                break;
-        //            case TokenType.operator_tilde:
+        //            case TokenType.Operator_tilde:
         //                tt = TokenType.unary_tilde;
         //                break;
         //        }
@@ -208,73 +261,73 @@ namespace Eval4.Core
                 case '\r':
                 case '\n':
                     parser.NextChar();
-                    return NewToken(TokenType.none);
+                    return NewToken(TokenType.None);
 
                 case '\0': //null:
-                    return NewToken(TokenType.end_of_formula);
+                    return NewToken(TokenType.EndOfFormula);
 
                 case '-':
                     parser.NextChar();
 
-                    return NewToken(TokenType.operator_minus);
+                    return NewToken(TokenType.OperatorMinus);
                 case '+':
                     parser.NextChar();
-                    return NewToken(TokenType.operator_plus);
+                    return NewToken(TokenType.OperatorPlus);
                 case '*':
                     parser.NextChar();
-                    return NewToken(TokenType.operator_mul);
+                    return NewToken(TokenType.OperatorMultiply);
                 case '/':
                     parser.NextChar();
-                    return NewToken(TokenType.operator_div);
+                    return NewToken(TokenType.OperatorDivide);
                 case '(':
                     parser.NextChar();
-                    return NewToken(TokenType.open_parenthesis);
+                    return NewToken(TokenType.OpenParenthesis);
                 case ')':
                     parser.NextChar();
-                    return NewToken(TokenType.close_parenthesis);
+                    return NewToken(TokenType.CloseParenthesis);
                 case '<':
                     parser.NextChar();
                     if (parser.mCurChar == '=')
                     {
                         parser.NextChar();
-                        return NewToken(TokenType.operator_le);
+                        return NewToken(TokenType.OperatorLE);
                     }
                     else if (parser.mCurChar == '>')
                     {
                         parser.NextChar();
-                        return NewToken(TokenType.operator_ne);
+                        return NewToken(TokenType.OperatorNE);
                     }
                     else
                     {
-                        return NewToken(TokenType.operator_lt);
+                        return NewToken(TokenType.OperatorLT);
                     }
                 case '>':
                     parser.NextChar();
                     if (parser.mCurChar == '=')
                     {
                         parser.NextChar();
-                        return NewToken(TokenType.operator_ge);
+                        return NewToken(TokenType.OperatorGE);
                     }
                     else
                     {
-                        return NewToken(TokenType.operator_gt);
+                        return NewToken(TokenType.OperatorGT);
                     }
                 case ',':
                     parser.NextChar();
-                    return NewToken(TokenType.comma);
+                    return NewToken(TokenType.Comma);
                 case '.':
                     parser.NextChar();
                     if (parser.mCurChar >= '0' && parser.mCurChar <= '9') return parser.ParseNumber(afterDot: true);
-                    else return NewToken(TokenType.dot);
+                    else return NewToken(TokenType.Dot);
                 case '\'':
                 case '"':
                     return parser.ParseString(true);
                 case '[':
                     parser.NextChar();
-                    return NewToken(TokenType.open_bracket);
+                    return NewToken(TokenType.OpenBracket);
                 case ']':
                     parser.NextChar();
-                    return NewToken(TokenType.close_bracket);
+                    return NewToken(TokenType.CloseBracket);
                 default:
                     if (parser.mCurChar >= '0' && parser.mCurChar <= '9') return parser.ParseNumber();
                     else return parser.ParseIdentifierOrKeyword();
@@ -290,35 +343,35 @@ namespace Eval4.Core
 
             switch (token.Type)
             {
-                case TokenType.operator_minus:
-                case TokenType.operator_plus:
-                case TokenType.operator_not:
+                case TokenType.OperatorMinus:
+                case TokenType.OperatorPlus:
+                case TokenType.OperatorNot:
                     // unary minus operator
                     parser.NextToken();
                     result = parser.ParseExpr(null, opPrecedence);
                     result = TypedExpressions.UnaryExpr(parser, token.Type, result);
                     return result;
 
-                case TokenType.Value_identifier:
+                case TokenType.ValueIdentifier:
                     parser.ParseIdentifier(ref result);
                     return result;
 
-                case TokenType.Value_true:
+                case TokenType.ValueTrue:
                     result = new ConstantExpr<bool>(true);
                     parser.NextToken();
                     return result;
 
-                case TokenType.Value_false:
+                case TokenType.ValueFalse:
                     result = new ConstantExpr<bool>(false);
                     parser.NextToken();
                     return result;
 
-                case TokenType.Value_string:
+                case TokenType.ValueString:
                     result = new ConstantExpr<string>(token.ValueString);
                     parser.NextToken();
                     return result;
 
-                case TokenType.Value_number:
+                case TokenType.ValueNumber:
                     string valueString = token.ValueString;
                     int intValue;
                     double doubleValue;
@@ -337,7 +390,7 @@ namespace Eval4.Core
                     parser.NextToken();
                     return result;
 
-                case TokenType.Value_date:
+                case TokenType.ValueDate:
                     try
                     {
                         result = new ConstantExpr<DateTime>(DateTime.Parse(parser.mCurToken.ValueString));
@@ -349,10 +402,10 @@ namespace Eval4.Core
                         throw parser.NewParserException(string.Format("Invalid date {0}, it should be #DD/MM/YYYY hh:mm:ss#", parser.mCurToken.ValueString));
                     }
 
-                case TokenType.open_parenthesis:
+                case TokenType.OpenParenthesis:
                     parser.NextToken();
                     result = parser.ParseExpr(null, 0);
-                    if (parser.mCurToken.Type == TokenType.close_parenthesis)
+                    if (parser.mCurToken.Type == TokenType.CloseParenthesis)
                     {
                         // good we eat the end parenthesis and continue ...
                         parser.NextToken();
@@ -363,7 +416,7 @@ namespace Eval4.Core
                         throw parser.NewUnexpectedToken("End parenthesis not found");
                     }
 
-                case TokenType.operator_if:
+                case TokenType.OperatorIf:
                     // first check functions
                     List<IHasValue> parameters = null;
                     // parameters... 
@@ -382,34 +435,128 @@ namespace Eval4.Core
             IHasValue ValueRight;
             switch (tt)
             {
-                case TokenType.operator_plus:
-                case TokenType.operator_minus:
-                case TokenType.operator_concat:
-                case TokenType.operator_mul:
-                case TokenType.operator_div:
-                case TokenType.operator_or:
-                case TokenType.operator_orelse:
-                case TokenType.operator_and:
-                case TokenType.operator_andalso:
-                case TokenType.operator_xor:
-                case TokenType.operator_mod:
-                case TokenType.operator_ne:
-                case TokenType.operator_gt:
-                case TokenType.operator_ge:
-                case TokenType.operator_eq:
-                case TokenType.operator_le:
-                case TokenType.operator_lt:
+                case TokenType.OperatorPlus:
+                case TokenType.OperatorMinus:
+                case TokenType.OperatorConcat:
+                case TokenType.OperatorMultiply:
+                case TokenType.OperatorDivide:
+                case TokenType.OperatorOr:
+                case TokenType.OperatorOrElse:
+                case TokenType.OperatorAnd:
+                case TokenType.OperatorAndAlso:
+                case TokenType.OperatorXor:
+                case TokenType.OperatorModulo:
+                case TokenType.OperatorNE:
+                case TokenType.OperatorGT:
+                case TokenType.OperatorGE:
+                case TokenType.OperatorEQ:
+                case TokenType.OperatorLE:
+                case TokenType.OperatorLT:
                     parser.NextToken();
                     ValueRight = parser.ParseExpr(ValueLeft, opPrecedence);
-                    ValueLeft = TypedExpressions.BinaryExpr(parser, ValueLeft, tt, ValueRight);
+                                yield return new Dependency("p1", mP1);
+        //ValueLeft = TypedExpressions.BinaryExpr(parser, ValueLeft, tt, ValueRight);
+                    ValueLeft = FindOperation(ValueLeft, tt, ValueRight);
                     return true;
-                //case TokenType.operator_percent:
+                //case TokenType.Operator_percent:
                 //    parser.NextToken();
                 //    ValueLeft = TypedExpr.BinaryExpr(parser, ValueLeft, tt, Acc);
                 //    return true;
                 default:
                     return false;
             }
+        }
+
+        private IHasValue FindOperation(IHasValue ValueLeft, TokenType tt, IHasValue ValueRight)
+        {
+            var leftType = ValueLeft.SystemType;
+            var rightType = ValueRight.SystemType;
+            List<Declaration> declarations;
+            if (this.mDeclarations.TryGetValue(tt, out declarations))
+            {
+                foreach (var decl in declarations)
+                {
+                    Declaration cast1, cast2;
+                    if (CanCast(ValueLeft.SystemType, decl.P1, out cast1) && CanCast(ValueRight.SystemType, decl.P2, out cast2))
+                    {
+                        return CreateIHasValue(ValueLeft, ValueRight, cast1, cast2, decl);
+                    }
+                }
+            }
+            return null;
+        }
+
+        private IHasValue CreateIHasValue(IHasValue ValueLeft, IHasValue ValueRight, Declaration cast1, Declaration cast2, Declaration decl)
+        {
+            var x = typeof(NewTypedExpr<,,>).MakeGenericType(decl.P1, decl.P2, decl.T);
+            if (cast1 != null)
+            {
+            }
+            if (cast2 != null)
+            {
+            }
+            //        public TypedExpr(IHasValue<P1> p1, IHasValue<P2> p2, Func<P1, P2, T> func)
+
+            return (IHasValue)Activator.CreateInstance(x, ValueLeft, ValueRight, decl.dlg);
+
+        }
+
+        private class NewTypedExpr<P1, P2, T> : IHasValue<T>
+        {
+            private IHasValue<P1> mP1;
+            private IHasValue<P2> mP2;
+            private Func<P1, P2, T> mFunc;
+
+            public NewTypedExpr(IHasValue<P1> p1, IHasValue<P2> p2, Func<P1, P2, T> func)
+            {
+                mP1 = p1;
+                mP2 = p2;
+                mFunc = func;
+            }
+
+
+            public T Value
+            {
+                get { return mFunc(mP1.Value, mP2.Value); }
+            }
+
+            public object ObjectValue
+            {
+                get { return mFunc(mP1.Value, mP2.Value); }
+            }
+
+            public event ValueChangedEventHandler ValueChanged;
+
+            public Type SystemType
+            {
+                get { return typeof(T); }
+            }
+
+            public string ShortName
+            {
+                get { return "NewTypedExpr"; }
+            }
+
+            public IEnumerable<Dependency> Dependencies
+            {
+                get {
+                    yield return new Dependency("p1", mP1);
+                    yield return new Dependency("p2", mP2);
+                }
+            }
+        }
+
+        private bool CanCast(Type type1, Type type2, out Declaration cast)
+        {
+            cast = null;
+            if (type1 == type2 || type2.IsAssignableFrom(type1)) return true;
+            Declaration decl;
+            if (mCasts.TryGetValue(new TypePair() { Actual = type1, Target = type2 }, out decl))
+            {
+                cast = decl;
+                return true;
+            }
+            return false;
         }
 
         internal virtual void CleanUpCharacter(ref char mCurChar)
@@ -431,7 +578,7 @@ namespace Eval4.Core
         public Token NewToken(T customTokenType)
         {
             var result = new Token<T>();
-            result.Type = TokenType.custom;
+            result.Type = TokenType.Custom;
             result.CustomType = customTokenType;
             return result;
         }

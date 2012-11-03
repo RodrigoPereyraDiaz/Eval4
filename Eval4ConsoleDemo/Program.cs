@@ -28,9 +28,9 @@ namespace Eval4ConsoleDemo
 
         static void Main(string[] args)
         {
-            //Eval("1+2*3");
+            Eval("1+2*3.1");
 
-            Eval("A.T*X+Y"); //("Sin(X)*5.1");
+            //Eval("A.T*X+Y"); //("Sin(X)*5.1");
             Console.ReadKey(intercept: true);
         }
 

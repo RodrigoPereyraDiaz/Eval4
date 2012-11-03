@@ -8,7 +8,7 @@ namespace Eval4
 
     public enum CustomTokenType
     {
-        operator_percent,
+        Operator_percent,
         integer_div
     }
     
@@ -31,18 +31,18 @@ namespace Eval4
             {
                 case '%':
                     parser.NextChar();
-                    return NewToken(CustomTokenType.operator_percent);
+                    return NewToken(CustomTokenType.Operator_percent);
 
                 case '=':
                     parser.NextChar();
-                    return NewToken(TokenType.operator_eq);
+                    return NewToken(TokenType.OperatorEQ);
 
                 case '#':
                     return ParseDate(parser);
 
                 case '&':
                     parser.NextChar();
-                    return NewToken(TokenType.operator_concat);
+                    return NewToken(TokenType.OperatorConcat);
 
                 default:
                     return base.ParseToken(parser);
@@ -74,7 +74,7 @@ namespace Eval4
                     throw parser.NewParserException("Invalid date literal. Expcecting the format #yyyy/mm/dd#");
                 }
             }
-            return NewToken(TokenType.Value_date, sb.ToString());
+            return NewToken(TokenType.ValueDate, sb.ToString());
         }
 
 
@@ -84,33 +84,33 @@ namespace Eval4
             switch (keyword.ToString())
             {
                 case "and":
-                    return NewToken(TokenType.operator_and);
+                    return NewToken(TokenType.OperatorAnd);
 
                 case "andalso":
-                    return NewToken(TokenType.operator_andalso);
+                    return NewToken(TokenType.OperatorAndAlso);
 
                 case "or":
-                    return NewToken(TokenType.operator_or);
+                    return NewToken(TokenType.OperatorOr);
 
                 case "orelse":
-                    return NewToken(TokenType.operator_orelse);
+                    return NewToken(TokenType.OperatorOrElse);
 
                 case "xor":
-                    return NewToken(TokenType.operator_xor);
+                    return NewToken(TokenType.OperatorXor);
 
                 case "not":
-                    return NewToken(TokenType.operator_not);
+                    return NewToken(TokenType.OperatorNot);
 
                 case "true":
                 case "yes":
-                    return NewToken(TokenType.Value_true);
+                    return NewToken(TokenType.ValueTrue);
 
                 case "if":
-                    return NewToken(TokenType.operator_if);
+                    return NewToken(TokenType.OperatorIf);
 
                 case "false":
                 case "no":
-                    return NewToken(TokenType.Value_false);
+                    return NewToken(TokenType.ValueFalse);
 
                 default:
                     return base.CheckKeyword(keyword);
@@ -194,13 +194,13 @@ namespace Eval4
 
         internal override bool ParseRight(Parser parser, Token tk, int opPrecedence, IHasValue Acc, ref IHasValue ValueLeft)
         {
-            if (tk.Type == TokenType.custom)
+            if (tk.Type == TokenType.Custom)
             {
                 IHasValue ValueRight;
                 var tk2 = tk as Token<CustomTokenType>;
                 switch (tk2.CustomType)
                 {
-                    case CustomTokenType.operator_percent:
+                    case CustomTokenType.Operator_percent:
                         parser.NextToken();
                         //ValueRight = parser.ParseExpr(ValueLeft, opPrecedence);
                         if (DelegatedExpr.IsIntOrSmaller(ValueLeft.SystemType) && DelegatedExpr.IsIntOrSmaller(Acc.SystemType))
@@ -235,10 +235,10 @@ namespace Eval4
             //{
             //    switch (tt)
             //    {
-            //        case TokenType.operator_plus:
+            //        case TokenType.Operator_plus:
             //            tt = TokenType.unary_plus;
             //            break;
-            //        case TokenType.operator_minus:
+            //        case TokenType.Operator_minus:
             //            tt = TokenType.unary_minus;
             //            break;
             //    }
@@ -247,75 +247,75 @@ namespace Eval4
 
             switch (tt.Type)
             {
-                case TokenType.open_parenthesis:
+                case TokenType.OpenParenthesis:
                     return 16;
 
-                case TokenType.exponent:
+                case TokenType.Exponent:
                     //Exponentiation (^)
                     return 15;
 
-                case TokenType.operator_minus:
-                case TokenType.operator_plus:
+                case TokenType.OperatorMinus:
+                case TokenType.OperatorPlus:
                     //Unary identity and negation (+, –)
                     return (unary ? 14 : 9);
 
-                case TokenType.custom:
-                    if (tt.CustomType == CustomTokenType.operator_percent)
+                case TokenType.Custom:
+                    if (tt.CustomType == CustomTokenType.Operator_percent)
                     {
                         // the percent operator is something I created 
                         // it allows formula like 10 + 5% 
                         return 13;
                     }
                     break;
-                case TokenType.operator_mul:
-                case TokenType.operator_div:
+                case TokenType.OperatorMultiply:
+                case TokenType.OperatorDivide:
                     //Multiplication and floating-point division (*, /)
                     return 12;
 
-                case TokenType.backslash:
+                case TokenType.BackSlash:
                     //Integer division (\)
                     return 11;
 
-                case TokenType.operator_mod:
+                case TokenType.OperatorModulo:
                     //Modulus arithmetic (Mod)
                     return 10;
 
-                //case TokenType.operator_plus:
+                //case TokenType.Operator_plus:
                 //    //Addition and subtraction (+, –), string concatenation (+)
                 //    return 9;
 
-                case TokenType.operator_concat:
+                case TokenType.OperatorConcat:
                     //String concatenation (&)
                     return 8;
 
-                case TokenType.shift_left:
+                case TokenType.ShiftLeft:
                     //Arithmetic bit shift (<<, >>)
                     return 7;
 
-                case TokenType.operator_eq:
-                case TokenType.operator_ne:
-                case TokenType.operator_ge:
-                case TokenType.operator_gt:
-                case TokenType.operator_le:
-                case TokenType.operator_lt:
+                case TokenType.OperatorEQ:
+                case TokenType.OperatorNE:
+                case TokenType.OperatorGE:
+                case TokenType.OperatorGT:
+                case TokenType.OperatorLE:
+                case TokenType.OperatorLT:
                     //All comparison operators (=, <>, <, <=, >, >=, Is, IsNot, Like, TypeOf...Is)
                     return 6;
 
-                case TokenType.operator_not:
+                case TokenType.OperatorNot:
                     //Negation (Not)
                     return 5;
 
-                case TokenType.operator_and:
-                case TokenType.operator_andalso:
+                case TokenType.OperatorAnd:
+                case TokenType.OperatorAndAlso:
                     //Conjunction (And, AndAlso)
                     return 4;
 
-                case TokenType.operator_or:
-                case TokenType.operator_orelse:
+                case TokenType.OperatorOr:
+                case TokenType.OperatorOrElse:
                     //Inclusive disjunction (Or, OrElse)
                     return 3;
 
-                case TokenType.operator_xor:
+                case TokenType.OperatorXor:
                     //Exclusive disjunction (Xor)
                     return 2;
 
