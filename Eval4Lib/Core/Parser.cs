@@ -52,7 +52,6 @@ namespace Eval4.Core
                 throw NewParserException(msg + "Unexpected " + mCurToken.Type);
             }
             else
-
             {
                 throw NewParserException(msg + "Unexpected " + mCurToken.Type + " \"" + mCurToken.ValueString + "\"");
             }
@@ -378,7 +377,8 @@ namespace Eval4.Core
         {
             MemberInfo mi = null;
             Type resultType;
-            if (GetMemberInfo(baseType, isStatic: true, isInstance: @base != null, func: funcName, parameters: parameters, mi: out mi, resultType: out resultType))
+            Delegate[] casts;
+            if (GetMemberInfo(baseType, isStatic: true, isInstance: @base != null, func: funcName, parameters: parameters, mi: out mi, resultType: out resultType, casts: out casts))
             {
 
                 switch (mi.MemberType)
@@ -401,7 +401,7 @@ namespace Eval4.Core
                     default:
                         throw NewUnexpectedToken(mi.MemberType.ToString() + " members are not supported");
                 }
-                var res = GetNewCallMethodExpr(resultType, @base, mi, parameters);
+                var res = GetNewCallMethodExpr(resultType, @base, mi, parameters, casts);
                 return res;
             }
             if (@base is IVariableBag && (parameters == null || parameters.Count == 0))
@@ -415,13 +415,13 @@ namespace Eval4.Core
             return null;
         }
 
-        private IHasValue GetNewCallMethodExpr(Type resultType, IHasValue @base, MemberInfo mi, List<IHasValue> parameters)
+        private IHasValue GetNewCallMethodExpr(Type resultType, IHasValue @base, MemberInfo mi, List<IHasValue> parameters, Delegate[] casts)
         {
             var t = typeof(CallMethodExpr<>).MakeGenericType(resultType);
-            return (IHasValue)Activator.CreateInstance(t, @base, mi, parameters);
+            return (IHasValue)Activator.CreateInstance(t, mEvaluator, @base, mi, parameters, casts);
         }
 
-        protected bool GetMemberInfo(Type objType, bool isStatic, bool isInstance, string func, List<IHasValue> parameters, out MemberInfo mi, out Type resultType)
+        protected bool GetMemberInfo(Type objType, bool isStatic, bool isInstance, string func, List<IHasValue> parameters, out MemberInfo mi, out Type resultType, out Delegate[] casts)
         {
             BindingFlags bindingAttr = default(BindingFlags);
             bindingAttr = BindingFlags.GetProperty | BindingFlags.GetField | BindingFlags.Public | BindingFlags.InvokeMethod;
@@ -445,9 +445,10 @@ namespace Eval4.Core
 
             // There is a bit of cooking here...
             // lets find the most acceptable Member
-            int Score = 0;
+            int score = 0;
             int BestScore = 0;
             MemberInfo BestMember = null;
+            Delegate[] bestCasts = null;
             ParameterInfo[] plist = null;
             int idx = 0;
 
@@ -468,7 +469,7 @@ namespace Eval4.Core
                 {
                     plist = null;
                 }
-                Score = 10;
+                score = 10;
                 // by default
                 idx = 0;
                 if (plist == null)
@@ -477,9 +478,11 @@ namespace Eval4.Core
                     parameters = new List<IHasValue>();
 
                 ParameterInfo pi = null;
+                var castList = new List<Delegate>();
+
                 if (parameters.Count > plist.Length)
                 {
-                    Score = 0;
+                    score = 0;
                 }
                 else
                 {
@@ -488,27 +491,31 @@ namespace Eval4.Core
                         pi = plist[index];
                         if (idx < parameters.Count)
                         {
-                            Score += ParamCompatibility(parameters[idx], pi.ParameterType);
+                            Delegate castDlg;
+                            score += ParamCompatibility(parameters[idx], pi.ParameterType, out castDlg);
+                            castList.Add(castDlg);
                         }
                         else if (pi.IsOptional)
                         {
-                            Score += 10;
+                            score += 10;
                         }
                         else
                         {
                             // unknown parameter
-                            Score = 0;
+                            score = 0;
                         }
                         idx += 1;
                     }
                 }
-                if (Score > BestScore)
+                if (score > BestScore)
                 {
-                    BestScore = Score;
+                    BestScore = score;
                     BestMember = mi;
+                    bestCasts = castList.ToArray();
                 }
             }
             mi = BestMember;
+            casts = bestCasts;
             if (mi is MethodInfo) resultType = (mi as MethodInfo).ReturnType;
             else if (mi is PropertyInfo) resultType = (mi as PropertyInfo).PropertyType;
             else if (mi is FieldInfo) resultType = (mi as FieldInfo).FieldType;
@@ -516,26 +523,31 @@ namespace Eval4.Core
             return resultType != null;
         }
 
-        protected static int ParamCompatibility(object value, Type type)
+        protected int ParamCompatibility(IHasValue actual, Type expectedType, out Delegate castDlg)
         {
+            castDlg = null;
             // This function returns a score 1 to 10 to this question
             // Can this Value fit into this type ?
-            if (value == null)
+            var actualType = actual.SystemType;
+            if (actualType == expectedType || expectedType.IsAssignableFrom(actualType)) return 10;
+            Declaration cast;
+            if (mEvaluator.mImplicitCasts.TryGetValue(new Evaluator.TypePair() { Actual = actualType, Target = expectedType }, out cast))
             {
-                if (object.ReferenceEquals(type, typeof(object)))
-                    return 10;
-                if (object.ReferenceEquals(type, typeof(string)))
-                    return 8;
-                return 5;
+                castDlg = cast.dlg;
+                return 8;
             }
-            else if (object.ReferenceEquals(type, value.GetType()))
+            if (expectedType == typeof(object)) return 6;
+            if (expectedType == typeof(string))
             {
-                return 10;
+                castDlg = new Func<object, string>((o) => o.ToString());
+                return 4;
             }
-            else
+            if (mEvaluator.mExplicitCasts.TryGetValue(new Evaluator.TypePair() { Actual = actualType, Target = expectedType }, out cast))
             {
-                return 5;
+                castDlg = cast.dlg;
+                return 2;
             }
+            return 0;
         }
 
         protected void ParseDot(ref IHasValue ValueLeft)
@@ -622,10 +634,11 @@ namespace Eval4.Core
                     }
                     else
                     {
-                        MemberInfo mi = null;
-                        if (GetMemberInfo(t, isStatic: true, isInstance: true, func: null, parameters: parameters, mi: out mi, resultType: out resultType))
+                        MemberInfo mi;
+                        Delegate[] casts;
+                        if (GetMemberInfo(t, isStatic: true, isInstance: true, func: null, parameters: parameters, mi: out mi, resultType: out resultType, casts: out casts))
                         {
-                            valueLeft = GetNewCallMethodExpr(resultType, valueLeft, mi, parameters);
+                            valueLeft = GetNewCallMethodExpr(resultType, valueLeft, mi, parameters, casts);
                         }
                         else
                         {

@@ -5,22 +5,17 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Eval4.CSharpTests
 {
     [TestClass]
-    public class TestArraysAndObjects
+    public class TestArraysAndObjects : BaseTest
     {
-        static VbEvaluator evVB;
-        static CSharpEvaluator evCSharp;
         static Accounts accountInstance = new Accounts();
 
-        static TestArraysAndObjects()
+        public TestArraysAndObjects()
         {
-            evVB = new VbEvaluator();
-            evCSharp = new CSharpEvaluator();
             InitEvaluator(evVB);
-            InitEvaluator(evCSharp);
-
+            InitEvaluator(evCS);
         }
 
-        private static void InitEvaluator(Eval4.Core.Evaluator ev)
+        private void InitEvaluator(Eval4.Core.Evaluator ev)
         {
             ev.SetVariable("pascal", new int[] { 1, 8, 28, 56, 70, 56, 28, 8, 1 });
             ev.SetVariable("fibonacci", new int[] { 1, 1, 2, 3, 5, 8, 13, 21, 34 });
@@ -52,50 +47,44 @@ namespace Eval4.CSharpTests
             }
         }
 
-        public void TestFormula<T>(Eval4.Core.Evaluator ev, string formula, T expectedResult)
-        {
-            var actualResult = ev.Eval(formula);
-            Assert.AreEqual(expectedResult, actualResult, formula);
-        }
-
-        public void TestFormula<T>(string formula, T expectedResult)
-        {
-            TestFormula(evCSharp, formula, expectedResult);
-            formula = formula.Replace("[", "(").Replace("]", ")");
-            TestFormula(evVB, formula, expectedResult);
-        }
-
-
         [TestMethod]
         public void CheckArrays()
         {
-            TestFormula("pascal[0]", 1);
-            TestFormula("pascal[2]", 28);
-            TestFormula("pascal[2]*2", 56);
-            TestFormula("mult[1,0]", 0);
-            TestFormula("mult[1,2]", 2);
-            TestFormula("mult[2,3]", 6);
-            TestFormula("mult[3,3]", 9);
+            TestCSFormula("pascal[0]", 1);
+            TestCSFormula("pascal[2]", 28);
+            TestCSFormula("pascal[2]*2", 56);
+            TestCSFormula("mult[1,0]", 0);
+            TestCSFormula("mult[1,2]", 2);
+            TestCSFormula("mult[2,3]", 6);
+            TestCSFormula("mult[3,3]", 9);
+
+            TestVBFormula("pascal(0)", 1);
+            TestVBFormula("pascal(2)", 28);
+            TestVBFormula("pascal(2)*2", 56);
+            TestVBFormula("mult(1,0)", 0);
+            TestVBFormula("mult(1,2)", 2);
+            TestVBFormula("mult(2,3)", 6);
+            TestVBFormula("mult(3,3)", 9);
         }
 
         [TestMethod]
         public void CheckMethod()
         {
-            TestFormula("accounts.Credit", 150.00);
-            TestFormula("accounts.Vat", 20.00);
-            TestFormula("accounts.CreditWithVat", 180.0);
-            TestFormula("accounts.AddVat(20,100)", 120.0);
+            TestVbAndCsFormula("accounts.Credit", 150.00);
+            TestVbAndCsFormula("accounts.Vat", 20.00);
+            TestVbAndCsFormula("accounts.CreditWithVat", 180.0);
+            TestVbAndCsFormula("accounts.AddVat(20,100)", 120.0);
 
-            TestFormula("accounts.ByteValue", (byte)123);
-            TestFormula("accounts.SingleValue", (Single)123);
-            TestFormula("accounts.DecimalValue", (decimal)123);
-            TestFormula("accounts.Int16Value", (Int16)123);
+            TestVbAndCsFormula("accounts.ByteValue", (byte)123);
+            TestVbAndCsFormula("accounts.SingleValue", (Single)123);
+            TestVbAndCsFormula("accounts.DecimalValue", (decimal)123);
+            TestVbAndCsFormula("accounts.Int16Value", (Int16)123);
 
-            TestFormula("accounts.ByteValue * 1.0", 123.0);
-            TestFormula("accounts.SingleValue  * 1.0", 123.0);
-            //TestFormula("accounts.DecimalValue * 1.0", accountInstance.DecimalValue * 1.0);
-            TestFormula("accounts.Int16Value * 1.0", 123.0);
-            TestFormula("accounts.Sum(1,2,3,4)", (decimal)10.0);
+            TestVbAndCsFormula("accounts.ByteValue * 1.0", 123.0);
+            TestVbAndCsFormula("accounts.SingleValue  * 1.0", 123.0);
+            //TestVbAndCsFormula("accounts.DecimalValue * 1.0", accountInstance.DecimalValue * 1.0);
+            TestVbAndCsFormula("accounts.Int16Value * 1.0", 123.0);
+            //TestVbAndCsFormula("accounts.Sum(1,2,3,4)", (decimal)10.0);
 
         }
     }

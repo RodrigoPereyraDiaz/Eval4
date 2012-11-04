@@ -2,339 +2,8 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-
 namespace Eval4.Core
 {
-    class TypedExpressions
-    {
-
-        public static TypedExpr Create<P1, P2, T>(IHasValue p1, IHasValue p2, Func<P1, P2, T> func)
-        {
-            if (!CanConvert(p1, typeof(P1))) return null;
-            if (!CanConvert(p2, typeof(P2))) return null;
-            return new TypedExpr<P1, P2, T>(ChangeType<P1>(p1), ChangeType<P2>(p2), func);
-        }
-
-        private static bool CanConvert(IHasValue actual, Type targetType)
-        {
-            var actualType = actual.SystemType;
-            if (targetType == actualType) return true;
-            if (targetType.IsAssignableFrom(actualType)) return true;
-            if (targetType == typeof(int)) return DelegatedExpr.IsIntOrSmaller(actualType);
-            if (targetType == typeof(double)) return DelegatedExpr.IsDoubleOrSmaller(actualType);
-            if (targetType == typeof(string)) return true;
-            return false;
-        }
-
-        public static TypedExpr Create<P1, T>(IHasValue p1, Func<P1, T> func)
-        {
-            if (!CanConvert(p1, typeof(P1))) return null;
-            return new TypedExpr<P1, T>(ChangeType<P1>(p1), func);
-        }
-
-        public static IHasValue<P> ChangeType<P>(IHasValue p)
-        {
-            if (!(p is IHasValue<P>))
-            {
-                p = new ChangeTypeExpr<P>(p);
-            }
-            return (IHasValue<P>)p;
-        }
-
-        public static IHasValue ChangeType(IHasValue expr, Type newType)
-        {
-            if (expr.SystemType == newType) return (IHasValue)expr;
-
-            var t = typeof(ChangeTypeExpr<>).MakeGenericType(newType);
-            var i = (ISetP1)Activator.CreateInstance(t);
-            i.SetP1((IHasValue)expr);
-            return i;
-        }
-
-        //internal static IHasValue UnaryExpr(Parser parser, TokenType tt, IHasValue ValueLeft)
-        //{
-        //var v1Type = ValueLeft.SystemType;
-        //TypedExpr result = null;
-
-        //switch (tt)
-        //{
-        //    case TokenType.OperatorNot:
-        //        result = TypedExpressions.Create<bool, bool>(ValueLeft, (a) => { return !a; })
-        //            ?? TypedExpressions.Create<int, int>(ValueLeft, (a) => { return ~a; });
-        //        break;
-        //    case TokenType.OperatorMinus:
-        //        result = TypedExpressions.Create<int, int>(ValueLeft, (a) => { return -a; })
-        //            ?? TypedExpressions.Create<double, double>(ValueLeft, (a) => { return -a; });
-        //        break;
-        //    case TokenType.OperatorPlus:
-        //        if (DelegatedExpr.IsIntOrSmaller(v1Type)) return ValueLeft;
-        //        else if (DelegatedExpr.IsDoubleOrSmaller(v1Type)) return ValueLeft;
-        //        break;
-        //}
-        //if (result != null) return result;
-        //throw parser.NewParserException("Invalid operator " + tt.ToString().Replace("Operator_", ""));
-        //}
-    }
-
-    public interface ISetP1 : IHasValue
-    {
-        void SetP1(IHasValue p1);
-    }
-
-    public interface ISetP2 : IHasValue
-    {
-        void SetP2(IHasValue p2);
-    }
-
-    public class ChangeTypeExpr<T> : ISetP1, IHasValue<T>
-    {
-        internal IHasValue mP1;
-
-        public ChangeTypeExpr()
-        {
-        }
-
-        public ChangeTypeExpr(IHasValue p1)
-        {
-            mP1 = p1;
-            mP1.ValueChanged += mP1_ValueChanged;
-        }
-
-        void mP1_ValueChanged(object sender, EventArgs e)
-        {
-            if (ValueChanged != null) ValueChanged(sender, e);
-        }
-
-        public object ObjectValue
-        {
-            get { return Value; }
-        }
-
-        public event ValueChangedEventHandler ValueChanged;
-
-        public Type SystemType
-        {
-            get { return typeof(T); }
-        }
-
-        public T Value
-        {
-            get
-            {
-                return (T)System.Convert.ChangeType(mP1.ObjectValue, typeof(T));
-            }
-        }
-
-        public IEnumerable<Dependency> Dependencies
-        {
-            get
-            {
-                yield return new Dependency("p1", mP1);
-            }
-        }
-
-
-        public string ShortName
-        {
-            get { return "ChangeType"; }
-        }
-
-
-        public void SetP1(IHasValue p1)
-        {
-            mP1 = p1;
-            p1.ValueChanged += mP1_ValueChanged;
-        }
-    }
-
-    public abstract class TypedExpr : IHasValue, ISetP1, ISetP2
-    {
-
-        public abstract object ObjectValue { get; }
-
-        public event ValueChangedEventHandler ValueChanged;
-
-        public abstract Type SystemType { get; }
-
-        public string ShortName { get; set; }
-
-        public abstract IEnumerable<Dependency> Dependencies { get; }
-
-        internal void RaiseValueChanged(object sender, EventArgs e)
-        {
-            if (ValueChanged != null) ValueChanged(sender, e);
-        }
-
-        public abstract void SetP1(IHasValue newP1);
-        public abstract void SetP2(IHasValue newP2);
-    }
-
-    public class TypedExpr<P1, P2, T> : TypedExpr, IHasValue<T>
-    {
-        private IHasValue<P1> mP1;
-        private IHasValue<P2> mP2;
-        private Func<P1, P2, T> mFunc;
-
-        public TypedExpr(IHasValue<P1> p1, IHasValue<P2> p2, Func<P1, P2, T> func)
-        {
-            mP1 = p1;
-            mP2 = p2;
-            mFunc = func;
-            mP1.ValueChanged += mP_ValueChanged;
-            mP2.ValueChanged += mP_ValueChanged;
-        }
-
-        void mP_ValueChanged(object sender, EventArgs e)
-        {
-            base.RaiseValueChanged(sender, e);
-        }
-
-
-        public override object ObjectValue
-        {
-            get
-            {
-                return mFunc(mP1.Value, mP2.Value);
-            }
-        }
-
-        public override Type SystemType
-        {
-            get { return typeof(T); }
-        }
-
-        public T Value
-        {
-            get { return mFunc(mP1.Value, mP2.Value); }
-        }
-
-
-        public override IEnumerable<Dependency> Dependencies
-        {
-            get
-            {
-                yield return new Dependency("P1", mP1);
-                yield return new Dependency("P2", mP2);
-            }
-        }
-
-        public override void SetP1(IHasValue newP1)
-        {
-            mP1 = (IHasValue<P1>)newP1;
-        }
-
-        public override void SetP2(IHasValue newP2)
-        {
-            mP2 = (IHasValue<P2>)newP2;
-        }
-    }
-
-    public class TypedExpr<P1, T> : TypedExpr, IHasValue<T>
-    {
-        private IHasValue<P1> mP1;
-        private Func<P1, T> mFunc;
-
-        public TypedExpr(IHasValue<P1> p1, Func<P1, T> func)
-        {
-            mP1 = p1;
-            mFunc = func;
-            mP1.ValueChanged += mP_ValueChanged;
-        }
-
-        void mP_ValueChanged(object Sender, EventArgs e)
-        {
-            if (ValueChanged != null) ValueChanged(Sender, e);
-        }
-
-        public event ValueChangedEventHandler ValueChanged;
-
-        public T Value
-        {
-            get { return mFunc(mP1.Value); }
-        }
-
-        public override object ObjectValue
-        {
-            get { return mFunc(mP1.Value); }
-        }
-
-        public override Type SystemType
-        {
-            get { return typeof(T); }
-        }
-
-        public override IEnumerable<Dependency> Dependencies
-        {
-            get
-            {
-                yield return new Dependency("p1", mP1);
-            }
-        }
-
-        public override void SetP1(IHasValue newP1)
-        {
-            mP1 = (IHasValue<P1>)newP1;
-        }
-
-        public override void SetP2(IHasValue newP2)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public abstract class DelegatedExpr : IHasValue
-    {
-
-        protected ValueDelegate mValueDelegate;
-        protected delegate object ValueDelegate();
-
-        public delegate void RunDelegate();
-
-
-        protected DelegatedExpr()
-        {
-        }
-
-        protected void RaiseEventValueChanged(object sender, EventArgs e)
-        {
-            if (ValueChanged != null)
-            {
-                ValueChanged(sender, e);
-            }
-        }
-
-        public abstract Type SystemType { get; }
-
-        public static bool IsDoubleOrSmaller(Type v1Type)
-        {
-            return v1Type == typeof(sbyte) || v1Type == typeof(Int16) || v1Type == typeof(Int32) || v1Type == typeof(Int64)
-                || v1Type == typeof(byte) || v1Type == typeof(UInt16) || v1Type == typeof(UInt32) || v1Type == typeof(UInt64)
-                || v1Type == typeof(Single) || v1Type == typeof(double) || v1Type == typeof(Decimal);
-        }
-
-        public static bool IsIntOrSmaller(Type v1Type)
-        {
-            return v1Type == typeof(sbyte) || v1Type == typeof(Int16) || v1Type == typeof(Int32)
-                || v1Type == typeof(byte) || v1Type == typeof(UInt16);
-        }
-
-        public virtual object ObjectValue
-        {
-            get { return mValueDelegate(); }
-        }
-
-        System.Type IHasValue.SystemType
-        {
-            get { return SystemType; }
-        }
-
-        public event ValueChangedEventHandler ValueChanged;
-
-        public abstract IEnumerable<Dependency> Dependencies { get; }
-
-        public abstract string ShortName { get; }
-    }
-
     internal class ConstantExpr<T> : IHasValue<T>
     {
         private T mValue;
@@ -385,7 +54,7 @@ namespace Eval4.Core
         private System.Type mResultSystemType;
         private IHasValue withEventsField_mResultValue;
 
-        public CallMethodExpr(IHasValue baseObject, MemberInfo method, List<IHasValue> @params)
+        public CallMethodExpr(Evaluator ev, IHasValue baseObject, MemberInfo method, List<IHasValue> @params, Delegate[] casts)
         {
             if (@params == null)
                 @params = new List<IHasValue>();
@@ -440,7 +109,13 @@ namespace Eval4.Core
             {
                 if (i < paramInfo.Length)
                 {
-                    mParams[i] = TypedExpressions.ChangeType(mParams[i], paramInfo[i].ParameterType);
+                    var sourceType = mParams[i].SystemType;
+                    var targetType = paramInfo[i].ParameterType;
+                    if (sourceType != targetType)
+                    {
+                        var c2 = typeof(Eval4.Core.Evaluator.NewTypedExpr<,>).MakeGenericType(sourceType, targetType);
+                        mParams[i] = (IHasValue)Activator.CreateInstance(c2, mParams[i], casts[i]);
+                    }
                 }
             }
         }
@@ -659,7 +334,7 @@ namespace Eval4.Core
         public event ValueChangedEventHandler ValueChanged;
     }
 
-    public class OperatorIfExpr : DelegatedExpr
+    public class OperatorIfExpr<T> : IHasValue<T>
     {
         private Type mSystemType;
         private IHasValue ifExpr;
@@ -674,7 +349,7 @@ namespace Eval4.Core
             mSystemType = thenExpr.SystemType;
         }
 
-        public override object ObjectValue
+        public object ObjectValue
         {
             get
             {
@@ -686,14 +361,14 @@ namespace Eval4.Core
                 return result;
             }
         }
-        public override Type SystemType
+        public Type SystemType
         {
             get { return mSystemType; }
         }
 
 
 
-        public override IEnumerable<Dependency> Dependencies
+        public IEnumerable<Dependency> Dependencies
         {
             get
             {
@@ -704,9 +379,17 @@ namespace Eval4.Core
             }
         }
 
-        public override string ShortName
+        public string ShortName
         {
             get { return "OperatorIf"; }
         }
+
+        public T Value
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+
+        public event ValueChangedEventHandler ValueChanged;
     }
 }

@@ -5,27 +5,18 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Eval4.CSharpTests
 {
     [TestClass]
-    public class TestEnvironmentFunctions
+    public class TestEnvironmentFunctions : BaseTest
     {
-        static VbEvaluator ev;
-
-        static TestEnvironmentFunctions()
+        public TestEnvironmentFunctions()
         {
-            ev = new VbEvaluator();
-            ev.AddEnvironmentFunctions(typeof(EnvironmentFunctions));
+            evVB.AddEnvironmentFunctions(typeof(EnvironmentFunctions));
         }
 
-
-        public void TestFormula<T>(string formula, T expectedResult)
-        {
-            var actualResult = ev.Eval(formula);
-            Assert.AreEqual(expectedResult, actualResult, formula);
-        }
 
         [TestMethod]
         public void TestEnvironment()
         {
-            TestFormula("avg(2,3,5)", 10 / 3.0);
+            TestVBFormula("avg(2,3,5)", 10 / 3.0);
         }
     }
 

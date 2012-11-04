@@ -51,6 +51,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="BaseTest.cs" />
     <Compile Include="CommonTests.cs" />
     <Compile Include="CSharpTests.cs" />
     <Compile Include="TestEnvironmentFunctions.cs" />

@@ -20,7 +20,7 @@ namespace Eval4.Core
             public Type Target;
             public override string ToString()
             {
-                return "(" + Target.Name + ")" + Actual.Name;
+                return Actual.Name + "=>" + Target.Name;
             }
 
             public bool Equals(TypePair other)
@@ -453,7 +453,8 @@ namespace Eval4.Core
                     parser.NextToken();
                     bool brackets = false;
                     parameters = parser.ParseParameters(ref brackets);
-                    return new OperatorIfExpr(parameters[0], parameters[1], parameters[2]);
+                    var t = typeof(OperatorIfExpr<>).MakeGenericType(parameters[1].SystemType);
+                    return (IHasValue)Activator.CreateInstance(t, parameters[0], parameters[1], parameters[2]);
             }
             throw parser.NewUnexpectedToken();
         }
@@ -539,13 +540,14 @@ namespace Eval4.Core
 
         //}
 
-        private class NewTypedExpr<P1, T> : IHasValue<T>
+        internal class NewTypedExpr<P1, T> : IHasValue<T>
         {
             private IHasValue<P1> mP1;
             private Func<P1, T> mFunc;
 
             public NewTypedExpr(IHasValue<P1> p1, Func<P1, T> func)
             {
+                System.Diagnostics.Debug.Assert(func != null);
                 mP1 = p1;
                 mFunc = func;
             }
@@ -582,7 +584,7 @@ namespace Eval4.Core
             }
         }
 
-        private class NewTypedExpr<P1, P2, T> : IHasValue<T>
+        internal class NewTypedExpr<P1, P2, T> : IHasValue<T>
         {
             private IHasValue<P1> mP1;
             private IHasValue<P2> mP2;

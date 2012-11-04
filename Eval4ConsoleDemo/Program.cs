@@ -11,7 +11,7 @@ namespace Eval4ConsoleDemo
     class Program
     {
         //static Eval4.Core.Evaluator ev = new CSharpEvaluator();
-        static Eval4.Core.Evaluator ev = new VbEvaluator();
+        static Eval4.Core.Evaluator ev = new CSharpEvaluator();
         public readonly static Int16 X = 12;
         public static Single Y = 34.56F;
         public static Account A = new Account();
@@ -52,7 +52,8 @@ namespace Eval4ConsoleDemo
 
             //TestFormula("#2012/12/25#", christmas);
             //TestFormula("#2012/12/25# + 1", christmas.AddDays(1));
-            TestFormula("-1.5*-2.5", -1.5 * -2.5);
+            //TestFormula("-1.5*-2.5", -1.5 * -2.5);
+            TestFormula("true ?  1:0", 1);
 
             Console.WriteLine("Completed");
             Console.ReadKey();

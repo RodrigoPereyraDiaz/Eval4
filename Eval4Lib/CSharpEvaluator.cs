@@ -109,7 +109,9 @@ namespace Eval4
                     IHasValue thenExpr = parser.ParseExpr(null, 0);
                     parser.Expect(TokenType.OperatorColon, "Missing : in ? expression test ? valueIfTrue : valueIfFalse.");
                     IHasValue elseExpr = parser.ParseExpr(null, 0);
-                    valueLeft = new OperatorIfExpr(valueLeft, thenExpr, elseExpr);
+                    var t = typeof(OperatorIfExpr<>).MakeGenericType(thenExpr.SystemType);
+
+                    valueLeft = (IHasValue)Activator.CreateInstance(t, valueLeft, thenExpr, elseExpr);
                     break;
                 default:
                     base.ParseRight(parser, tk, opPrecedence, Acc, ref valueLeft);
