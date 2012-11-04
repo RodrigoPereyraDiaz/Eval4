@@ -1,17 +1,45 @@
-﻿using System;
+﻿using Eval4.Core;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
-using Eval4.Core;
 
 namespace Eval4
 {
-    public enum CSharpCustomToken
+    public enum ExcelToken
     {
         None
     }
 
-    public class CSharpEvaluator : Core.Evaluator<CSharpCustomToken>
+    public class Range
     {
+    }
+
+    public class Cell
+    {
+        public Object Value;
+    }
+
+    public class CellTypeHandler : TypeHandler
+    {
+        public CellTypeHandler()
+        {
+            base.AddImplicitCast<Cell, double>((a) =>
+            {
+                var value = a.Value;
+                if (value is double) return (double)value;
+                if (value is bool) return ((bool)value )? 1 : 0;
+                if (value is DateTime) return ((DateTime)value).Subtract(EPOCH).TotalDays;
+                return double.NaN;
+            });
+        }
+        static DateTime EPOCH = new DateTime(1900, 1, 1);
+    }
+
+
+    public class ExcelEvaluator : Evaluator<ExcelToken>
+    {
+
         protected internal override bool IsCaseSensitive
         {
             get { return true; }
@@ -24,9 +52,29 @@ namespace Eval4
 
         protected override List<TypeHandler> GetTypeHandlers()
         {
-            return base.GetTypeHandlers();
+            var typeHandlers = new List<TypeHandler>();
+            typeHandlers.Add(new BoolTypeHandler());
+            //typeHandlers.Add(new IntTypeHandler());
+            typeHandlers.Add(new DoubleTypeHandler());
+            typeHandlers.Add(new DateTimeTypeHandler());
+            typeHandlers.Add(new StringTypeHandler());
+            typeHandlers.Add(new CellTypeHandler()); //<= this is excel specific
+            typeHandlers.Add(new ObjectTypeHandler());
+            return typeHandlers;
         }
 
+        public override IHasValue ParseLeft(Parser parser, Token token, int precedence)
+        {
+            switch (token.Type)
+            {
+                case  TokenType.ValueNumber:
+                    return base.ParseLeft(parser, token, precedence);
+                    
+                default:
+                    return base.ParseLeft(parser, token, precedence);
+            }
+
+        }
         public override Token ParseToken(Parser parser)
         {
             switch (parser.mCurChar)
@@ -124,7 +172,7 @@ namespace Eval4
             }
         }
 
-        public override int GetPrecedence(Token<CSharpCustomToken> token, bool unary)
+        public override int GetPrecedence(Token<ExcelToken> token, bool unary)
         {
             var tt = token.Type;
             //http://msdn.microsoft.com/en-us/library/aa691323(v=vs.71).aspx

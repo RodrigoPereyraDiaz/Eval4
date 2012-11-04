@@ -1,16 +1,15 @@
-﻿using System;
+﻿using Eval4.Core;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
-using Eval4.Core;
 
 namespace Eval4
 {
-    public enum CSharpCustomToken
-    {
-        None
+    public enum JavascriptToken{
     }
 
-    public class CSharpEvaluator : Core.Evaluator<CSharpCustomToken>
+    class JavascriptEvaluator : Evaluator<JavascriptToken>
     {
         protected internal override bool IsCaseSensitive
         {
@@ -124,20 +123,19 @@ namespace Eval4
             }
         }
 
-        public override int GetPrecedence(Token<CSharpCustomToken> token, bool unary)
+        public override int GetPrecedence(Token<JavascriptToken> token, bool unary)
         {
             var tt = token.Type;
-            //http://msdn.microsoft.com/en-us/library/aa691323(v=vs.71).aspx
+            //https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Operators/Operator_Precedence
+            //TODO this is still C# precednce for now
             switch (tt)
             {
                 case TokenType.Dot:
-                case TokenType.OpenParenthesis:
                 case TokenType.OpenBracket:
                 case TokenType.New:
+                    return 15;
 
-                    // 	Primary	
-                    //x.y  f(x)  a[x]  x++  x--  new
-                    //typeof  checked  unchecked
+                case TokenType.OpenParenthesis:
                     return 15;
 
                 case TokenType.OperatorPlus:

@@ -35,11 +35,14 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Core\RaiseFindVariableExpr.cs" />
     <Compile Include="Core\Token.cs" />
     <Compile Include="Core\TypeHandler.cs" />
     <Compile Include="Core\Variable.cs" />
     <Compile Include="CSharpEvaluator.cs" />
     <Compile Include="Core\Evaluator.cs" />
+    <Compile Include="ExcelEvaluator.cs" />
+    <Compile Include="JavascriptEvaluator.cs" />
     <Compile Include="SyntaxError.cs" />
     <Compile Include="Variable.cs" />
     <Compile Include="Core\Expr.cs" />

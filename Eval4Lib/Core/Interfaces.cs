@@ -3,10 +3,10 @@ using System.Collections.Generic;
 
 namespace Eval4.Core
 {
-    public interface IVariableBag
-    {
-        IHasValue GetVariable(string varname);
-    }
+    //public interface IVariableBag
+    //{
+    //    IHasValue GetVariable(string varname);
+    //}
 
     public interface IHasValue
     {
@@ -19,9 +19,16 @@ namespace Eval4.Core
 
     public interface IHasValue<T> : IHasValue
     {
+       // IDisposable Subscribe(IObserver<T> observer);
         T Value { get; }
     }
 
+    //public interface IObserver<T>
+    //{
+    //    void OnNext(T value);
+    //}
+
+    
     public class Dependency
     {
         public String Name;

@@ -63,7 +63,7 @@ namespace Eval4.Core
             {
                 startpos = mPos;
                 mCurToken = mEvaluator.ParseToken(this);
-                if (mCurToken.Type != TokenType.None)
+                if (mCurToken.Type != TokenType.Undefined)
                     return;
             } while (true);
         }
@@ -241,7 +241,7 @@ namespace Eval4.Core
             IHasValue res;
             if (sourceIsTextTemplate) res = ParseTemplate();
             else res = ParseExpr(null, 0);
-            if (mCurToken.Type == TokenType.EndOfFormula)
+            if (mCurToken.Type == TokenType.Eof)
             {
                 if (res == null)
                     res = new ConstantExpr<string>(string.Empty);
@@ -282,7 +282,7 @@ namespace Eval4.Core
             {
                 //TokenType tt = default(TokenType);
                 //tt = mCurToken.Type;
-                int opPrecedence = (mCurToken.Type == TokenType.EndOfFormula ? 0 : mEvaluator.GetPrecedence(mCurToken, unary: false));
+                int opPrecedence = (mCurToken.Type == TokenType.Eof ? 0 : mEvaluator.GetPrecedence(mCurToken, unary: false));
 
                 if (precedence >= opPrecedence)
                 {
@@ -300,7 +300,7 @@ namespace Eval4.Core
         protected IHasValue ParseLeft(int precedence)
         {
             IHasValue result = null;
-            while (mCurToken.Type != TokenType.EndOfFormula)
+            while (mCurToken.Type != TokenType.Eof)
             {
                 // we ignore precedence here, not sure if it is valid
                 result = mEvaluator.ParseLeft(this, mCurToken, precedence);
@@ -337,19 +337,23 @@ namespace Eval4.Core
                         var hasValue = environmentFunctions as IHasValue;
                         newExpr = GetMember(hasValue, hasValue.SystemType, funcName, parameters, callType);
                     }
-                    else if (environmentFunctions is IVariableBag)
-                    {
-                        if (parameters == null || parameters.Count == 0)
-                        {
-                            newExpr = (environmentFunctions as IVariableBag).GetVariable(funcName);
-                        }
-
-                    }
                     else
                     {
                         throw NewParserException("Invalid Environment functions.");
                     }
                     if (newExpr != null) break;
+                }
+                if (newExpr == null && (parameters == null || parameters.Count == 0))
+                {
+                    var findVariableResult = mEvaluator.RaiseFindVariable(funcName);
+                    if (findVariableResult.Handled)
+                    {
+                        if (findVariableResult.Type==null) {
+                            findVariableResult.Type= findVariableResult.Value.GetType();
+                        }
+                        var t= typeof( RaiseFindVariableExpr<>).MakeGenericType(findVariableResult.Type );
+                        newExpr = (IHasValue)Activator.CreateInstance(t, this.mEvaluator, funcName);
+                    }
                 }
             }
             else if (valueLeft.SystemType == typeof(StaticFunctionsWrapper))
@@ -401,24 +405,18 @@ namespace Eval4.Core
                     default:
                         throw NewUnexpectedToken(mi.MemberType.ToString() + " members are not supported");
                 }
-                var res = GetNewCallMethodExpr(resultType, @base, mi, parameters, casts);
-                return res;
+                var t = typeof(CallMethodExpr<>).MakeGenericType(resultType);
+                return (IHasValue)Activator.CreateInstance(t, mEvaluator, @base, mi, parameters, casts);
             }
-            if (@base is IVariableBag && (parameters == null || parameters.Count == 0))
-            {
-                IHasValue val = ((IVariableBag)@base).GetVariable(funcName);
-                if ((val != null))
-                {
-                    return val; // new GetVariableExpr(val);
-                }
-            }
+            //if (@base is IVariableBag && (parameters == null || parameters.Count == 0))
+            //{
+            //    IHasValue val = ((IVariableBag)@base).GetVariable(funcName);
+            //    if ((val != null))
+            //    {
+            //        return val; // new GetVariableExpr(val);
+            //    }
+            //}
             return null;
-        }
-
-        private IHasValue GetNewCallMethodExpr(Type resultType, IHasValue @base, MemberInfo mi, List<IHasValue> parameters, Delegate[] casts)
-        {
-            var t = typeof(CallMethodExpr<>).MakeGenericType(resultType);
-            return (IHasValue)Activator.CreateInstance(t, mEvaluator, @base, mi, parameters, casts);
         }
 
         protected bool GetMemberInfo(Type objType, bool isStatic, bool isInstance, string func, List<IHasValue> parameters, out MemberInfo mi, out Type resultType, out Delegate[] casts)
@@ -638,7 +636,8 @@ namespace Eval4.Core
                         Delegate[] casts;
                         if (GetMemberInfo(t, isStatic: true, isInstance: true, func: null, parameters: parameters, mi: out mi, resultType: out resultType, casts: out casts))
                         {
-                            valueLeft = GetNewCallMethodExpr(resultType, valueLeft, mi, parameters, casts);
+                            var t3 = typeof(CallMethodExpr<>).MakeGenericType(resultType);
+                            valueLeft = (IHasValue)Activator.CreateInstance(t3, mEvaluator, valueLeft, mi, parameters, casts);
                         }
                         else
                         {
@@ -708,14 +707,13 @@ namespace Eval4.Core
 
     public enum TokenType
     {
-        None,
-        EndOfFormula,
+        Undefined,
+        Eof,
         OperatorPlus,
         OperatorMinus,
         OperatorMultiply,
         OperatorDivide,
         OperatorModulo,
-        OpenParenthesis,
         OperatorNE,
         OperatorGT,
         OperatorGE,
@@ -743,6 +741,7 @@ namespace Eval4.Core
         CloseBracket,
         Comma,
         Dot,
+        OpenParenthesis,
         CloseParenthesis,
         ShiftLeft,
         ShiftRight,

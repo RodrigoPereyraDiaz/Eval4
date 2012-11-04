@@ -4,54 +4,54 @@ using System.Text;
 
 namespace Eval4.Core
 {
-    public class VariableBag : IVariableBag
-    {
-        Dictionary<string, Variable> mVariables;
+    //public class VariableBag : IVariableBag
+    //{
+    //    Dictionary<string, VariableBase> mVariables;
 
-        public VariableBag(bool caseSensitive)
-        {
-            mVariables = new Dictionary<string, Variable>(caseSensitive ? StringComparer.InvariantCulture : StringComparer.InvariantCultureIgnoreCase);
-        }
+    //    public VariableBag(bool caseSensitive)
+    //    {
+    //        mVariables = new Dictionary<string, VariableBase>(caseSensitive ? StringComparer.InvariantCulture : StringComparer.InvariantCultureIgnoreCase);
+    //    }
 
-        public IHasValue GetVariable(string varname)
-        {
-            Variable result;
-            mVariables.TryGetValue(varname, out result);
-            return result;
-        }
+    //    public IHasValue GetVariable(string varname)
+    //    {
+    //        VariableBase result;
+    //        mVariables.TryGetValue(varname, out result);
+    //        return result;
+    //    }
 
-        public void SetVariable<T>(string varname, T value)
-        {
-            Variable result;
-            if (mVariables.TryGetValue(varname, out result))
-            {
-                ((Variable<T>)result).Value = value;
-            }
-            else
-            {
-                Variable<T> newVariable = new Variable<T>(value, varname);
-                mVariables[varname] = newVariable;
-            }
+    //    public void SetVariable<T>(string varname, T value)
+    //    {
+    //        VariableBase result;
+    //        if (mVariables.TryGetValue(varname, out result))
+    //        {
+    //            ((Variable<T>)result).Value = value;
+    //        }
+    //        else
+    //        {
+    //            Variable<T> newVariable = new Variable<T>(value, varname);
+    //            mVariables[varname] = newVariable;
+    //        }
 
-        }
+    //    }
 
-        public void DeleteVariable(string varname)
-        {
-            mVariables.Remove(varname);
-        }
+    //    public void DeleteVariable(string varname)
+    //    {
+    //        mVariables.Remove(varname);
+    //    }
 
-    }
+    //}
 
-    public abstract class Variable : IHasValue
+    public abstract class VariableBase : IHasValue
     {
         protected string mDescription;
         protected string mName;
 
-        public abstract object ObjectValue { get; }
+        public abstract object ObjectValue { get; set;  }
         public abstract Type SystemType { get; }
         public event ValueChangedEventHandler ValueChanged;
 
-        public Variable(string description)
+        public VariableBase(string description)
         {
             mDescription = description;
         }

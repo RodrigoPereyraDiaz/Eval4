@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Eval4
 {
 
-    public class Variable<T> : Core.Variable, Core.IHasValue<T>
+    public class Variable<T> : Core.VariableBase, Core.IHasValue<T>
     {
         private T mValue;
 
@@ -16,6 +16,7 @@ namespace Eval4
         public override object ObjectValue
         {
             get { return mValue; }
+            set { mValue = (T)value; }
         }
 
 

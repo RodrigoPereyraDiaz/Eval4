@@ -19,12 +19,12 @@ namespace Eval4.Core
     {
         internal List<Declaration> mDeclarations = new List<Declaration>();
 
-        protected void AddOperation<P1, T>(TokenType tokenType, Func<P1, T> func)
+        protected void AddUnaryOperation<P1, T>(TokenType tokenType, Func<P1, T> func)
         {
             mDeclarations.Add(new Declaration() { tk = tokenType, dlg = func, P1 = typeof(P1), T = typeof(T) });
         }
 
-        protected void AddOperation<P1, P2, T>(TokenType tokenType, Func<P1, P2, T> func)
+        protected void AddBinaryOperation<P1, P2, T>(TokenType tokenType, Func<P1, P2, T> func)
         {
             mDeclarations.Add(new Declaration() { tk = tokenType, dlg = func, P1 = typeof(P1), P2 = typeof(P2), T = typeof(T) });
         }
@@ -44,14 +44,14 @@ namespace Eval4.Core
     {
         public BoolTypeHandler()
         {
-            AddOperation<bool, bool, bool>(TokenType.OperatorAnd, (a, b) => { return a & b; });
-            AddOperation<bool, bool, bool>(TokenType.OperatorOr, (a, b) => { return a | b; });
-            AddOperation<bool, bool, bool>(TokenType.OperatorXor, (a, b) => { return a ^ b; });
-            AddOperation<bool, bool, bool>(TokenType.OperatorAndAlso, (a, b) => { return a && b; });
-            AddOperation<bool, bool, bool>(TokenType.OperatorOrElse, (a, b) => { return a || b; });
-            AddOperation<bool, bool, bool>(TokenType.OperatorEQ, (a, b) => { return a == b; });
-            AddOperation<bool, bool, bool>(TokenType.OperatorNE, (a, b) => { return a != b; });
-            AddOperation<bool, bool>(TokenType.OperatorNot, (a) => { return !a; });
+            AddBinaryOperation<bool, bool, bool>(TokenType.OperatorAnd, (a, b) => { return a & b; });
+            AddBinaryOperation<bool, bool, bool>(TokenType.OperatorOr, (a, b) => { return a | b; });
+            AddBinaryOperation<bool, bool, bool>(TokenType.OperatorXor, (a, b) => { return a ^ b; });
+            AddBinaryOperation<bool, bool, bool>(TokenType.OperatorAndAlso, (a, b) => { return a && b; });
+            AddBinaryOperation<bool, bool, bool>(TokenType.OperatorOrElse, (a, b) => { return a || b; });
+            AddBinaryOperation<bool, bool, bool>(TokenType.OperatorEQ, (a, b) => { return a == b; });
+            AddBinaryOperation<bool, bool, bool>(TokenType.OperatorNE, (a, b) => { return a != b; });
+            AddUnaryOperation<bool, bool>(TokenType.OperatorNot, (a) => { return !a; });
 
             AddExplicitCast<bool, int>((a) => { return (a ? 1 : 0); });
         }
@@ -62,26 +62,26 @@ namespace Eval4.Core
     {
         public IntTypeHandler()
         {
-            AddOperation<int, int, int>(TokenType.OperatorPlus, (a, b) => { return a + b; });
-            AddOperation<int, int, int>(TokenType.OperatorMinus, (a, b) => { return a - b; });
-            AddOperation<int, int, int>(TokenType.OperatorMultiply, (a, b) => { return a * b; });
-            AddOperation<int, int, int>(TokenType.OperatorDivide, (a, b) => { return a / b; });
-            AddOperation<int, int, int>(TokenType.OperatorModulo, (a, b) => { return a % b; });
-            AddOperation<int, int, int>(TokenType.OperatorAnd, (a, b) => { return a & b; });
-            AddOperation<int, int, int>(TokenType.OperatorOr, (a, b) => { return a | b; });
-            AddOperation<int, int, int>(TokenType.OperatorXor, (a, b) => { return a ^ b; });
+            AddBinaryOperation<int, int, int>(TokenType.OperatorPlus, (a, b) => { return a + b; });
+            AddBinaryOperation<int, int, int>(TokenType.OperatorMinus, (a, b) => { return a - b; });
+            AddBinaryOperation<int, int, int>(TokenType.OperatorMultiply, (a, b) => { return a * b; });
+            AddBinaryOperation<int, int, int>(TokenType.OperatorDivide, (a, b) => { return a / b; });
+            AddBinaryOperation<int, int, int>(TokenType.OperatorModulo, (a, b) => { return a % b; });
+            AddBinaryOperation<int, int, int>(TokenType.OperatorAnd, (a, b) => { return a & b; });
+            AddBinaryOperation<int, int, int>(TokenType.OperatorOr, (a, b) => { return a | b; });
+            AddBinaryOperation<int, int, int>(TokenType.OperatorXor, (a, b) => { return a ^ b; });
             //AddOperation<int, int, int>(TokenType.Operator_andalso, (a, b) => { return a && b; });
             //AddOperation<int, int, int>(TokenType.Operator_orelse, (a, b) => { return a || b; });
-            AddOperation<int, int, bool>(TokenType.OperatorEQ, (a, b) => { return a == b; });
-            AddOperation<int, int, bool>(TokenType.OperatorNE, (a, b) => { return a != b; });
-            AddOperation<int, int, bool>(TokenType.OperatorGE, (a, b) => { return a >= b; });
-            AddOperation<int, int, bool>(TokenType.OperatorGT, (a, b) => { return a > b; });
-            AddOperation<int, int, bool>(TokenType.OperatorLE, (a, b) => { return a <= b; });
-            AddOperation<int, int, bool>(TokenType.OperatorLT, (a, b) => { return a < b; });
+            AddBinaryOperation<int, int, bool>(TokenType.OperatorEQ, (a, b) => { return a == b; });
+            AddBinaryOperation<int, int, bool>(TokenType.OperatorNE, (a, b) => { return a != b; });
+            AddBinaryOperation<int, int, bool>(TokenType.OperatorGE, (a, b) => { return a >= b; });
+            AddBinaryOperation<int, int, bool>(TokenType.OperatorGT, (a, b) => { return a > b; });
+            AddBinaryOperation<int, int, bool>(TokenType.OperatorLE, (a, b) => { return a <= b; });
+            AddBinaryOperation<int, int, bool>(TokenType.OperatorLT, (a, b) => { return a < b; });
 
-            AddOperation<int, int>(TokenType.OperatorNot, (a) => { return ~a; });
-            AddOperation<int, int>(TokenType.OperatorMinus, (a) => { return -a; });
-            AddOperation<int, int>(TokenType.OperatorPlus, (a) => { return a; });
+            AddUnaryOperation<int, int>(TokenType.OperatorNot, (a) => { return ~a; });
+            AddUnaryOperation<int, int>(TokenType.OperatorMinus, (a) => { return -a; });
+            AddUnaryOperation<int, int>(TokenType.OperatorPlus, (a) => { return a; });
 
             AddImplicitCast<byte, int>((a) => { return a; });
             AddImplicitCast<sbyte, int>((a) => { return a; });
@@ -101,25 +101,25 @@ namespace Eval4.Core
     {
         public DoubleTypeHandler()
         {
-            AddOperation<double, double, double>(TokenType.OperatorPlus, (a, b) => { return a + b; });
-            AddOperation<double, double, double>(TokenType.OperatorMinus, (a, b) => { return a - b; });
-            AddOperation<double, double, double>(TokenType.OperatorMultiply, (a, b) => { return a * b; });
-            AddOperation<double, double, double>(TokenType.OperatorDivide, (a, b) => { return a / b; });
+            AddBinaryOperation<double, double, double>(TokenType.OperatorPlus, (a, b) => { return a + b; });
+            AddBinaryOperation<double, double, double>(TokenType.OperatorMinus, (a, b) => { return a - b; });
+            AddBinaryOperation<double, double, double>(TokenType.OperatorMultiply, (a, b) => { return a * b; });
+            AddBinaryOperation<double, double, double>(TokenType.OperatorDivide, (a, b) => { return a / b; });
             //AddOperation<double, double, double>(TokenType.Operator_and, (a, b) => { return a & b; });
             //AddOperation<double, double, double>(TokenType.Operator_or, (a, b) => { return a | b; });
             //AddOperation<double, double, double>(TokenType.Operator_xor, (a, b) => { return a ^ b; });
             //AddOperation<double, double, double>(TokenType.Operator_andalso, (a, b) => { return a && b; });
             //AddOperation<double, double, double>(TokenType.Operator_orelse, (a, b) => { return a || b; });
-            AddOperation<double, double, bool>(TokenType.OperatorEQ, (a, b) => { return a == b; });
-            AddOperation<double, double, bool>(TokenType.OperatorNE, (a, b) => { return a != b; });
-            AddOperation<double, double, bool>(TokenType.OperatorGE, (a, b) => { return a >= b; });
-            AddOperation<double, double, bool>(TokenType.OperatorGT, (a, b) => { return a > b; });
-            AddOperation<double, double, bool>(TokenType.OperatorLE, (a, b) => { return a <= b; });
-            AddOperation<double, double, bool>(TokenType.OperatorLT, (a, b) => { return a < b; });
+            AddBinaryOperation<double, double, bool>(TokenType.OperatorEQ, (a, b) => { return a == b; });
+            AddBinaryOperation<double, double, bool>(TokenType.OperatorNE, (a, b) => { return a != b; });
+            AddBinaryOperation<double, double, bool>(TokenType.OperatorGE, (a, b) => { return a >= b; });
+            AddBinaryOperation<double, double, bool>(TokenType.OperatorGT, (a, b) => { return a > b; });
+            AddBinaryOperation<double, double, bool>(TokenType.OperatorLE, (a, b) => { return a <= b; });
+            AddBinaryOperation<double, double, bool>(TokenType.OperatorLT, (a, b) => { return a < b; });
 
             //AddOperation<double, double>(TokenType.Operator_not, (a) => { return ~a; });
-            AddOperation<double, double>(TokenType.OperatorMinus, (a) => { return -a; });
-            AddOperation<double, double>(TokenType.OperatorPlus, (a) => { return a; });
+            AddUnaryOperation<double, double>(TokenType.OperatorMinus, (a) => { return -a; });
+            AddUnaryOperation<double, double>(TokenType.OperatorPlus, (a) => { return a; });
 
             AddImplicitCast<byte, double>((a) => { return a; });
             AddImplicitCast<sbyte, double>((a) => { return a; });
@@ -140,31 +140,31 @@ namespace Eval4.Core
     {
         public DateTimeTypeHandler()
         {
-            AddOperation<DateTime, TimeSpan, DateTime>(TokenType.OperatorPlus, (a, b) => { return a.Add(b); });
-            AddOperation<TimeSpan, DateTime, DateTime>(TokenType.OperatorPlus, (a, b) => { return b.Add(a); });
-            AddOperation<DateTime, TimeSpan, DateTime>(TokenType.OperatorMinus, (a, b) => { return a.Subtract(b); });
-            AddOperation<DateTime, DateTime, TimeSpan>(TokenType.OperatorMinus, (a, b) => { return a.Subtract(b); });
-            AddOperation<DateTime, DateTime, bool>(TokenType.OperatorEQ, (a, b) => { return a.Ticks == b.Ticks; });
-            AddOperation<DateTime, DateTime, bool>(TokenType.OperatorNE, (a, b) => { return a.Ticks != b.Ticks; });
-            AddOperation<DateTime, DateTime, bool>(TokenType.OperatorGE, (a, b) => { return a.Ticks >= b.Ticks; });
-            AddOperation<DateTime, DateTime, bool>(TokenType.OperatorGT, (a, b) => { return a.Ticks > b.Ticks; });
-            AddOperation<DateTime, DateTime, bool>(TokenType.OperatorLE, (a, b) => { return a.Ticks <= b.Ticks; });
-            AddOperation<DateTime, DateTime, bool>(TokenType.OperatorLT, (a, b) => { return a.Ticks < b.Ticks; });
+            AddBinaryOperation<DateTime, TimeSpan, DateTime>(TokenType.OperatorPlus, (a, b) => { return a.Add(b); });
+            AddBinaryOperation<TimeSpan, DateTime, DateTime>(TokenType.OperatorPlus, (a, b) => { return b.Add(a); });
+            AddBinaryOperation<DateTime, TimeSpan, DateTime>(TokenType.OperatorMinus, (a, b) => { return a.Subtract(b); });
+            AddBinaryOperation<DateTime, DateTime, TimeSpan>(TokenType.OperatorMinus, (a, b) => { return a.Subtract(b); });
+            AddBinaryOperation<DateTime, DateTime, bool>(TokenType.OperatorEQ, (a, b) => { return a.Ticks == b.Ticks; });
+            AddBinaryOperation<DateTime, DateTime, bool>(TokenType.OperatorNE, (a, b) => { return a.Ticks != b.Ticks; });
+            AddBinaryOperation<DateTime, DateTime, bool>(TokenType.OperatorGE, (a, b) => { return a.Ticks >= b.Ticks; });
+            AddBinaryOperation<DateTime, DateTime, bool>(TokenType.OperatorGT, (a, b) => { return a.Ticks > b.Ticks; });
+            AddBinaryOperation<DateTime, DateTime, bool>(TokenType.OperatorLE, (a, b) => { return a.Ticks <= b.Ticks; });
+            AddBinaryOperation<DateTime, DateTime, bool>(TokenType.OperatorLT, (a, b) => { return a.Ticks < b.Ticks; });
 
-            AddOperation<TimeSpan, TimeSpan, TimeSpan>(TokenType.OperatorPlus, (a, b) => { return a + b; });
-            AddOperation<TimeSpan, TimeSpan, TimeSpan>(TokenType.OperatorMinus, (a, b) => { return a - b; });
-            AddOperation<TimeSpan, double, TimeSpan>(TokenType.OperatorMultiply, (a, b) => { return TimeSpan.FromTicks((long)(a.Ticks * b)); });
-            AddOperation<double, TimeSpan, TimeSpan>(TokenType.OperatorMultiply, (a, b) => { return TimeSpan.FromTicks((long)(a * b.Ticks)); });
-            AddOperation<TimeSpan, double, TimeSpan>(TokenType.OperatorDivide, (a, b) => { return TimeSpan.FromTicks((long)(a.Ticks / b)); });
-            AddOperation<TimeSpan, TimeSpan, bool>(TokenType.OperatorEQ, (a, b) => { return a == b; });
-            AddOperation<TimeSpan, TimeSpan, bool>(TokenType.OperatorNE, (a, b) => { return a != b; });
-            AddOperation<TimeSpan, TimeSpan, bool>(TokenType.OperatorGE, (a, b) => { return a >= b; });
-            AddOperation<TimeSpan, TimeSpan, bool>(TokenType.OperatorGT, (a, b) => { return a > b; });
-            AddOperation<TimeSpan, TimeSpan, bool>(TokenType.OperatorLE, (a, b) => { return a <= b; });
-            AddOperation<TimeSpan, TimeSpan, bool>(TokenType.OperatorLT, (a, b) => { return a < b; });
+            AddBinaryOperation<TimeSpan, TimeSpan, TimeSpan>(TokenType.OperatorPlus, (a, b) => { return a + b; });
+            AddBinaryOperation<TimeSpan, TimeSpan, TimeSpan>(TokenType.OperatorMinus, (a, b) => { return a - b; });
+            AddBinaryOperation<TimeSpan, double, TimeSpan>(TokenType.OperatorMultiply, (a, b) => { return TimeSpan.FromTicks((long)(a.Ticks * b)); });
+            AddBinaryOperation<double, TimeSpan, TimeSpan>(TokenType.OperatorMultiply, (a, b) => { return TimeSpan.FromTicks((long)(a * b.Ticks)); });
+            AddBinaryOperation<TimeSpan, double, TimeSpan>(TokenType.OperatorDivide, (a, b) => { return TimeSpan.FromTicks((long)(a.Ticks / b)); });
+            AddBinaryOperation<TimeSpan, TimeSpan, bool>(TokenType.OperatorEQ, (a, b) => { return a == b; });
+            AddBinaryOperation<TimeSpan, TimeSpan, bool>(TokenType.OperatorNE, (a, b) => { return a != b; });
+            AddBinaryOperation<TimeSpan, TimeSpan, bool>(TokenType.OperatorGE, (a, b) => { return a >= b; });
+            AddBinaryOperation<TimeSpan, TimeSpan, bool>(TokenType.OperatorGT, (a, b) => { return a > b; });
+            AddBinaryOperation<TimeSpan, TimeSpan, bool>(TokenType.OperatorLE, (a, b) => { return a <= b; });
+            AddBinaryOperation<TimeSpan, TimeSpan, bool>(TokenType.OperatorLT, (a, b) => { return a < b; });
 
-            AddOperation<TimeSpan, TimeSpan>(TokenType.OperatorMinus, (a) => { return -a; });
-            AddOperation<TimeSpan, TimeSpan>(TokenType.OperatorPlus, (a) => { return a; });
+            AddUnaryOperation<TimeSpan, TimeSpan>(TokenType.OperatorMinus, (a) => { return -a; });
+            AddUnaryOperation<TimeSpan, TimeSpan>(TokenType.OperatorPlus, (a) => { return a; });
 
             AddImplicitCast<int, TimeSpan>((a) => { return TimeSpan.FromDays(a); });
             AddImplicitCast<double, TimeSpan>((a) => { return TimeSpan.FromDays(a); });
@@ -175,15 +175,15 @@ namespace Eval4.Core
     {
         public StringTypeHandler()
         {
-            AddOperation<string, string, string>(TokenType.OperatorPlus, (a, b) => { return a + b; });
-            AddOperation<string, int, string>(TokenType.OperatorMultiply, (a, b) => { return RepeatString(a, b); });
-            AddOperation<int, string, string>(TokenType.OperatorMultiply, (a, b) => { return RepeatString(b, a); });
-            AddOperation<string, string, bool>(TokenType.OperatorEQ, (a, b) => { return CompareString(a, b) == 0; });
-            AddOperation<string, string, bool>(TokenType.OperatorNE, (a, b) => { return CompareString(a, b) != 0; });
-            AddOperation<string, string, bool>(TokenType.OperatorGE, (a, b) => { return CompareString(a, b) >= 0; });
-            AddOperation<string, string, bool>(TokenType.OperatorGT, (a, b) => { return CompareString(a, b) > 0; });
-            AddOperation<string, string, bool>(TokenType.OperatorLE, (a, b) => { return CompareString(a, b) <= 0; });
-            AddOperation<string, string, bool>(TokenType.OperatorLT, (a, b) => { return CompareString(a, b) < 0; });
+            AddBinaryOperation<string, string, string>(TokenType.OperatorPlus, (a, b) => { return a + b; });
+            AddBinaryOperation<string, int, string>(TokenType.OperatorMultiply, (a, b) => { return RepeatString(a, b); });
+            AddBinaryOperation<int, string, string>(TokenType.OperatorMultiply, (a, b) => { return RepeatString(b, a); });
+            AddBinaryOperation<string, string, bool>(TokenType.OperatorEQ, (a, b) => { return CompareString(a, b) == 0; });
+            AddBinaryOperation<string, string, bool>(TokenType.OperatorNE, (a, b) => { return CompareString(a, b) != 0; });
+            AddBinaryOperation<string, string, bool>(TokenType.OperatorGE, (a, b) => { return CompareString(a, b) >= 0; });
+            AddBinaryOperation<string, string, bool>(TokenType.OperatorGT, (a, b) => { return CompareString(a, b) > 0; });
+            AddBinaryOperation<string, string, bool>(TokenType.OperatorLE, (a, b) => { return CompareString(a, b) <= 0; });
+            AddBinaryOperation<string, string, bool>(TokenType.OperatorLT, (a, b) => { return CompareString(a, b) < 0; });
 
             AddImplicitCast<byte, string>((a) => { return ToString(a); });
             AddImplicitCast<sbyte, string>((a) => { return ToString(a); });
@@ -221,22 +221,22 @@ namespace Eval4.Core
     {
         public ObjectTypeHandler()
         {
-            AddOperation<IComparable, object, bool>(TokenType.OperatorEQ, (a, b) => { return Compare(a, b) == 0; });
-            AddOperation<IComparable, object, bool>(TokenType.OperatorNE, (a, b) => { return Compare(a, b) != 0; });
-            AddOperation<IComparable, object, bool>(TokenType.OperatorGE, (a, b) => { return Compare(a, b) >= 0; });
-            AddOperation<IComparable, object, bool>(TokenType.OperatorGT, (a, b) => { return Compare(a, b) > 0; });
-            AddOperation<IComparable, object, bool>(TokenType.OperatorLE, (a, b) => { return Compare(a, b) <= 0; });
-            AddOperation<IComparable, object, bool>(TokenType.OperatorLT, (a, b) => { return Compare(a, b) < 0; });
+            AddBinaryOperation<IComparable, object, bool>(TokenType.OperatorEQ, (a, b) => { return Compare(a, b) == 0; });
+            AddBinaryOperation<IComparable, object, bool>(TokenType.OperatorNE, (a, b) => { return Compare(a, b) != 0; });
+            AddBinaryOperation<IComparable, object, bool>(TokenType.OperatorGE, (a, b) => { return Compare(a, b) >= 0; });
+            AddBinaryOperation<IComparable, object, bool>(TokenType.OperatorGT, (a, b) => { return Compare(a, b) > 0; });
+            AddBinaryOperation<IComparable, object, bool>(TokenType.OperatorLE, (a, b) => { return Compare(a, b) <= 0; });
+            AddBinaryOperation<IComparable, object, bool>(TokenType.OperatorLT, (a, b) => { return Compare(a, b) < 0; });
 
-            AddOperation<object, IComparable, bool>(TokenType.OperatorEQ, (a, b) => { return Compare(a, b) == 0; });
-            AddOperation<object, IComparable, bool>(TokenType.OperatorNE, (a, b) => { return Compare(a, b) != 0; });
-            AddOperation<object, IComparable, bool>(TokenType.OperatorGE, (a, b) => { return Compare(a, b) >= 0; });
-            AddOperation<object, IComparable, bool>(TokenType.OperatorGT, (a, b) => { return Compare(a, b) > 0; });
-            AddOperation<object, IComparable, bool>(TokenType.OperatorLE, (a, b) => { return Compare(a, b) <= 0; });
-            AddOperation<object, IComparable, bool>(TokenType.OperatorLT, (a, b) => { return Compare(a, b) < 0; });
+            AddBinaryOperation<object, IComparable, bool>(TokenType.OperatorEQ, (a, b) => { return Compare(a, b) == 0; });
+            AddBinaryOperation<object, IComparable, bool>(TokenType.OperatorNE, (a, b) => { return Compare(a, b) != 0; });
+            AddBinaryOperation<object, IComparable, bool>(TokenType.OperatorGE, (a, b) => { return Compare(a, b) >= 0; });
+            AddBinaryOperation<object, IComparable, bool>(TokenType.OperatorGT, (a, b) => { return Compare(a, b) > 0; });
+            AddBinaryOperation<object, IComparable, bool>(TokenType.OperatorLE, (a, b) => { return Compare(a, b) <= 0; });
+            AddBinaryOperation<object, IComparable, bool>(TokenType.OperatorLT, (a, b) => { return Compare(a, b) < 0; });
 
-            AddOperation<object, object, bool>(TokenType.OperatorEQ, (a, b) => { return Equal(a, b); });
-            AddOperation<object, object, bool>(TokenType.OperatorNE, (a, b) => { return !Equal(a, b); });
+            AddBinaryOperation<object, object, bool>(TokenType.OperatorEQ, (a, b) => { return Equal(a, b); });
+            AddBinaryOperation<object, object, bool>(TokenType.OperatorNE, (a, b) => { return !Equal(a, b); });
         }
 
         private int Compare(IComparable a, object b)

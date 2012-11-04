@@ -7,7 +7,7 @@ namespace Eval4.Core
     {
         internal List<object> mEnvironmentFunctionsList;
         public bool RaiseVariableNotFoundException;
-        protected VariableBag mVariableBag;
+        protected Dictionary<string, VariableBase> mVariableBag;
         public abstract int GetPrecedence(Token token, bool unary);
         internal Dictionary<TokenType, List<Declaration>> mBinaryDeclarations;
         internal Dictionary<TokenType, List<Declaration>> mUnaryDeclarations;
@@ -36,9 +36,8 @@ namespace Eval4.Core
         public Evaluator()
         {
             mEnvironmentFunctionsList = new List<object>();
-            mVariableBag = new VariableBag(this.IsCaseSensitive);
-            mEnvironmentFunctionsList.Add(mVariableBag);
             CompileTypeHandlers(GetTypeHandlers());
+            mVariableBag = new Dictionary<string, VariableBase>(this.IsCaseSensitive ? StringComparer.InvariantCulture : StringComparer.InvariantCultureIgnoreCase);
         }
 
         protected virtual List<TypeHandler> GetTypeHandlers()
@@ -228,7 +227,16 @@ namespace Eval4.Core
 
         public void SetVariable<T>(string variableName, T variableValue)
         {
-            mVariableBag.SetVariable(variableName, variableValue);
+            VariableBase variable;
+            if (mVariableBag.TryGetValue(variableName, out variable))
+            {
+                variable.ObjectValue = variableValue;
+            }
+            else
+            {
+                variable = new Variable<T>(variableValue, variableName);
+                mVariableBag[variableName] = variable;
+            }
         }
 
         public void SetVariableFunctions(string variableName, Type type)
@@ -238,7 +246,7 @@ namespace Eval4.Core
 
         public void DeleteVariable(string variableName)
         {
-            mVariableBag.DeleteVariable(variableName);
+            mVariableBag.Remove(variableName);
         }
 
         public abstract bool UseParenthesisForArrays { get; }
@@ -282,10 +290,10 @@ namespace Eval4.Core
                 case '\r':
                 case '\n':
                     parser.NextChar();
-                    return NewToken(TokenType.None);
+                    return NewToken(TokenType.Undefined);
 
                 case '\0': //null:
-                    return NewToken(TokenType.EndOfFormula);
+                    return NewToken(TokenType.Eof);
 
                 case '-':
                     parser.NextChar();
@@ -380,6 +388,11 @@ namespace Eval4.Core
 
                 }
             }
+            return ParseLeft2(parser, token, ref result);
+        }
+
+        private static IHasValue ParseLeft2(Parser parser, Token token, ref IHasValue result)
+        {
             switch (token.Type)
             {
                 case TokenType.ValueIdentifier:
@@ -659,8 +672,30 @@ namespace Eval4.Core
         {
             return (mCurChar >= '0' && mCurChar <= '9') || (mCurChar >= 'a' && mCurChar <= 'z') || (mCurChar >= 'A' && mCurChar <= 'Z') || (mCurChar >= 'A' && mCurChar <= 'Z') || (mCurChar >= 128) || (mCurChar == '_');
         }
+
+        internal FindVariableEventArgs RaiseFindVariable(string variableName)
+        {
+            var result = new FindVariableEventArgs(variableName);
+            if (FindVariable != null) FindVariable(this, result);
+            return result;
+        }
+
+        public event EventHandler<FindVariableEventArgs> FindVariable;
     }
 
+    public class FindVariableEventArgs : EventArgs
+    {
+        public string Name { get; private set; }
+        public object Value { get; set; }
+        public Type Type { get; set; }
+
+        public FindVariableEventArgs(string name)
+        {
+            Name = name;
+        }
+
+        public bool Handled { get; set; }
+    }
     public abstract class Evaluator<T> : Evaluator
     {
         public abstract int GetPrecedence(Token<T> token, bool unary);
