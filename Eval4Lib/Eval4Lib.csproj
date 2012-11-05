@@ -37,7 +37,6 @@
   <ItemGroup>
     <Compile Include="Core\RaiseFindVariableExpr.cs" />
     <Compile Include="Core\Token.cs" />
-    <Compile Include="Core\TypeHandler.cs" />
     <Compile Include="Core\Variable.cs" />
     <Compile Include="CSharpEvaluator.cs" />
     <Compile Include="Core\Evaluator.cs" />

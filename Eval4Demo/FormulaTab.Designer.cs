@@ -1,6 +1,6 @@
 ﻿namespace Eval4.DemoCSharp
 {
-    partial class EvaluatorPanel
+    partial class FormulaTab
     {
         /// <summary> 
         /// Required designer variable.

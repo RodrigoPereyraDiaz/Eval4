@@ -9,9 +9,9 @@ using System.Windows.Forms;
 
 namespace Eval4.DemoCSharp
 {
-    public partial class EvaluatorPanel : UserControl
+    public partial class FormulaTab : UserControl
     {
-        public EvaluatorPanel()
+        public FormulaTab()
         {
             InitializeComponent();
         }

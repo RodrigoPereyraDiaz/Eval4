@@ -17,59 +17,147 @@ namespace Eval4
 
     public class Cell
     {
-        public Object Value;
+        private Evaluator mEv;
+        private string mFormula;
+        private string mName;
+        private IHasValue mValue;
+        public Exception Exception;
+
+        public Cell(Evaluator ev, int col, int row)
+        {
+            mName = GetCellName(col + 1, row + 1);
+            this.mEv = ev;
+            ev.SetVariable(mName, this);
+        }
+
+        public static string GetColName(int x)
+        {
+            string result = string.Empty;
+            if (x <= 26)
+            {
+                result = ((char)(64 + x)).ToString();
+            }
+            else if (x <= 26 * 26)
+            {
+                var x1 = ((x - 1) / 26);
+                var x2 = 1 + ((x - 1) % 26);
+
+                result = ((char)(64 + x1)).ToString() + ((char)(64 + x2)).ToString();
+            }
+            return result;
+        }
+
+        public static string GetCellName(int x, int y)
+        {
+            var col = GetColName(x);
+            var cell = col + y.ToString();
+            return cell;
+        }
+
+
+        public string Formula
+        {
+            get
+            {
+                return mFormula;
+            }
+            set
+            {
+                mFormula = value;
+                Exception = null;
+                mValue = null;
+                var firstChar = string.IsNullOrEmpty(mFormula) ? '\0' : mFormula[0];
+                if ((firstChar >= '0' && firstChar <= '9') || firstChar == '.' || firstChar == '+' || firstChar == '-' || firstChar == '=')
+                {
+                    if (firstChar == '=') mFormula = mFormula.Substring(1);
+                    try
+                    {
+                        mValue = mEv.Parse(mFormula);
+                    }
+                    catch (Exception ex)
+                    {
+                        Exception = ex;
+                    }
+                }
+            }
+        }
+
+
+        public override string ToString()
+        {
+            if (Exception != null) return Exception.Message;
+            else if (mValue != null) return mValue.ObjectValue.ToString();
+            else
+            {
+                if (mFormula != null && mFormula.StartsWith("'")) return mFormula.Substring(1);
+                else return mFormula;
+            }
+        }
+
+        public object ValueObject
+        {
+            get {
+                if (mValue != null) return mValue.ObjectValue;
+                else return mFormula;
+            }
+        }
     }
 
-    public class CellTypeHandler : TypeHandler
+    public class ExcelEvaluator : Evaluator<ExcelToken>
     {
-        public CellTypeHandler()
+
+        protected internal override EvaluatorOptions Options
         {
+            get
+            {
+                return EvaluatorOptions.BooleanLogic
+                    | EvaluatorOptions.CaseSensitive
+                    | EvaluatorOptions.DoubleValues
+                    | EvaluatorOptions.IntegerValues
+                    | EvaluatorOptions.ObjectValues
+                    | EvaluatorOptions.StringValues;
+            }
+        }
+
+        protected override void DeclareOperators()
+        {
+            base.DeclareOperators();
             base.AddImplicitCast<Cell, double>((a) =>
             {
-                var value = a.Value;
+                var value = a.ValueObject;
                 if (value is double) return (double)value;
-                if (value is bool) return ((bool)value )? 1 : 0;
+                if (value is bool) return ((bool)value) ? 1 : 0;
                 if (value is DateTime) return ((DateTime)value).Subtract(EPOCH).TotalDays;
                 return double.NaN;
             });
         }
         static DateTime EPOCH = new DateTime(1900, 1, 1);
-    }
-
-
-    public class ExcelEvaluator : Evaluator<ExcelToken>
-    {
-
-        protected internal override bool IsCaseSensitive
-        {
-            get { return true; }
-        }
 
         public override bool UseParenthesisForArrays
         {
             get { return false; }
         }
 
-        protected override List<TypeHandler> GetTypeHandlers()
-        {
-            var typeHandlers = new List<TypeHandler>();
-            typeHandlers.Add(new BoolTypeHandler());
-            //typeHandlers.Add(new IntTypeHandler());
-            typeHandlers.Add(new DoubleTypeHandler());
-            typeHandlers.Add(new DateTimeTypeHandler());
-            typeHandlers.Add(new StringTypeHandler());
-            typeHandlers.Add(new CellTypeHandler()); //<= this is excel specific
-            typeHandlers.Add(new ObjectTypeHandler());
-            return typeHandlers;
-        }
+        //protected override List<TypeHandler> GetTypeHandlers()
+        //{
+        //    var typeHandlers = new List<TypeHandler>();
+        //    typeHandlers.Add(new BoolTypeHandler());
+        //    //typeHandlers.Add(new IntTypeHandler());
+        //    typeHandlers.Add(new DoubleTypeHandler());
+        //    typeHandlers.Add(new DateTimeTypeHandler());
+        //    typeHandlers.Add(new StringTypeHandler());
+        //    typeHandlers.Add(new CellTypeHandler()); //<= this is excel specific
+        //    typeHandlers.Add(new ObjectTypeHandler());
+        //    return typeHandlers;
+        //}
 
         public override IHasValue ParseLeft(Parser parser, Token token, int precedence)
         {
             switch (token.Type)
             {
-                case  TokenType.ValueNumber:
+                case TokenType.ValueNumber:
                     return base.ParseLeft(parser, token, precedence);
-                    
+
                 default:
                     return base.ParseLeft(parser, token, precedence);
             }

@@ -11,19 +11,23 @@ namespace Eval4
 
     class JavascriptEvaluator : Evaluator<JavascriptToken>
     {
-        protected internal override bool IsCaseSensitive
+        protected internal override EvaluatorOptions Options
         {
-            get { return true; }
+            get
+            {
+                return EvaluatorOptions.BooleanLogic
+                    | EvaluatorOptions.CaseSensitive
+                    //| EvaluatorOptions.DateTimeValues
+                    | EvaluatorOptions.DoubleValues
+                    //| EvaluatorOptions.IntegerValues
+                    | EvaluatorOptions.ObjectValues
+                    | EvaluatorOptions.StringValues;
+            }
         }
 
         public override bool UseParenthesisForArrays
         {
             get { return false; }
-        }
-
-        protected override List<TypeHandler> GetTypeHandlers()
-        {
-            return base.GetTypeHandlers();
         }
 
         public override Token ParseToken(Parser parser)

@@ -348,10 +348,11 @@ namespace Eval4.Core
                     var findVariableResult = mEvaluator.RaiseFindVariable(funcName);
                     if (findVariableResult.Handled)
                     {
-                        if (findVariableResult.Type==null) {
-                            findVariableResult.Type= findVariableResult.Value.GetType();
+                        if (findVariableResult.Type == null)
+                        {
+                            findVariableResult.Type = findVariableResult.Value.GetType();
                         }
-                        var t= typeof( RaiseFindVariableExpr<>).MakeGenericType(findVariableResult.Type );
+                        var t = typeof(RaiseFindVariableExpr<>).MakeGenericType(findVariableResult.Type);
                         newExpr = (IHasValue)Activator.CreateInstance(t, this.mEvaluator, funcName);
                     }
                 }
@@ -425,7 +426,7 @@ namespace Eval4.Core
             bindingAttr = BindingFlags.GetProperty | BindingFlags.GetField | BindingFlags.Public | BindingFlags.InvokeMethod;
             if (isStatic) bindingAttr |= BindingFlags.Static;
             if (isInstance) bindingAttr |= BindingFlags.Instance;
-            if (this.mEvaluator.IsCaseSensitive == false)
+            if ((this.mEvaluator.Options & Evaluator.EvaluatorOptions.CaseSensitive) == 0)
             {
                 bindingAttr = bindingAttr | BindingFlags.IgnoreCase;
             }
@@ -528,7 +529,7 @@ namespace Eval4.Core
             // Can this Value fit into this type ?
             var actualType = actual.SystemType;
             if (actualType == expectedType || expectedType.IsAssignableFrom(actualType)) return 10;
-            Declaration cast;
+            Evaluator.Declaration cast;
             if (mEvaluator.mImplicitCasts.TryGetValue(new Evaluator.TypePair() { Actual = actualType, Target = expectedType }, out cast))
             {
                 castDlg = cast.dlg;

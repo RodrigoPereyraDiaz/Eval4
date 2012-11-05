@@ -28,9 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.textBox1 = new FormulaTextBox();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.panel2 = new Eval4.DemoCSharp.DoubleBufferPanel();
+            this.panel2 = new Eval4.DemoCSharp.CellsViewer();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -65,6 +65,10 @@
             this.panel2.Size = new System.Drawing.Size(845, 511);
             this.panel2.TabIndex = 0;
             this.panel2.Paint += new System.Windows.Forms.PaintEventHandler(this.panel2_Paint);
+            this.panel2.Enter += new System.EventHandler(this.panel2_Enter);
+            this.panel2.KeyDown += new System.Windows.Forms.KeyEventHandler(this.panel2_KeyDown);
+            this.panel2.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.panel2_KeyPress);
+            this.panel2.Leave += new System.EventHandler(this.panel2_Leave);
             this.panel2.MouseDown += new System.Windows.Forms.MouseEventHandler(this.panel2_MouseDown);
             // 
             // ExcelSheet
@@ -83,8 +87,8 @@
 
         #endregion
 
-        private System.Windows.Forms.TextBox textBox1;
+        private FormulaTextBox textBox1;
         private System.Windows.Forms.Panel panel1;
-        private DoubleBufferPanel panel2;
+        private CellsViewer panel2;
     }
 }

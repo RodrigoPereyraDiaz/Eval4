@@ -14,9 +14,18 @@ namespace Eval4
 
     public class VbEvaluator : Core.Evaluator<CustomTokenType>
     {
-        protected internal override bool IsCaseSensitive
+        protected internal override EvaluatorOptions Options
         {
-            get { return false; }
+            get
+            {
+                return EvaluatorOptions.BooleanLogic
+                    //| EvaluatorOptions.CaseSensitive
+                    //| EvaluatorOptions.DateTimeValues
+                    | EvaluatorOptions.DoubleValues
+                    | EvaluatorOptions.IntegerValues
+                    | EvaluatorOptions.ObjectValues
+                    | EvaluatorOptions.StringValues;
+            }
         }
 
         public override bool UseParenthesisForArrays
