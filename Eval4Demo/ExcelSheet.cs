@@ -25,7 +25,7 @@ namespace Eval4.DemoCSharp
             ev = new ExcelEvaluator();
             ev.FindVariable += ev_FindVariable;
             mCells = new Cell[NBCOLUMN, NBROWS];
-            for (int row = 0; row < NBCOLUMN; row++)
+            for (int row = 0; row < NBROWS; row++)
             {
                 for (int col = 0; col < NBCOLUMN; col++)
                 {
@@ -33,10 +33,6 @@ namespace Eval4.DemoCSharp
                     mCells[col, row] = new Cell(ev, col, row);
                 }
             }
-            SetFocusedCell(1, 1);
-            textBox1.HideSelection = false;
-            textBox1.AcceptsReturn = true;
-            textBox1.AcceptsTab = true;
         }
 
         void ev_FindVariable(object sender, FindVariableEventArgs e)
@@ -94,7 +90,7 @@ namespace Eval4.DemoCSharp
             r = GetRect(curCell.X, curCell.Y);
             if (r.IntersectsWith(e.ClipRectangle))
             {
-                e.Graphics.DrawRectangle(new Pen(inPanel2 ? Color.Blue : Color.DarkGray, 2), r);
+                e.Graphics.DrawRectangle(new Pen(textBox1.Focused ? Color.Blue : Color.DarkGray, 2), r);
 
             }
         }
@@ -103,7 +99,7 @@ namespace Eval4.DemoCSharp
         static StringFormat Centered = new StringFormat() { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
         static StringFormat MiddleLeft = new StringFormat() { Alignment = StringAlignment.Near, LineAlignment = StringAlignment.Center };
         static StringFormat MiddleRight = new StringFormat() { Alignment = StringAlignment.Far, LineAlignment = StringAlignment.Center };
-        private bool inPanel2;
+        private string mOriginalText;
 
         private void DrawCell(Graphics g, int x, int y)
         {
@@ -186,9 +182,10 @@ namespace Eval4.DemoCSharp
                 InvalidateCells(previousCell);
                 InvalidateCells(curCell);
                 Cell c = mCells[curCell.X - 1, curCell.Y - 1];
-                textBox1.Text = c.Formula;
+                
+                textBox1.Text = c.GetFormula();
                 textBox1.SelectAll();
-                //textBox1.Focus();
+                textBox1.Focus();
             }
         }
 
@@ -209,12 +206,6 @@ namespace Eval4.DemoCSharp
 
 
 
-        private void textBox1_TextChanged(object sender, EventArgs e)
-        {
-            var c = mCells[curCell.X - 1, curCell.Y - 1];
-            c.Formula = textBox1.Text;
-            InvalidateCell(curCell.X, curCell.Y);
-        }
 
         private void ExcelSheet_Load(object sender, EventArgs e)
         {
@@ -232,20 +223,75 @@ namespace Eval4.DemoCSharp
                 case "excelSheet3":
                     break;
             }
+            SetFocusedCell(1, 1);
         }
 
 
-        private void panel2_Enter(object sender, EventArgs e)
-        {
-            inPanel2 = true;
-            InvalidateCell(curCell.X, curCell.Y);
-        }
+        //private void panel2_Enter(object sender, EventArgs e)
+        //{
+        //    inPanel2 = true;
+        //    InvalidateCell(curCell.X, curCell.Y);
+        //}
 
-        private void panel2_Leave(object sender, EventArgs e)
-        {
-            inPanel2 = false;
-            InvalidateCell(curCell.X, curCell.Y);
-        }
+        //private void panel2_Leave(object sender, EventArgs e)
+        //{
+        //    inPanel2 = false;
+        //    InvalidateCell(curCell.X, curCell.Y);
+        //}
+
+        //private void panel2_KeyPress(object sender, KeyPressEventArgs e)
+        //{
+        //    switch (e.KeyChar)
+        //    {
+        //        case '\t':
+        //        case '\r':
+        //            e.Handled = true;
+        //            break;
+        //        default:
+        //            textBox1.Focus();
+        //            textBox1.Text = e.KeyChar.ToString();
+        //            textBox1.SelectionStart = 1;
+        //            break;
+        //    }
+        //}
+
+        //private void panel2_KeyDown(object sender, KeyEventArgs e)
+        //{
+        //    var keyCode = e.KeyCode;
+        //    if (e.KeyCode == Keys.Tab) keyCode = (e.Modifiers == Keys.Shift ? Keys.Left : Keys.Right);
+        //    else if (e.KeyCode == Keys.Return) keyCode = (e.Modifiers == Keys.Shift ? Keys.Up : Keys.Down);
+
+
+        //    switch (keyCode)
+        //    {
+        //        case Keys.Left:
+        //            SetFocusedCell(curCell.X - 1, curCell.Y);
+        //            e.Handled = true;
+        //            break;
+        //        case Keys.Right:
+        //            SetFocusedCell(curCell.X + 1, curCell.Y);
+        //            e.Handled = true;
+        //            break;
+        //        case Keys.Up:
+        //            SetFocusedCell(curCell.X, curCell.Y - 1);
+        //            e.Handled = true;
+        //            break;
+        //        case Keys.Down:
+        //            SetFocusedCell(curCell.X, curCell.Y + 1);
+        //            e.Handled = true;
+        //            break;
+        //        case Keys.F2:
+        //            textBox1.Focus();
+        //            textBox1.SelectionStart = textBox1.Text.Length;
+        //            e.Handled = true;
+        //            break;
+        //        case Keys.Delete:
+        //            textBox1.Text = string.Empty;
+        //            e.Handled = true;
+        //            break;
+
+        //    }
+        //}
 
         private void textBox1_KeyDown(object sender, KeyEventArgs e)
         {
@@ -253,79 +299,45 @@ namespace Eval4.DemoCSharp
             {
                 case Keys.Up:
                     e.Handled = true;
-                    panel2.Focus();
                     SetFocusedCell(curCell.X, curCell.Y - 1);
                     break;
                 case Keys.Down:
                     e.Handled = true;
-                    panel2.Focus();
                     SetFocusedCell(curCell.X, curCell.Y + 1);
                     break;
                 case Keys.Left:
+                    if ((e.Modifiers != Keys.Control)
+                        && (textBox1.SelectionStart == 0))
+                    {
+                        SetFocusedCell(curCell.X - 1, curCell.Y);
+                        e.Handled = true;
+                    }
+                    else if (textBox1.SelectionLength > 0)
+                    {
+                        textBox1.SelectionLength = 0;
+                    }
+                    break;
                 case Keys.Right:
+                    if ((e.Modifiers != Keys.Control)
+                        && (textBox1.SelectionStart + textBox1.SelectionLength == textBox1.TextLength))
+                    {
+                        SetFocusedCell(curCell.X + 1, curCell.Y);
+                        e.Handled = true;
+                    }
                     break;
                 case Keys.Escape:
-                    e.Handled = true;
-                    break;
-                case Keys.Return:
-                    e.Handled = true;
-                    panel2.Focus();
-                    SetFocusedCell(curCell.X, curCell.Y + ((e.Modifiers & Keys.Shift) != 0 ? -1 : 1));
-                    break;
-            }
-        }
-
-        private void panel2_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            switch (e.KeyChar)
-            {
-                case '\t':
-                case '\r':
-                    e.Handled = true;
-                    break;
-                default:
-                    textBox1.Focus();
-                    textBox1.Text = e.KeyChar.ToString();
-                    textBox1.SelectionStart = 1;
-                    break;
-            }
-        }
-
-        private void panel2_KeyDown(object sender, KeyEventArgs e)
-        {
-            var keyCode = e.KeyCode;
-            if (e.KeyCode == Keys.Tab) keyCode = (e.Modifiers == Keys.Shift ? Keys.Left : Keys.Right);
-            else if (e.KeyCode == Keys.Return) keyCode = (e.Modifiers == Keys.Shift ? Keys.Up : Keys.Down);
-
-
-            switch (keyCode)
-            {
-                case Keys.Left:
-                    SetFocusedCell(curCell.X - 1, curCell.Y);
-                    e.Handled = true;
-                    break;
-                case Keys.Right:
-                    SetFocusedCell(curCell.X + 1, curCell.Y);
-                    e.Handled = true;
-                    break;
-                case Keys.Up:
-                    SetFocusedCell(curCell.X, curCell.Y - 1);
-                    e.Handled = true;
-                    break;
-                case Keys.Down:
-                    SetFocusedCell(curCell.X, curCell.Y + 1);
+                    textBox1.Text = mOriginalText;
+                    textBox1.SelectionLength = textBox1.TextLength;
                     e.Handled = true;
                     break;
                 case Keys.F2:
-                    textBox1.Focus();
-                    textBox1.SelectionStart = textBox1.Text.Length;
-                    e.Handled = true;
+                    textBox1.SelectionStart = textBox1.TextLength;
+                    textBox1.SelectionLength = 0;
                     break;
-                case Keys.Delete:
-                    textBox1.Text = string.Empty;
+                case Keys.Return:
                     e.Handled = true;
+                    SetFocusedCell(curCell.X, curCell.Y + ((e.Modifiers & Keys.Shift) != 0 ? -1 : 1));
                     break;
-
             }
         }
 
@@ -335,8 +347,21 @@ namespace Eval4.DemoCSharp
             //e.Handled = true;
         }
 
+        private void textBox1_TextChanged(object sender, EventArgs e)
+        {
+            var c = mCells[curCell.X - 1, curCell.Y - 1];
+            c.Formula = textBox1.Text;
+            InvalidateCell(curCell.X, curCell.Y);
+        }
 
+        private void textBox1_Enter(object sender, EventArgs e)
+        {
+            InvalidateCell(curCell.X, curCell.Y);
+        }
 
-
+        private void textBox1_Leave(object sender, EventArgs e)
+        {
+            InvalidateCell(curCell.X, curCell.Y);
+        }
     }
 }

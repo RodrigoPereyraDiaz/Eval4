@@ -16,26 +16,6 @@ namespace Eval4.DemoCSharp
             | ControlStyles.UserPaint
             | ControlStyles.OptimizedDoubleBuffer
             | ControlStyles.Selectable, true);
-
-            //UpdateStyles();
-            this.TabStop = true;
-        }
-
-        protected override bool IsInputKey(Keys keyData)
-        {
-            var key = (Keys)((int)keyData & 0xFF); // remove control / alt
-            switch (key)
-            {
-                case Keys.Enter: // same as Keys.Return
-                case Keys.Tab:
-                case Keys.Up:
-                case Keys.Down:
-                case Keys.Left:
-                case Keys.Right:
-                    return true;
-                default:
-                    return base.IsInputKey(keyData);
-            }
         }
 
     }

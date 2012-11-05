@@ -101,6 +101,11 @@ namespace Eval4
                 else return mFormula;
             }
         }
+
+        public string GetFormula()
+        {
+            return (mValue == null ? mFormula : "=" + mFormula);
+        }
     }
 
     public class ExcelEvaluator : Evaluator<ExcelToken>

@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.textBox1 = new FormulaTextBox();
+            this.textBox1 = new Eval4.DemoCSharp.FormulaTextBox();
             this.panel1 = new System.Windows.Forms.Panel();
             this.panel2 = new Eval4.DemoCSharp.CellsViewer();
             this.panel1.SuspendLayout();
@@ -45,8 +45,10 @@
             this.textBox1.Size = new System.Drawing.Size(150, 22);
             this.textBox1.TabIndex = 2;
             this.textBox1.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
+            this.textBox1.Enter += new System.EventHandler(this.textBox1_Enter);
             this.textBox1.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox1_KeyDown);
             this.textBox1.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBox1_KeyPress);
+            this.textBox1.Leave += new System.EventHandler(this.textBox1_Leave);
             // 
             // panel1
             // 
@@ -65,10 +67,6 @@
             this.panel2.Size = new System.Drawing.Size(845, 511);
             this.panel2.TabIndex = 0;
             this.panel2.Paint += new System.Windows.Forms.PaintEventHandler(this.panel2_Paint);
-            this.panel2.Enter += new System.EventHandler(this.panel2_Enter);
-            this.panel2.KeyDown += new System.Windows.Forms.KeyEventHandler(this.panel2_KeyDown);
-            this.panel2.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.panel2_KeyPress);
-            this.panel2.Leave += new System.EventHandler(this.panel2_Leave);
             this.panel2.MouseDown += new System.Windows.Forms.MouseEventHandler(this.panel2_MouseDown);
             // 
             // ExcelSheet
