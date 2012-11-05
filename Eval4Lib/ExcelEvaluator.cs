@@ -69,10 +69,9 @@ namespace Eval4
                 var firstChar = string.IsNullOrEmpty(mFormula) ? '\0' : mFormula[0];
                 if ((firstChar >= '0' && firstChar <= '9') || firstChar == '.' || firstChar == '+' || firstChar == '-' || firstChar == '=')
                 {
-                    if (firstChar == '=') mFormula = mFormula.Substring(1);
                     try
                     {
-                        mValue = mEv.Parse(mFormula);
+                        mValue = mEv.Parse((firstChar == '=' ? mFormula.Substring(1) : mFormula));
                     }
                     catch (Exception ex)
                     {
@@ -86,7 +85,12 @@ namespace Eval4
         public override string ToString()
         {
             if (Exception != null) return Exception.Message;
-            else if (mValue != null) return mValue.ObjectValue.ToString();
+            else if (mValue != null)
+            {
+                object val = mValue.ObjectValue;
+                if (val is double) return ((double)val).ToString("#,##0.00");
+                else return val.ToString();
+            }
             else
             {
                 if (mFormula != null && mFormula.StartsWith("'")) return mFormula.Substring(1);
@@ -102,10 +106,6 @@ namespace Eval4
             }
         }
 
-        public string GetFormula()
-        {
-            return (mValue == null ? mFormula : "=" + mFormula);
-        }
     }
 
     public class ExcelEvaluator : Evaluator<ExcelToken>

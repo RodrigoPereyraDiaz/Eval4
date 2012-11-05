@@ -130,7 +130,9 @@ namespace Eval4.DemoCSharp
                     if (x > 0 && x <= NBCOLUMN && y > 0 && y < NBROWS)
                     {
                         var c = mCells[x - 1, y - 1];
+
                         text = c.ToString();
+                        if (c.ValueObject != null) stringFormat = MiddleRight;
                     }
                 }
             }
@@ -183,7 +185,7 @@ namespace Eval4.DemoCSharp
                 InvalidateCells(curCell);
                 Cell c = mCells[curCell.X - 1, curCell.Y - 1];
                 
-                textBox1.Text = c.GetFormula();
+                textBox1.Text = c.Formula;
                 textBox1.SelectAll();
                 textBox1.Focus();
             }
