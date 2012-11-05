@@ -156,74 +156,74 @@ namespace Eval4
         //    return typeHandlers;
         //}
 
-        public override IHasValue ParseLeft(Parser parser, Token token, int precedence)
+        public override IHasValue ParseLeftExpression(Token token, int precedence)
         {
             switch (token.Type)
             {
                 case TokenType.ValueNumber:
-                    return base.ParseLeft(parser, token, precedence);
+                    return base.ParseLeftExpression(token, precedence);
 
                 default:
-                    return base.ParseLeft(parser, token, precedence);
+                    return base.ParseLeftExpression(token, precedence);
             }
 
         }
-        public override Token ParseToken(Parser parser)
+        public override Token ParseToken()
         {
-            switch (parser.mCurChar)
+            switch (mCurChar)
             {
                 case '%':
-                    parser.NextChar();
+                    NextChar();
                     return NewToken(TokenType.OperatorModulo);
 
                 case '&':
-                    parser.NextChar();
-                    if (parser.mCurChar == '&')
+                    NextChar();
+                    if (mCurChar == '&')
                     {
-                        parser.NextChar();
+                        NextChar();
                         return NewToken(TokenType.OperatorAndAlso);
                     }
                     return NewToken(TokenType.OperatorAnd);
 
                 case '?':
-                    parser.NextChar();
+                    NextChar();
                     return NewToken(TokenType.OperatorIf);
 
                 case '=':
-                    parser.NextChar();
-                    if (parser.mCurChar == '=')
+                    NextChar();
+                    if (mCurChar == '=')
                     {
-                        parser.NextChar();
+                        NextChar();
                         return NewToken(TokenType.OperatorEQ);
                     }
                     return NewToken(TokenType.OperatorAssign);
 
                 case '!':
-                    parser.NextChar();
-                    if (parser.mCurChar == '=')
+                    NextChar();
+                    if (mCurChar == '=')
                     {
-                        parser.NextChar();
+                        NextChar();
                         return NewToken(TokenType.OperatorNE);
                     }
                     return NewToken(TokenType.OperatorNot);
 
                 case '^':
-                    parser.NextChar();
+                    NextChar();
                     return NewToken(TokenType.OperatorXor);
 
                 case '|':
-                    parser.NextChar();
-                    if (parser.mCurChar == '|')
+                    NextChar();
+                    if (mCurChar == '|')
                     {
-                        parser.NextChar();
+                        NextChar();
                         return NewToken(TokenType.OperatorOrElse);
                     }
                     return NewToken(TokenType.OperatorOr);
                 case ':':
-                    parser.NextChar();
+                    NextChar();
                     return NewToken(TokenType.OperatorColon);
                 default:
-                    return base.ParseToken(parser);
+                    return base.ParseToken();
 
             }
         }
@@ -245,22 +245,22 @@ namespace Eval4
             }
         }
 
-        internal override void ParseRight(Parser parser, Token tk, int opPrecedence, IHasValue Acc, ref IHasValue valueLeft)
+        internal override void ParseRight(Token tk, int opPrecedence, IHasValue Acc, ref IHasValue valueLeft)
         {
             var tt = tk.Type;
             switch (tt)
             {
                 case TokenType.OperatorIf:
-                    parser.NextToken();
-                    IHasValue thenExpr = parser.ParseExpr(null, 0);
-                    parser.Expect(TokenType.OperatorColon, "Missing : in ? expression test ? valueIfTrue : valueIfFalse.");
-                    IHasValue elseExpr = parser.ParseExpr(null, 0);
+                    NextToken();
+                    IHasValue thenExpr = ParseExpr(null, 0);
+                    Expect(TokenType.OperatorColon, "Missing : in ? expression test ? valueIfTrue : valueIfFalse.");
+                    IHasValue elseExpr = ParseExpr(null, 0);
                     var t = typeof(OperatorIfExpr<>).MakeGenericType(thenExpr.SystemType);
 
                     valueLeft = (IHasValue)Activator.CreateInstance(t, valueLeft, thenExpr, elseExpr);
                     break;
                 default:
-                    base.ParseRight(parser, tk, opPrecedence, Acc, ref valueLeft);
+                    base.ParseRight(tk, opPrecedence, Acc, ref valueLeft);
                     break;
             }
         }

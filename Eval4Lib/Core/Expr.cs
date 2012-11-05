@@ -113,7 +113,7 @@ namespace Eval4.Core
                     var targetType = paramInfo[i].ParameterType;
                     if (sourceType != targetType)
                     {
-                        var c2 = typeof(Eval4.Core.Evaluator.NewTypedExpr<,>).MakeGenericType(sourceType, targetType);
+                        var c2 = typeof(NewTypedExpr<,>).MakeGenericType(sourceType, targetType);
                         mParams[i] = (IHasValue)Activator.CreateInstance(c2, mParams[i], casts[i]);
                     }
                 }

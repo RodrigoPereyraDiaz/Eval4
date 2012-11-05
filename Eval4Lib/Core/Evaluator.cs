@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 
 namespace Eval4.Core
@@ -8,12 +9,18 @@ namespace Eval4.Core
     {
         internal List<object> mEnvironmentFunctionsList;
         public bool RaiseVariableNotFoundException;
-        protected Dictionary<string, VariableBase> mVariableBag;
+        internal Dictionary<string, VariableBase> mVariableBag;
         public abstract int GetPrecedence(Token token, bool unary);
         internal Dictionary<TokenType, List<Declaration>> mBinaryDeclarations;
         internal Dictionary<TokenType, List<Declaration>> mUnaryDeclarations;
         internal Dictionary<TypePair, Declaration> mImplicitCasts;
         internal Dictionary<TypePair, Declaration> mExplicitCasts;
+        protected string mString;
+        protected int mLen;
+        protected int mPos;
+        public char mCurChar;
+        public int startpos;
+        public Token mCurToken;
 
         public Evaluator()
         {
@@ -42,59 +49,19 @@ namespace Eval4.Core
         {
             switch (option)
             {
-                case Evaluator.EvaluatorOptions.BooleanLogic: AddBoolOperators();
+                case EvaluatorOptions.BooleanLogic: AddBoolOperators();
                     break;
-                case Evaluator.EvaluatorOptions.IntegerValues: AddIntOperators();
+                case EvaluatorOptions.IntegerValues: AddIntOperators();
                     break;
-                case Evaluator.EvaluatorOptions.DoubleValues: AddDoubleOperators();
+                case EvaluatorOptions.DoubleValues: AddDoubleOperators();
                     break;
-                case Evaluator.EvaluatorOptions.DateTimeValues: AddDateTimeOperators();
+                case EvaluatorOptions.DateTimeValues: AddDateTimeOperators();
                     break;
-                case Evaluator.EvaluatorOptions.StringValues: AddStringOperators();
+                case EvaluatorOptions.StringValues: AddStringOperators();
                     break;
-                case Evaluator.EvaluatorOptions.ObjectValues: AddObjectOperators();
+                case EvaluatorOptions.ObjectValues: AddObjectOperators();
                     break;
             }
-        }
-
-        internal protected enum EvaluatorOptions
-        {
-            CaseSensitive = 1,
-            BooleanLogic = 2,
-            IntegerValues = 4,
-            DoubleValues = 8,
-            DateTimeValues = 16,
-            StringValues = 32,
-            ObjectValues = 64
-        }
-
-        internal class TypePair : IEquatable<TypePair>
-        {
-            public Type Actual;
-            public Type Target;
-            public override string ToString()
-            {
-                return Actual.Name + "=>" + Target.Name;
-            }
-
-            public bool Equals(TypePair other)
-            {
-                return other.Actual == this.Actual && other.Target == this.Target;
-            }
-
-            public override int GetHashCode()
-            {
-                return Actual.GetHashCode() ^ Target.GetHashCode();
-            }
-        }
-
-        internal class Declaration
-        {
-            internal TokenType tk;
-            internal Delegate dlg;
-            internal Type P1;
-            internal Type P2;
-            internal Type T;
         }
 
         protected void AddUnaryOperation<P1, T>(TokenType tokenType, Func<P1, T> func)
@@ -393,14 +360,12 @@ namespace Eval4.Core
             var dict = (stringTemplate ? mTemplates : mExpressions);
             if (!dict.TryGetValue(formula, out parsed))
             {
-                var p = new Parser(this, formula, stringTemplate);
-                parsed = p.ParsedExpression;
+                parsed = InternalParse(formula, stringTemplate);
                 dict[formula] = parsed;
                 if (dict.Count > 100) dict.Clear(); //  I know this is crude
             }
             return parsed;
         }
-
 
         public static string ConvertToString(object value)
         {
@@ -460,7 +425,7 @@ namespace Eval4.Core
 
         public object Eval(string formula)
         {
-            IHasValue parsed = Parse(formula);
+            IHasValue parsed = InternalParse(formula);
             return parsed.ObjectValue;
         }
 
@@ -472,7 +437,7 @@ namespace Eval4.Core
 
         public IHasValue ParseTemplate(string template)
         {
-            IHasValue parsed = Parse(template, stringTemplate: true);
+            IHasValue parsed = InternalParse(template, sourceIsTextTemplate: true);
             return parsed;
         }
 
@@ -508,7 +473,7 @@ namespace Eval4.Core
             return NewToken(TokenType.ValueIdentifier, keyword);
         }
 
-        //internal virtual int GetPrecedence(BaseParser parser, Token tk, bool unary)
+        //internal virtual int GetPrecedence(BaseToken tk, bool unary)
         //{
         //    var tt = tk.Type;
         //    if (unary)
@@ -533,49 +498,49 @@ namespace Eval4.Core
         //}
 
 
-        public virtual Token ParseToken(Parser parser)
+        public virtual Token ParseToken()
         {
-            switch (parser.mCurChar)
+            switch (mCurChar)
             {
                 case ' ':
                 case '\t':
                 case '\r':
                 case '\n':
-                    parser.NextChar();
+                    NextChar();
                     return NewToken(TokenType.Undefined);
 
                 case '\0': //null:
                     return NewToken(TokenType.Eof);
 
                 case '-':
-                    parser.NextChar();
+                    NextChar();
 
                     return NewToken(TokenType.OperatorMinus);
                 case '+':
-                    parser.NextChar();
+                    NextChar();
                     return NewToken(TokenType.OperatorPlus);
                 case '*':
-                    parser.NextChar();
+                    NextChar();
                     return NewToken(TokenType.OperatorMultiply);
                 case '/':
-                    parser.NextChar();
+                    NextChar();
                     return NewToken(TokenType.OperatorDivide);
                 case '(':
-                    parser.NextChar();
+                    NextChar();
                     return NewToken(TokenType.OpenParenthesis);
                 case ')':
-                    parser.NextChar();
+                    NextChar();
                     return NewToken(TokenType.CloseParenthesis);
                 case '<':
-                    parser.NextChar();
-                    if (parser.mCurChar == '=')
+                    NextChar();
+                    if (mCurChar == '=')
                     {
-                        parser.NextChar();
+                        NextChar();
                         return NewToken(TokenType.OperatorLE);
                     }
-                    else if (parser.mCurChar == '>')
+                    else if (mCurChar == '>')
                     {
-                        parser.NextChar();
+                        NextChar();
                         return NewToken(TokenType.OperatorNE);
                     }
                     else
@@ -583,10 +548,10 @@ namespace Eval4.Core
                         return NewToken(TokenType.OperatorLT);
                     }
                 case '>':
-                    parser.NextChar();
-                    if (parser.mCurChar == '=')
+                    NextChar();
+                    if (mCurChar == '=')
                     {
-                        parser.NextChar();
+                        NextChar();
                         return NewToken(TokenType.OperatorGE);
                     }
                     else
@@ -594,30 +559,30 @@ namespace Eval4.Core
                         return NewToken(TokenType.OperatorGT);
                     }
                 case ',':
-                    parser.NextChar();
+                    NextChar();
                     return NewToken(TokenType.Comma);
                 case '.':
-                    parser.NextChar();
-                    if (parser.mCurChar >= '0' && parser.mCurChar <= '9') return parser.ParseNumber(afterDot: true);
+                    NextChar();
+                    if (mCurChar >= '0' && mCurChar <= '9') return ParseNumber(afterDot: true);
                     else return NewToken(TokenType.Dot);
                 case '\'':
                 case '"':
-                    return parser.ParseString(true);
+                    return ParseString(true);
                 case '[':
-                    parser.NextChar();
+                    NextChar();
                     return NewToken(TokenType.OpenBracket);
                 case ']':
-                    parser.NextChar();
+                    NextChar();
                     return NewToken(TokenType.CloseBracket);
                 default:
-                    if (parser.mCurChar >= '0' && parser.mCurChar <= '9') return parser.ParseNumber();
-                    else if (IsIdentifierFirstLetter(parser.mCurChar)) return parser.ParseIdentifierOrKeyword();
+                    if (mCurChar >= '0' && mCurChar <= '9') return ParseNumber();
+                    else if (IsIdentifierFirstLetter(mCurChar)) return ParseIdentifierOrKeyword();
                     break;
             }
-            throw parser.NewParserException("Unexpected character " + parser.mCurChar);
+            throw NewParserException("Unexpected character " + mCurChar);
         }
 
-        public virtual IHasValue ParseLeft(Parser parser, Token token, int precedence)
+        public virtual IHasValue ParseLeftExpression(Token token, int precedence)
         {
 
             IHasValue result = null;
@@ -626,8 +591,8 @@ namespace Eval4.Core
             {
                 var tt = token;
                 var opPrecedence = GetPrecedence(tt, true);
-                parser.NextToken();
-                var ValueRight = parser.ParseExpr(null, opPrecedence);
+                NextToken();
+                var ValueRight = ParseExpr(null, opPrecedence);
 
                 foreach (var decl in declarations)
                 {
@@ -640,30 +605,30 @@ namespace Eval4.Core
 
                 }
             }
-            return ParseLeft2(parser, token, ref result);
+            return ParseLeftToken(token, ref result);
         }
 
-        private static IHasValue ParseLeft2(Parser parser, Token token, ref IHasValue result)
+        private IHasValue ParseLeftToken(Token token, ref IHasValue result)
         {
             switch (token.Type)
             {
                 case TokenType.ValueIdentifier:
-                    parser.ParseIdentifier(ref result);
+                    ParseIdentifier(ref result);
                     return result;
 
                 case TokenType.ValueTrue:
                     result = new ConstantExpr<bool>(true);
-                    parser.NextToken();
+                    NextToken();
                     return result;
 
                 case TokenType.ValueFalse:
                     result = new ConstantExpr<bool>(false);
-                    parser.NextToken();
+                    NextToken();
                     return result;
 
                 case TokenType.ValueString:
                     result = new ConstantExpr<string>(token.ValueString);
-                    parser.NextToken();
+                    NextToken();
                     return result;
 
                 case TokenType.ValueNumber:
@@ -680,57 +645,56 @@ namespace Eval4.Core
                     }
                     else
                     {
-                        throw parser.NewParserException(string.Format("Invalid number {0}", parser.mCurToken.ValueString));
+                        throw NewParserException(string.Format("Invalid number {0}", mCurToken.ValueString));
                     }
-                    parser.NextToken();
+                    NextToken();
                     return result;
 
                 case TokenType.ValueDate:
                     try
                     {
-                        result = new ConstantExpr<DateTime>(DateTime.Parse(parser.mCurToken.ValueString));
-                        parser.NextToken();
+                        result = new ConstantExpr<DateTime>(DateTime.Parse(mCurToken.ValueString));
+                        NextToken();
                         return result;
                     }
                     catch (Exception) // ex)
                     {
-                        throw parser.NewParserException(string.Format("Invalid date {0}, it should be #DD/MM/YYYY hh:mm:ss#", parser.mCurToken.ValueString));
+                        throw NewParserException(string.Format("Invalid date {0}, it should be #DD/MM/YYYY hh:mm:ss#", mCurToken.ValueString));
                     }
 
                 case TokenType.OpenParenthesis:
-                    parser.NextToken();
-                    result = parser.ParseExpr(null, 0);
-                    if (parser.mCurToken.Type == TokenType.CloseParenthesis)
+                    NextToken();
+                    result = ParseExpr(null, 0);
+                    if (mCurToken.Type == TokenType.CloseParenthesis)
                     {
                         // good we eat the end parenthesis and continue ...
-                        parser.NextToken();
+                        NextToken();
                         return result;
                     }
                     else
                     {
-                        throw parser.NewUnexpectedToken("End parenthesis not found");
+                        throw NewUnexpectedToken("End parenthesis not found");
                     }
 
                 case TokenType.OperatorIf:
                     // first check functions
                     List<IHasValue> parameters = null;
                     // parameters... 
-                    parser.NextToken();
+                    NextToken();
                     bool brackets = false;
-                    parameters = parser.ParseParameters(ref brackets);
+                    parameters = ParseParameters(ref brackets);
                     var t = typeof(OperatorIfExpr<>).MakeGenericType(parameters[1].SystemType);
                     return (IHasValue)Activator.CreateInstance(t, parameters[0], parameters[1], parameters[2]);
             }
-            throw parser.NewUnexpectedToken();
+            throw NewUnexpectedToken();
         }
 
-
-        internal virtual void ParseRight(Parser parser, Token tk, int opPrecedence, IHasValue acc, ref IHasValue valueLeft)
+        internal virtual void ParseRight(Token tk, int opPrecedence, IHasValue acc, ref IHasValue valueLeft)
         {
             var tt = tk.Type;
             IHasValue valueRight;
-            parser.NextToken();
-            valueRight = parser.ParseExpr(valueLeft, opPrecedence);
+            NextToken();
+            valueRight = ParseExpr(valueLeft, opPrecedence);
             var leftType = valueLeft.SystemType;
             var rightType = valueRight.SystemType;
             List<Declaration> declarations;
@@ -741,7 +705,7 @@ namespace Eval4.Core
                     if (ApplyMethod(ref valueLeft, valueRight, decl.dlg)) return;
                 }
             }
-            throw parser.NewParserException(string.Format("Cannot find operation {0} {1} {2}", valueLeft.SystemType, tt, valueRight.SystemType));
+            throw NewParserException(string.Format("Cannot find operation {0} {1} {2}", valueLeft.SystemType, tt, valueRight.SystemType));
         }
 
         protected bool ApplyMethod(ref IHasValue valueLeft, IHasValue valueRight, Delegate dlg)
@@ -771,7 +735,6 @@ namespace Eval4.Core
             return false;
         }
 
-
         protected bool ApplyMethod(ref IHasValue valueLeft, Delegate dlg)
         {
             Declaration cast1;
@@ -791,108 +754,6 @@ namespace Eval4.Core
                 return true;
             }
             return false;
-        }
-
-        //protected IHasValue CreateIHasValue(IHasValue ValueLeft, Declaration cast1, Declaration decl)
-        //{
-        //    if (cast1 != null)
-        //    {
-        //        var c1 = typeof(NewTypedExpr<,>).MakeGenericType(cast1.P1, cast1.T);
-        //        ValueLeft = (IHasValue)Activator.CreateInstance(c1, ValueLeft, cast1.dlg);
-        //    }
-        //    var x = typeof(NewTypedExpr<,>).MakeGenericType(decl.P1, decl.T);
-        //    return (IHasValue)Activator.CreateInstance(x, ValueLeft, decl.dlg);
-
-        //}
-
-        internal class NewTypedExpr<P1, T> : IHasValue<T>
-        {
-            private IHasValue<P1> mP1;
-            private Func<P1, T> mFunc;
-
-            public NewTypedExpr(IHasValue<P1> p1, Func<P1, T> func)
-            {
-                System.Diagnostics.Debug.Assert(func != null);
-                mP1 = p1;
-                mFunc = func;
-            }
-
-
-            public T Value
-            {
-                get { return mFunc(mP1.Value); }
-            }
-
-            public object ObjectValue
-            {
-                get { return mFunc(mP1.Value); }
-            }
-
-            public event ValueChangedEventHandler ValueChanged;
-
-            public Type SystemType
-            {
-                get { return typeof(T); }
-            }
-
-            public string ShortName
-            {
-                get { return "NewTypedExpr"; }
-            }
-
-            public IEnumerable<Dependency> Dependencies
-            {
-                get
-                {
-                    yield return new Dependency("p1", mP1);
-                }
-            }
-        }
-
-        internal class NewTypedExpr<P1, P2, T> : IHasValue<T>
-        {
-            private IHasValue<P1> mP1;
-            private IHasValue<P2> mP2;
-            private Func<P1, P2, T> mFunc;
-
-            public NewTypedExpr(IHasValue<P1> p1, IHasValue<P2> p2, Func<P1, P2, T> func)
-            {
-                mP1 = p1;
-                mP2 = p2;
-                mFunc = func;
-            }
-
-
-            public T Value
-            {
-                get { return mFunc(mP1.Value, mP2.Value); }
-            }
-
-            public object ObjectValue
-            {
-                get { return mFunc(mP1.Value, mP2.Value); }
-            }
-
-            public event ValueChangedEventHandler ValueChanged;
-
-            public Type SystemType
-            {
-                get { return typeof(T); }
-            }
-
-            public string ShortName
-            {
-                get { return "NewTypedExpr"; }
-            }
-
-            public IEnumerable<Dependency> Dependencies
-            {
-                get
-                {
-                    yield return new Dependency("p1", mP1);
-                    yield return new Dependency("p2", mP2);
-                }
-            }
         }
 
         private bool CanCast(Type type1, Type type2, out Declaration cast)
@@ -933,6 +794,818 @@ namespace Eval4.Core
         }
 
         public event EventHandler<FindVariableEventArgs> FindVariable;
+
+
+        internal SyntaxError NewParserException(string msg, Exception ex = null)
+        {
+            if (ex is SyntaxError)
+            {
+                msg += ". " + ex.Message;
+            }
+            else
+            {
+                msg += " " + " at position " + startpos;
+                if ((ex != null))
+                {
+                    msg += ". " + ex.Message;
+                }
+            }
+            return new SyntaxError(msg, this.mString, this.mPos);
+        }
+
+        internal SyntaxError NewUnexpectedToken(string msg = null)
+        {
+            if (String.IsNullOrEmpty(msg))
+            {
+                msg = "";
+            }
+            else
+            {
+                msg += "; ";
+            }
+            if (string.IsNullOrEmpty(mCurToken.ValueString))
+            {
+                //if (mCurChar == '\0') throw NewParserException(msg + "Unexpected end of formula.");
+                throw NewParserException(msg + "Unexpected " + mCurToken.Type);
+            }
+            else
+            {
+                throw NewParserException(msg + "Unexpected " + mCurToken.Type + " \"" + mCurToken.ValueString + "\"");
+            }
+        }
+
+        public void NextToken()
+        {
+            do
+            {
+                startpos = mPos;
+                mCurToken = ParseToken();
+                if (mCurToken.Type != TokenType.Undefined)
+                    return;
+            } while (true);
+        }
+
+        internal void NextChar()
+        {
+            if (mPos < mLen)
+            {
+                mCurChar = mString[mPos];
+                CleanUpCharacter(ref mCurChar);
+
+                mPos += 1;
+            }
+            else
+            {
+                mCurChar = '\0';
+            }
+        }
+
+        internal Token ParseNumber(bool afterDot = false)
+        {
+            var sb = new StringBuilder();
+            if (!afterDot)
+            {
+                while (mCurChar >= '0' && mCurChar <= '9')
+                {
+                    sb.Append(mCurChar);
+                    NextChar();
+                }
+                if (mCurChar == '.')
+                {
+                    afterDot = true;
+                    NextChar();
+                }
+            }
+            if (afterDot)
+            {
+                sb.Append('.');
+                while (mCurChar >= '0' && mCurChar <= '9')
+                {
+                    sb.Append(mCurChar);
+                    NextChar();
+                }
+            }
+            return NewToken(TokenType.ValueNumber, sb.ToString());
+        }
+
+        internal Token ParseIdentifierOrKeyword()
+        {
+            var sb = new StringBuilder();
+            // we eat at least one character
+            sb.Append(mCurChar);
+            NextChar();
+
+            while (IsIdentifierLetter(mCurChar))
+            {
+                sb.Append(mCurChar);
+                NextChar();
+            }
+            mCurToken = CheckKeyword(sb.ToString());
+            return mCurToken;
+        }
+
+        internal Token ParseString(bool InQuote)
+        {
+            var sb = new StringBuilder();
+            char OriginalChar = '\0';
+            if (InQuote)
+            {
+                OriginalChar = mCurChar;
+                NextChar();
+            }
+            List<object> bits = new List<object>();
+
+            while (mCurChar != '\0')
+            {
+                if (InQuote && mCurChar == OriginalChar)
+                {
+                    NextChar();
+                    if (mCurChar == OriginalChar)
+                    {
+                        sb.Append(mCurChar);
+                    }
+                    else
+                    {
+                        //End of String
+                        return NewToken(TokenType.ValueString, sb.ToString());
+                    }
+                }
+                else if (mCurChar == '%')
+                {
+                    NextChar();
+                    if (mCurChar == '[')
+                    {
+                        NextChar();
+                        System.Text.StringBuilder SaveValue = sb;
+                        int SaveStartPos = startpos;
+                        sb = new System.Text.StringBuilder();
+                        this.NextToken();
+                        // restart the tokenizer for the subExpr
+                        object subExpr = null;
+                        try
+                        {
+                            // subExpr = mParseExpr(0, ePriority.none)
+                            if (subExpr == null)
+                            {
+                                sb.Append("<nothing>");
+                            }
+                            else
+                            {
+                                sb.Append(Evaluator.ConvertToString(subExpr));
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // XML don't like < and >
+                            sb.Append("[Error " + ex.Message + "]");
+                        }
+                        SaveValue.Append(sb.ToString());
+                        sb = SaveValue;
+                        startpos = SaveStartPos;
+                    }
+                    else
+                    {
+                        sb.Append('%');
+                    }
+                }
+                else
+                {
+                    sb.Append(mCurChar);
+                    NextChar();
+                }
+            }
+
+            if (InQuote)
+            {
+                throw NewParserException("Incomplete string, missing " + OriginalChar + "; String started");
+            }
+            if (sb.Length > 0 && bits.Count > 0)
+            {
+                bits.Add(sb.ToString());
+                sb.Length = 0;
+                foreach (object o in bits)
+                {
+                    if (o is string) sb.Append(o as string);
+                    else sb.Append((o as IHasValue).ObjectValue);
+                }
+            }
+            return NewToken(TokenType.ValueString, sb.ToString());
+        }
+
+        internal void Expect(TokenType tokenType, string msg)
+        {
+            if (mCurToken.Type == tokenType)
+            {
+                NextToken();
+            }
+            else
+            {
+                throw NewUnexpectedToken(msg);
+            }
+        }
+
+        private IHasValue InternalParse(string source, bool sourceIsTextTemplate = false)
+        {
+            mString = source;
+            mLen = source.Length;
+            mPos = 0;
+            // start the machine
+            NextChar();
+            NextToken();
+            IHasValue res;
+            if (sourceIsTextTemplate) res = ParseTemplate();
+            else res = ParseExpr(null, 0);
+            if (mCurToken.Type == TokenType.Eof)
+            {
+                if (res == null)
+                    res = new ConstantExpr<string>(string.Empty);
+                return res;
+            }
+            else
+            {
+                throw NewUnexpectedToken();
+            }
+        }
+
+        private IHasValue ParseTemplate()
+        {
+            var token = ParseString(false);
+            return (IHasValue)token.ValueObject;
+        }
+
+        internal IHasValue ParseExpr(IHasValue acc, int precedence)
+        {
+            IHasValue valueLeft = null;
+            valueLeft = ParseLeft(precedence);
+            if (valueLeft == null)
+            {
+                throw NewUnexpectedToken("No Expression found");
+            }
+            while (typeof(IHasValue).IsAssignableFrom(valueLeft.SystemType))
+            {
+                valueLeft = (IHasValue)valueLeft.ObjectValue;
+            }
+            ParseDot(ref valueLeft);
+            return ParseRight(acc, precedence, valueLeft);
+        }
+
+        protected IHasValue ParseRight(IHasValue acc, int precedence, IHasValue valueLeft)
+        {
+            while (true)
+            {
+                //TokenType tt = default(TokenType);
+                //tt = mCurToken.Type;
+                int opPrecedence = (mCurToken.Type == TokenType.Eof ? 0 : GetPrecedence(mCurToken, unary: false));
+
+                if (precedence >= opPrecedence)
+                {
+                    // if on we have twice the same operator precedence it is more natural to calculate the left operator first
+                    // ie 1+2+3-4 will be calculated ((1+2)+3)-4
+                    return valueLeft;
+                }
+                else
+                {
+                    ParseRight(mCurToken, opPrecedence, acc, ref valueLeft);
+                }
+            }
+        }
+
+        protected IHasValue ParseLeft(int precedence)
+        {
+            IHasValue result = null;
+            while (mCurToken.Type != TokenType.Eof)
+            {
+                // we ignore precedence here, not sure if it is valid
+                result = ParseLeftExpression(mCurToken, precedence);
+                if (result != null) return result;
+            }
+            return null;
+        }
+
+        protected bool EmitCallFunction(ref IHasValue valueLeft, string funcName, List<IHasValue> parameters, EvalMemberType callType, bool errorIfNotFound)
+        {
+            IHasValue newExpr = null;
+
+            if (valueLeft == null)
+            {
+                for (int i = mEnvironmentFunctionsList.Count - 1; i >= 0; i--)
+                {
+                    var environmentFunctions = mEnvironmentFunctionsList[i];
+                    if (environmentFunctions is Type)
+                    {
+                        newExpr = GetMember(null, (Type)environmentFunctions, funcName, parameters, callType);
+                    }
+                    else if (environmentFunctions is IHasValue)
+                    {
+                        var hasValue = environmentFunctions as IHasValue;
+                        newExpr = GetMember(hasValue, hasValue.SystemType, funcName, parameters, callType);
+                    }
+                    else
+                    {
+                        throw NewParserException("Invalid Environment functions.");
+                    }
+                    if (newExpr != null) break;
+                }
+                if (newExpr == null && (parameters == null || parameters.Count == 0))
+                {
+                    VariableBase variable;
+                    if (mVariableBag.TryGetValue(funcName, out variable))
+                    {
+                        var t = typeof(GetVariableFromBag<>).MakeGenericType(variable.SystemType);
+                        newExpr = (IHasValue)Activator.CreateInstance(t, this, funcName);
+                    }
+                    else
+                    {
+                        var findVariableResult = RaiseFindVariable(funcName);
+                        if (findVariableResult.Handled)
+                        {
+                            if (findVariableResult.Type == null)
+                            {
+                                findVariableResult.Type = findVariableResult.Value.GetType();
+                            }
+                            var t = typeof(RaiseFindVariableExpr<>).MakeGenericType(findVariableResult.Type);
+                            newExpr = (IHasValue)Activator.CreateInstance(t, this, funcName);
+                        }
+                    }
+                }
+            }
+            else if (valueLeft.SystemType == typeof(StaticFunctionsWrapper))
+            {
+                newExpr = GetMember(null, (valueLeft.ObjectValue as StaticFunctionsWrapper).type, funcName, parameters, callType);
+            }
+            else
+            {
+                newExpr = GetMember(valueLeft, valueLeft.SystemType, funcName, parameters, callType);
+            }
+            if ((newExpr != null))
+            {
+                valueLeft = newExpr;
+                return true;
+            }
+            else
+            {
+                if (errorIfNotFound)
+                    throw NewParserException("No Variable or public method '" + funcName + "' was not found.");
+                return false;
+            }
+        }
+
+        protected IHasValue GetMember(IHasValue @base, Type baseType, string funcName, List<IHasValue> parameters, EvalMemberType CallType)
+        {
+            MemberInfo mi = null;
+            Type resultType;
+            Delegate[] casts;
+            if (GetMemberInfo(baseType, isStatic: true, isInstance: @base != null, func: funcName, parameters: parameters, mi: out mi, resultType: out resultType, casts: out casts))
+            {
+
+                switch (mi.MemberType)
+                {
+                    case MemberTypes.Field:
+                        if ((CallType & EvalMemberType.Field) == 0)
+                            throw NewParserException("Unexpected Field");
+                        resultType = (mi as FieldInfo).FieldType;
+                        break;
+                    case MemberTypes.Method:
+                        if ((CallType & EvalMemberType.Method) == 0)
+                            throw NewParserException("Unexpected Method");
+                        resultType = (mi as MethodInfo).ReturnType;
+                        break;
+                    case MemberTypes.Property:
+                        if ((CallType & EvalMemberType.Property) == 0)
+                            throw NewParserException("Unexpected Property");
+                        resultType = (mi as PropertyInfo).PropertyType;
+                        break;
+                    default:
+                        throw NewUnexpectedToken(mi.MemberType.ToString() + " members are not supported");
+                }
+                var t = typeof(CallMethodExpr<>).MakeGenericType(resultType);
+                return (IHasValue)Activator.CreateInstance(t, this, @base, mi, parameters, casts);
+            }
+            //if (@base is IVariableBag && (parameters == null || parameters.Count == 0))
+            //{
+            //    IHasValue val = ((IVariableBag)@base).GetVariable(funcName);
+            //    if ((val != null))
+            //    {
+            //        return val; // new GetVariableExpr(val);
+            //    }
+            //}
+            return null;
+        }
+
+        protected bool GetMemberInfo(Type objType, bool isStatic, bool isInstance, string func, List<IHasValue> parameters, out MemberInfo mi, out Type resultType, out Delegate[] casts)
+        {
+            BindingFlags bindingAttr = default(BindingFlags);
+            bindingAttr = BindingFlags.GetProperty | BindingFlags.GetField | BindingFlags.Public | BindingFlags.InvokeMethod;
+            if (isStatic) bindingAttr |= BindingFlags.Static;
+            if (isInstance) bindingAttr |= BindingFlags.Instance;
+            if ((this.Options & EvaluatorOptions.CaseSensitive) == 0)
+            {
+                bindingAttr = bindingAttr | BindingFlags.IgnoreCase;
+            }
+            MemberInfo[] mis = null;
+
+            if (func == null)
+            {
+                mis = objType.GetDefaultMembers();
+            }
+            else
+            {
+                mis = objType.GetMember(func, bindingAttr);
+            }
+
+
+            // There is a bit of cooking here...
+            // lets find the most acceptable Member
+            int score = 0;
+            int BestScore = 0;
+            MemberInfo BestMember = null;
+            Delegate[] bestCasts = null;
+            ParameterInfo[] plist = null;
+            int idx = 0;
+
+            mi = null;
+            for (int i = 0; i <= mis.Length - 1; i++)
+            {
+                mi = mis[i];
+
+                if (mi is MethodInfo)
+                {
+                    plist = ((MethodInfo)mi).GetParameters();
+                }
+                else if (mi is PropertyInfo)
+                {
+                    plist = ((PropertyInfo)mi).GetIndexParameters();
+                }
+                else if (mi is FieldInfo)
+                {
+                    plist = null;
+                }
+                score = 10;
+                // by default
+                idx = 0;
+                if (plist == null)
+                    plist = new ParameterInfo[] { };
+                if (parameters == null)
+                    parameters = new List<IHasValue>();
+
+                ParameterInfo pi = null;
+                var castList = new List<Delegate>();
+
+                if (parameters.Count > plist.Length)
+                {
+                    score = 0;
+                }
+                else
+                {
+                    for (int index = 0; index <= plist.Length - 1; index++)
+                    {
+                        pi = plist[index];
+                        if (idx < parameters.Count)
+                        {
+                            Delegate castDlg;
+                            score += ParamCompatibility(parameters[idx], pi.ParameterType, out castDlg);
+                            castList.Add(castDlg);
+                        }
+                        else if (pi.IsOptional)
+                        {
+                            score += 10;
+                        }
+                        else
+                        {
+                            // unknown parameter
+                            score = 0;
+                        }
+                        idx += 1;
+                    }
+                }
+                if (score > BestScore)
+                {
+                    BestScore = score;
+                    BestMember = mi;
+                    bestCasts = castList.ToArray();
+                }
+            }
+            mi = BestMember;
+            casts = bestCasts;
+            if (mi is MethodInfo) resultType = (mi as MethodInfo).ReturnType;
+            else if (mi is PropertyInfo) resultType = (mi as PropertyInfo).PropertyType;
+            else if (mi is FieldInfo) resultType = (mi as FieldInfo).FieldType;
+            else resultType = null;
+            return resultType != null;
+        }
+
+        protected int ParamCompatibility(IHasValue actual, Type expectedType, out Delegate castDlg)
+        {
+            castDlg = null;
+            // This function returns a score 1 to 10 to this question
+            // Can this Value fit into this type ?
+            var actualType = actual.SystemType;
+            if (actualType == expectedType || expectedType.IsAssignableFrom(actualType)) return 10;
+            Declaration cast;
+            if (mImplicitCasts.TryGetValue(new TypePair() { Actual = actualType, Target = expectedType }, out cast))
+            {
+                castDlg = cast.dlg;
+                return 8;
+            }
+            if (expectedType == typeof(object)) return 6;
+            if (expectedType == typeof(string))
+            {
+                castDlg = new Func<object, string>((o) => o.ToString());
+                return 4;
+            }
+            if (mExplicitCasts.TryGetValue(new TypePair() { Actual = actualType, Target = expectedType }, out cast))
+            {
+                castDlg = cast.dlg;
+                return 2;
+            }
+            return 0;
+        }
+
+        protected void ParseDot(ref IHasValue ValueLeft)
+        {
+            do
+            {
+                switch (mCurToken.Type)
+                {
+                    case TokenType.Dot:
+                        NextToken();
+                        break;
+                    case TokenType.OpenParenthesis:
+                        break;
+                    // fine this is either an array or a default property
+                    default:
+                        return;
+                }
+                ParseIdentifier(ref ValueLeft);
+            } while (true);
+        }
+
+        internal void ParseIdentifier(ref IHasValue valueLeft)
+        {
+            // first check functions
+            List<IHasValue> parameters = null;
+            // parameters... 
+            //Dim types As New ArrayList
+            string func = mCurToken.ValueString;
+            NextToken();
+            bool isBrackets = false;
+            Type resultType;
+            parameters = ParseParameters(ref isBrackets);
+            if ((parameters != null))
+            {
+                List<IHasValue> EmptyParameters = new List<IHasValue>();
+                bool ParamsNotUsed = false;
+                if (UseParenthesisForArrays)
+                {
+                    // in vb we don't know if it is array or not as we have only parenthesis
+                    // so we try with parameters first
+                    if (!EmitCallFunction(ref valueLeft, func, parameters, EvalMemberType.All, errorIfNotFound: false))
+                    {
+                        // and if not found we try as array or default member
+                        EmitCallFunction(ref valueLeft, func, EmptyParameters, EvalMemberType.All, errorIfNotFound: true);
+                        ParamsNotUsed = true;
+                    }
+                }
+                else
+                {
+                    if (isBrackets)
+                    {
+                        if (!EmitCallFunction(ref valueLeft, func, parameters, EvalMemberType.Property, errorIfNotFound: false))
+                        {
+                            EmitCallFunction(ref valueLeft, func, EmptyParameters, EvalMemberType.All, errorIfNotFound: true);
+                            ParamsNotUsed = true;
+                        }
+                    }
+                    else
+                    {
+                        if (!EmitCallFunction(ref valueLeft, func, parameters, EvalMemberType.Field | EvalMemberType.Method, errorIfNotFound: false))
+                        {
+                            EmitCallFunction(ref valueLeft, func, EmptyParameters, EvalMemberType.All, errorIfNotFound: true);
+                            ParamsNotUsed = true;
+                        }
+                    }
+                }
+                // we found a function without parameters 
+                // so our parameters must be default property or an array
+                Type t = valueLeft.SystemType;
+                if (ParamsNotUsed)
+                {
+                    if (t.IsArray)
+                    {
+                        if (parameters.Count == t.GetArrayRank())
+                        {
+                            var t2 = typeof(GetArrayEntryExpr<>).MakeGenericType(t.GetElementType());
+
+                            valueLeft = (IHasValue)Activator.CreateInstance(t2, valueLeft, parameters);
+                        }
+                        else
+                        {
+                            throw NewParserException("This array has " + t.GetArrayRank() + " dimensions");
+                        }
+                    }
+                    else
+                    {
+                        MemberInfo mi;
+                        Delegate[] casts;
+                        if (GetMemberInfo(t, isStatic: true, isInstance: true, func: null, parameters: parameters, mi: out mi, resultType: out resultType, casts: out casts))
+                        {
+                            var t3 = typeof(CallMethodExpr<>).MakeGenericType(resultType);
+                            valueLeft = (IHasValue)Activator.CreateInstance(t3, this, valueLeft, mi, parameters, casts);
+                        }
+                        else
+                        {
+                            throw NewParserException("Parameters not supported here");
+                        }
+                    }
+                }
+            }
+            else
+            {
+                EmitCallFunction(ref valueLeft, func, parameters, EvalMemberType.All, errorIfNotFound: true);
+            }
+        }
+
+        internal List<IHasValue> ParseParameters(ref bool brackets)
+        {
+            List<IHasValue> parameters = null;
+            IHasValue valueleft = null;
+            TokenType lClosing = default(TokenType);
+
+            if (mCurToken.Type == TokenType.OpenParenthesis
+                || (mCurToken.Type == TokenType.OpenBracket && !UseParenthesisForArrays))
+            {
+                switch (mCurToken.Type)
+                {
+                    case TokenType.OpenBracket:
+                        lClosing = TokenType.CloseBracket;
+                        brackets = true;
+                        break;
+                    case TokenType.OpenParenthesis:
+                        lClosing = TokenType.CloseParenthesis;
+                        break;
+                }
+                parameters = new List<IHasValue>();
+                NextToken();  //eat the parenthesis
+                do
+                {
+                    if (mCurToken.Type == lClosing)
+                    {
+                        // good we eat the end parenthesis and continue ...
+                        NextToken();
+                        return parameters;
+                    }
+                    valueleft = ParseExpr(null, 0);
+                    parameters.Add(valueleft);
+
+                    if (mCurToken.Type == lClosing)
+                    {
+                        // good we eat the end parenthesis and continue ...
+                        NextToken();
+                        return parameters;
+                    }
+                    else if (mCurToken.Type == TokenType.Comma)
+                    {
+                        NextToken();
+                    }
+                    else
+                    {
+                        throw NewUnexpectedToken(lClosing.ToString() + " not found");
+                    }
+                } while (true);
+            }
+            return parameters;
+        }
+
+    }
+
+    internal class NewTypedExpr<P1, T> : IHasValue<T>
+    {
+        private IHasValue<P1> mP1;
+        private Func<P1, T> mFunc;
+
+        public NewTypedExpr(IHasValue<P1> p1, Func<P1, T> func)
+        {
+            System.Diagnostics.Debug.Assert(func != null);
+            mP1 = p1;
+            mFunc = func;
+        }
+
+
+        public T Value
+        {
+            get { return mFunc(mP1.Value); }
+        }
+
+        public object ObjectValue
+        {
+            get { return mFunc(mP1.Value); }
+        }
+
+        public event ValueChangedEventHandler ValueChanged;
+
+        public Type SystemType
+        {
+            get { return typeof(T); }
+        }
+
+        public string ShortName
+        {
+            get { return "NewTypedExpr"; }
+        }
+
+        public IEnumerable<Dependency> Dependencies
+        {
+            get
+            {
+                yield return new Dependency("p1", mP1);
+            }
+        }
+    }
+
+    internal class NewTypedExpr<P1, P2, T> : IHasValue<T>
+    {
+        private IHasValue<P1> mP1;
+        private IHasValue<P2> mP2;
+        private Func<P1, P2, T> mFunc;
+
+        public NewTypedExpr(IHasValue<P1> p1, IHasValue<P2> p2, Func<P1, P2, T> func)
+        {
+            mP1 = p1;
+            mP2 = p2;
+            mFunc = func;
+        }
+
+
+        public T Value
+        {
+            get { return mFunc(mP1.Value, mP2.Value); }
+        }
+
+        public object ObjectValue
+        {
+            get { return mFunc(mP1.Value, mP2.Value); }
+        }
+
+        public event ValueChangedEventHandler ValueChanged;
+
+        public Type SystemType
+        {
+            get { return typeof(T); }
+        }
+
+        public string ShortName
+        {
+            get { return "NewTypedExpr"; }
+        }
+
+        public IEnumerable<Dependency> Dependencies
+        {
+            get
+            {
+                yield return new Dependency("p1", mP1);
+                yield return new Dependency("p2", mP2);
+            }
+        }
+    }
+
+    public enum EvaluatorOptions
+    {
+        CaseSensitive = 1,
+        BooleanLogic = 2,
+        IntegerValues = 4,
+        DoubleValues = 8,
+        DateTimeValues = 16,
+        StringValues = 32,
+        ObjectValues = 64
+    }
+
+    internal class TypePair : IEquatable<TypePair>
+    {
+        public Type Actual;
+        public Type Target;
+        public override string ToString()
+        {
+            return Actual.Name + "=>" + Target.Name;
+        }
+
+        public bool Equals(TypePair other)
+        {
+            return other.Actual == this.Actual && other.Target == this.Target;
+        }
+
+        public override int GetHashCode()
+        {
+            return Actual.GetHashCode() ^ Target.GetHashCode();
+        }
+    }
+
+    internal class Declaration
+    {
+        internal TokenType tk;
+        internal Delegate dlg;
+        internal Type P1;
+        internal Type P2;
+        internal Type T;
     }
 
     public class FindVariableEventArgs : EventArgs
@@ -948,6 +1621,7 @@ namespace Eval4.Core
 
         public bool Handled { get; set; }
     }
+
     public abstract class Evaluator<T> : Evaluator
     {
         public abstract int GetPrecedence(Token<T> token, bool unary);
@@ -980,7 +1654,7 @@ namespace Eval4.Core
         //    throw new NotImplementedException();
         //}
     }
-    public class StaticFunctionsWrapper
+    class StaticFunctionsWrapper
     {
         public Type type;
 
@@ -989,5 +1663,14 @@ namespace Eval4.Core
             // TODO: Complete member initialization
             this.type = type;
         }
+    }
+
+    [Flags()]
+    public enum EvalMemberType
+    {
+        Field = 1,
+        Method = 2,
+        Property = 4,
+        All = 7
     }
 }

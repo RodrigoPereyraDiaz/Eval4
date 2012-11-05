@@ -33,54 +33,54 @@ namespace Eval4
             get { return true; }
         }
 
-        public override Token ParseToken(Parser parser)
+        public override Token ParseToken()
         {
             //TODO:Check we advance
-            switch (parser.mCurChar)
+            switch (mCurChar)
             {
                 case '%':
-                    parser.NextChar();
+                    NextChar();
                     return NewToken(CustomTokenType.OperatorPercent);
 
                 case '=':
-                    parser.NextChar();
+                    NextChar();
                     return NewToken(TokenType.OperatorEQ);
 
                 case '#':
-                    return ParseDate(parser);
+                    return ParseDate();
 
                 case '&':
-                    parser.NextChar();
+                    NextChar();
                     return NewToken(TokenType.OperatorConcat);
 
                 default:
-                    return base.ParseToken(parser);
+                    return base.ParseToken();
 
             }
         }
 
-        internal Token ParseDate(Parser parser)
+        internal Token ParseDate()
         {
             var sb = new StringBuilder();
-            parser.NextChar();
+            NextChar();
             // eat the #
-            while ((parser.mCurChar >= '0' && parser.mCurChar <= '9') || (parser.mCurChar == '/') || (parser.mCurChar == ':') || (parser.mCurChar == ' '))
+            while ((mCurChar >= '0' && mCurChar <= '9') || (mCurChar == '/') || (mCurChar == ':') || (mCurChar == ' '))
             {
-                sb.Append(parser.mCurChar);
-                parser.NextChar();
+                sb.Append(mCurChar);
+                NextChar();
             }
-            if (parser.mCurChar != '#')
+            if (mCurChar != '#')
             {
-                throw parser.NewParserException("Missing character # at the end of the date literal.");
+                throw NewParserException("Missing character # at the end of the date literal.");
             }
             else
             {
-                parser.NextChar();
+                NextChar();
                 DateTime ignoreResult;
 
                 if (!DateTime.TryParse(sb.ToString(), out ignoreResult))
                 {
-                    throw parser.NewParserException("Invalid date literal. Expcecting the format #yyyy/mm/dd#");
+                    throw NewParserException("Invalid date literal. Expcecting the format #yyyy/mm/dd#");
                 }
             }
             return NewToken(TokenType.ValueDate, sb.ToString());
@@ -195,13 +195,13 @@ namespace Eval4
             }
         }
 
-        //internal override int GetPrecedence(BaseParser parser, Token tk, bool unary)
+        //internal override int GetPrecedence(BaseToken tk, bool unary)
         //{
         //    return 0;
         //}
 
 
-        internal override void ParseRight(Parser parser, Token tk, int opPrecedence, IHasValue Acc, ref IHasValue valueLeft)
+        internal override void ParseRight(Token tk, int opPrecedence, IHasValue Acc, ref IHasValue valueLeft)
         {
             switch (tk.Type)
             {
@@ -212,24 +212,24 @@ namespace Eval4
                     switch (tk2.CustomType)
                     {
                         case CustomTokenType.OperatorPercent:
-                            parser.NextToken();
+                            NextToken();
                             if (ApplyMethod(ref valueLeft, Acc, new Func<double, double, double>((a, b) => a * b / 100))) return;
                             break;
 
                         case CustomTokenType.IntegerDiv:
-                            parser.NextToken();
-                            valueRight = parser.ParseExpr(valueLeft, opPrecedence);
+                            NextToken();
+                            valueRight = ParseExpr(valueLeft, opPrecedence);
                             if (ApplyMethod(ref valueLeft, Acc, new Func<int, int, int>((a, b) => a / b))) return;
                             break;
                     }
                     break;
                 case TokenType.OperatorDivide:
-                    parser.NextToken();
-                    valueRight = parser.ParseExpr(valueLeft, opPrecedence);
+                    NextToken();
+                    valueRight = ParseExpr(valueLeft, opPrecedence);
                     if (ApplyMethod(ref valueLeft, valueRight, new Func<double, double, double>((a, b) => a / (double)b))) return;
                     break;
             }
-            base.ParseRight(parser, tk, opPrecedence, Acc, ref valueLeft);
+            base.ParseRight(tk, opPrecedence, Acc, ref valueLeft);
 
         }
 

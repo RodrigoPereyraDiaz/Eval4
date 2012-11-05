@@ -8,7 +8,8 @@ namespace Eval4.CSharpTests
     public class TestArraysAndObjects : BaseTest
     {
         static Accounts accountInstance = new Accounts();
-
+        static int[] pascal = new int[] { 1, 8, 28, 56, 70, 56, 28, 8, 1 };
+        
         public TestArraysAndObjects()
         {
             InitEvaluator(evVB);
@@ -17,7 +18,7 @@ namespace Eval4.CSharpTests
 
         private void InitEvaluator(Eval4.Core.Evaluator ev)
         {
-            ev.SetVariable("pascal", new int[] { 1, 8, 28, 56, 70, 56, 28, 8, 1 });
+            ev.SetVariable("pascal", pascal);
             ev.SetVariable("fibonacci", new int[] { 1, 1, 2, 3, 5, 8, 13, 21, 34 });
             ev.SetVariable("mult", new int[,] { { 0, 0, 0, 0 }, { 0, 1, 2, 3 }, { 0, 2, 4, 6 }, { 0, 3, 6, 9 } });
             ev.SetVariable("accounts", accountInstance);
@@ -50,6 +51,7 @@ namespace Eval4.CSharpTests
         [TestMethod]
         public void CheckArrays()
         {
+            TestCSFormula("pascal", pascal);
             TestCSFormula("pascal[0]", 1);
             TestCSFormula("pascal[2]", 28);
             TestCSFormula("pascal[2]*2", 56);
