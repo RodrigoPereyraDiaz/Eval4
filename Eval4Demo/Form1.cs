@@ -899,10 +899,12 @@ namespace Eval4.DemoCSharp
         {
             try
             {
-                if (FormulaHandler != null) mFormula3.ValueChanged -= FormulaHandler;
+                //throw new NotImplementedException();
+                //if (FormulaHandler != null) mFormula3.ValueChanged -= FormulaHandler;
                 mFormula3 = ev.Parse(tbExpression3.Text);
                 FormulaHandler = new Eval4.Core.ValueChangedEventHandler(mFormula3_ValueChanged);
-                mFormula3.ValueChanged += FormulaHandler;
+                //throw new NotImplementedException();
+                //mFormula3.ValueChanged += FormulaHandler;
                 mFormula3_ValueChanged(null, null);
             }
             catch (Exception ex)

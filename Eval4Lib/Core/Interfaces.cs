@@ -11,7 +11,7 @@ namespace Eval4.Core
     public interface IHasValue
     {
         object ObjectValue { get; }
-        event ValueChangedEventHandler ValueChanged;
+        IDisposable Subscribe(IObserver observer);
         Type SystemType { get; }
         string ShortName { get; }
         IEnumerable<Dependency> Dependencies { get; }
@@ -19,14 +19,13 @@ namespace Eval4.Core
 
     public interface IHasValue<T> : IHasValue
     {
-       // IDisposable Subscribe(IObserver<T> observer);
         T Value { get; }
     }
 
-    //public interface IObserver<T>
-    //{
-    //    void OnNext(T value);
-    //}
+    public interface IObserver
+    {
+        void OnValueChanged();
+    }
 
     
     public class Dependency

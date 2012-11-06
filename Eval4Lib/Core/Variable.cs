@@ -11,7 +11,7 @@ namespace Eval4.Core
 
         public abstract object ObjectValue { get; set;  }
         public abstract Type SystemType { get; }
-        public event ValueChangedEventHandler ValueChanged;
+        //public event ValueChangedEventHandler ValueChanged;
 
         public VariableBase(string description)
         {
@@ -20,9 +20,11 @@ namespace Eval4.Core
 
         protected void RaiseValueChanged()
         {
-            if (ValueChanged != null)
+            throw new NotImplementedException();
+            //if (ValueChanged != null)
             {
-                ValueChanged(this, new System.EventArgs());
+                throw new NotImplementedException();
+                //ValueChanged(this, new System.EventArgs());
             }
         }
 
@@ -38,6 +40,12 @@ namespace Eval4.Core
         public string ShortName
         {
             get { return "Variable " + mName; }
+        }
+
+
+        public IDisposable Subscribe(IObserver observer)
+        {
+            throw new NotImplementedException();
         }
     }
 }
