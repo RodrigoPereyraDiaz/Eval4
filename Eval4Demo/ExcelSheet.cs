@@ -184,11 +184,28 @@ namespace Eval4.DemoCSharp
                 InvalidateCells(previousCell);
                 InvalidateCells(curCell);
                 Cell c = mCells[curCell.X - 1, curCell.Y - 1];
-                
+
                 textBox1.Text = c.Formula;
                 textBox1.SelectAll();
                 textBox1.Focus();
+
+                ScrollCellIntoView(x,y);
             }
+        }
+
+        private void ScrollCellIntoView(int x, int y)
+        {
+            if (x == 1) x = 0;
+            if (y == 1) y = 0;
+            var cr = this.GetRect(x, y);
+            var dr = panel1.DisplayRectangle;
+            Point scroll = new Point(-dr.Left, -dr.Top);
+            var clr = panel1.ClientSize;
+            if (cr.Left < scroll.X) scroll.X = cr.Left;
+            if (cr.Top < scroll.Y) scroll.Y = cr.Top;
+            if (cr.Right > scroll.X + clr.Width) scroll.X = cr.Right - clr.Width;
+            if (cr.Bottom > scroll.Y + clr.Height) scroll.Y = cr.Bottom - clr.Height;
+            panel1.AutoScrollPosition = scroll;
         }
 
         private void InvalidateCells(Point cell)
@@ -297,6 +314,8 @@ namespace Eval4.DemoCSharp
 
         private void textBox1_KeyDown(object sender, KeyEventArgs e)
         {
+            bool shift=((e.Modifiers & Keys.Shift) != 0);
+
             switch (e.KeyCode)
             {
                 case Keys.Up:
@@ -336,17 +355,38 @@ namespace Eval4.DemoCSharp
                     textBox1.SelectionStart = textBox1.TextLength;
                     textBox1.SelectionLength = 0;
                     break;
+                case Keys.Tab:
+                    if ((curCell.X > 0 || !shift) 
+                        && (curCell.X < NBCOLUMN || shift))
+                    {
+                        e.Handled = true;
+                        SetFocusedCell(curCell.X + (shift ? -1 : 1), curCell.Y);
+                    }
+                    break;
                 case Keys.Return:
-                    e.Handled = true;
-                    SetFocusedCell(curCell.X, curCell.Y + ((e.Modifiers & Keys.Shift) != 0 ? -1 : 1));
+                    if ((curCell.Y > 0 || !shift) 
+                        && (curCell.Y < NBROWS || shift))
+                    {
+                        e.Handled = true;
+                        SetFocusedCell(curCell.X, curCell.Y + (shift ? -1 : 1));
+                    }
                     break;
             }
         }
 
         private void textBox1_KeyPress(object sender, KeyPressEventArgs e)
         {
-            Trace.WriteLine("textBox1_KeyPress(" + e.KeyChar + ")");
-            //e.Handled = true;
+
+            switch (e.KeyChar)
+            {
+                case '\r':
+                case '\t':
+                    e.Handled = true;
+                    break;
+                default:
+                    Trace.WriteLine("textBox1_KeyPress(" + e.KeyChar + ")");
+                    break;
+            }
         }
 
         private void textBox1_TextChanged(object sender, EventArgs e)

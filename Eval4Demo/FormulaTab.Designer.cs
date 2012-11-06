@@ -52,6 +52,7 @@
             this.cbSamples.Size = new System.Drawing.Size(325, 21);
             this.cbSamples.TabIndex = 7;
             this.cbSamples.Text = "<enter an expression or select a sample>";
+            this.cbSamples.SelectedIndexChanged += new System.EventHandler(this.cbSamples_SelectedIndexChanged);
             // 
             // btnEvaluate
             // 
@@ -61,6 +62,7 @@
             this.btnEvaluate.Size = new System.Drawing.Size(72, 23);
             this.btnEvaluate.TabIndex = 6;
             this.btnEvaluate.Text = "Evaluate";
+            this.btnEvaluate.Click += new System.EventHandler(this.btnEvaluate_Click);
             // 
             // TextBox2
             // 
@@ -74,14 +76,14 @@
             this.TextBox2.Size = new System.Drawing.Size(408, 356);
             this.TextBox2.TabIndex = 5;
             // 
-            // EvaluatorPanel
+            // FormulaTab
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this.cbSamples);
             this.Controls.Add(this.btnEvaluate);
             this.Controls.Add(this.TextBox2);
-            this.Name = "EvaluatorPanel";
+            this.Name = "FormulaTab";
             this.Size = new System.Drawing.Size(417, 394);
             this.Load += new System.EventHandler(this.EvaluatorPanel_Load);
             this.ResumeLayout(false);

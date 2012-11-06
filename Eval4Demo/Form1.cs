@@ -98,7 +98,6 @@ namespace Eval4.DemoCSharp
 
             // Add any initialization after the InitializeComponent() call
             mInitializing = false;
-            btnEvaluate_Click(null, null);
             btnEvaluate2_Click(null, null);
             btnEvaluate3_Click(null, null);
         }
@@ -754,17 +753,6 @@ namespace Eval4.DemoCSharp
         {
             Form1 f = new Form1();
             f.ShowDialog();
-        }
-
-        private void btnEvaluate_Click(object sender, System.EventArgs e)
-        {
-
-        }
-
-        private void cbSamples_SelectedIndexChanged(object sender, System.EventArgs e)
-        {
-            //tbExpression.Text = cbSamples.Text;
-            btnEvaluate_Click(sender, e);
         }
 
         private void btnEvaluate2_Click(object sender, System.EventArgs e)

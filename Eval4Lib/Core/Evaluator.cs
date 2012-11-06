@@ -15,6 +15,8 @@ namespace Eval4.Core
         internal Dictionary<TokenType, List<Declaration>> mUnaryDeclarations;
         internal Dictionary<TypePair, Declaration> mImplicitCasts;
         internal Dictionary<TypePair, Declaration> mExplicitCasts;
+        Dictionary<string, IHasValue> mExpressions = new Dictionary<string, IHasValue>();
+        Dictionary<string, IHasValue> mTemplates = new Dictionary<string, IHasValue>();
         protected string mString;
         protected int mLen;
         protected int mPos;
@@ -420,9 +422,6 @@ namespace Eval4.Core
             return null;
         }
 
-        Dictionary<string, IHasValue> mExpressions = new Dictionary<string, IHasValue>();
-        Dictionary<string, IHasValue> mTemplates = new Dictionary<string, IHasValue>();
-
         public object Eval(string formula)
         {
             IHasValue parsed = InternalParse(formula);
@@ -631,35 +630,44 @@ namespace Eval4.Core
                     NextToken();
                     return result;
 
-                case TokenType.ValueNumber:
-                    string valueString = token.ValueString;
+                case TokenType.ValueInteger:
                     int intValue;
-                    double doubleValue;
-                    if (int.TryParse(valueString, out intValue))
+                    if (int.TryParse(token.ValueString, out intValue))
                     {
                         result = new ConstantExpr<int>(intValue);
                     }
-                    else if (double.TryParse(valueString, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out doubleValue))
-                    {
-                        result = new ConstantExpr<double>(doubleValue);
-                    }
                     else
                     {
-                        throw NewParserException(string.Format("Invalid number {0}", mCurToken.ValueString));
+                        throw NewParserException(string.Format("Invalid number {0}", token.ValueString));
                     }
                     NextToken();
                     return result;
 
-                case TokenType.ValueDate:
-                    try
+                case TokenType.ValueDecimal:
+                    double doubleValue;
+                    if (double.TryParse(token.ValueString, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out doubleValue))
                     {
-                        result = new ConstantExpr<DateTime>(DateTime.Parse(mCurToken.ValueString));
+                        result = new ConstantExpr<double>(doubleValue);
                         NextToken();
                         return result;
                     }
-                    catch (Exception) // ex)
+                    else
                     {
-                        throw NewParserException(string.Format("Invalid date {0}, it should be #DD/MM/YYYY hh:mm:ss#", mCurToken.ValueString));
+                        throw NewParserException(string.Format("Invalid number {0}", token.ValueString));
+                    }
+
+                case TokenType.ValueDate:
+                    DateTime dateTimeValue;
+
+                    if (DateTime.TryParse(token.ValueString, out dateTimeValue))
+                    {
+                        result = new ConstantExpr<DateTime>(dateTimeValue);
+                        NextToken();
+                        return result;
+                    }
+                    else
+                    {
+                        throw NewParserException(string.Format("Invalid date {0}, it should be #DD/MM/YYYY hh:mm:ss#", token.ValueString));
                     }
 
                 case TokenType.OpenParenthesis:
@@ -702,13 +710,13 @@ namespace Eval4.Core
             {
                 foreach (var decl in declarations)
                 {
-                    if (ApplyMethod(ref valueLeft, valueRight, decl.dlg)) return;
+                    if (MethodApplies(ref valueLeft, valueRight, decl.dlg)) return;
                 }
             }
             throw NewParserException(string.Format("Cannot find operation {0} {1} {2}", valueLeft.SystemType, tt, valueRight.SystemType));
         }
 
-        protected bool ApplyMethod(ref IHasValue valueLeft, IHasValue valueRight, Delegate dlg)
+        protected bool MethodApplies(ref IHasValue valueLeft, IHasValue valueRight, Delegate dlg)
         {
             Declaration cast1, cast2;
             var parameters = dlg.Method.GetParameters();
@@ -884,8 +892,12 @@ namespace Eval4.Core
                     sb.Append(mCurChar);
                     NextChar();
                 }
+                return NewToken(TokenType.ValueDecimal, sb.ToString());
             }
-            return NewToken(TokenType.ValueNumber, sb.ToString());
+            else
+            {
+                return NewToken(TokenType.ValueInteger, sb.ToString());
+            }
         }
 
         internal Token ParseIdentifierOrKeyword()
@@ -1644,15 +1656,6 @@ namespace Eval4.Core
             return new Token<T>();
         }
 
-        //internal void AddImplicitCast<T1, T2>(Func<Cell, double> func)
-        //{
-        //    throw new NotImplementedException();
-        //}
-
-        //internal void AddExplicitCast<T1, T2>(Func<Cell, double> func)
-        //{
-        //    throw new NotImplementedException();
-        //}
     }
     class StaticFunctionsWrapper
     {

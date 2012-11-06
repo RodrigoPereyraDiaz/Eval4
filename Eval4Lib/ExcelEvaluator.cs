@@ -160,9 +160,6 @@ namespace Eval4
         {
             switch (token.Type)
             {
-                case TokenType.ValueNumber:
-                    return base.ParseLeftExpression(token, precedence);
-
                 default:
                     return base.ParseLeftExpression(token, precedence);
             }
