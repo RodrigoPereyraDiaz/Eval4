@@ -7,8 +7,8 @@ namespace Eval4.CSharpTests
     [TestClass]
     public class TestArraysAndObjects : BaseTest
     {
-        static Accounts accountInstance = new Accounts();
-        static int[] pascal = new int[] { 1, 8, 28, 56, 70, 56, 28, 8, 1 };
+        Accounts accountInstance = new Accounts();
+        int[] pascal = new int[] { 1, 8, 28, 56, 70, 56, 28, 8, 1 };
         
         public TestArraysAndObjects()
         {
@@ -49,7 +49,7 @@ namespace Eval4.CSharpTests
         }
 
         [TestMethod]
-        public void CheckArrays()
+        public void AccessArrayVariables()
         {
             TestCSFormula("pascal", pascal);
             TestCSFormula("pascal[0]", 1);
@@ -70,7 +70,7 @@ namespace Eval4.CSharpTests
         }
 
         [TestMethod]
-        public void CheckMethod()
+        public void AccessObjectMethodsAndFields()
         {
             TestVbAndCsFormula("accounts.Credit", 150.00);
             TestVbAndCsFormula("accounts.Vat", 20.00);
@@ -84,8 +84,8 @@ namespace Eval4.CSharpTests
 
             TestVbAndCsFormula("accounts.ByteValue * 1.0", 123.0);
             TestVbAndCsFormula("accounts.SingleValue  * 1.0", 123.0);
-            //TestVbAndCsFormula("accounts.DecimalValue * 1.0", accountInstance.DecimalValue * 1.0);
             TestVbAndCsFormula("accounts.Int16Value * 1.0", 123.0);
+            //TestVbAndCsFormula("accounts.DecimalValue * 1.0", accountInstance.DecimalValue * 1.0);
             //TestVbAndCsFormula("accounts.Sum(1,2,3,4)", (decimal)10.0);
 
         }

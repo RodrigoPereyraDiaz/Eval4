@@ -22,15 +22,13 @@ namespace Eval4.DemoCSharp
 
         private void EvaluatorPanel_Load(object sender, EventArgs e)
         {
+            var items = new List<object>();
+
             switch (PanelLanguage)
             {
-                case PanelLanguage.excel:
-                    ev = new ExcelEvaluator();
-                    //label1.Text = "Formula evaluator similar to Excel";
-                    break;
                 case PanelLanguage.vb:
                     ev = new VbEvaluator();
-                    //label1.Text = "Formula evaluator similar to Visual Basic";
+                    items.Add("1+2*3");
                     break;
                 case PanelLanguage.csharp:
                     ev = new CSharpEvaluator();
@@ -45,6 +43,7 @@ namespace Eval4.DemoCSharp
                     //label1.Text = "Formula evaluator similar to Excel";
                     break;
             }
+            this.cbSamples.Items.AddRange(items.ToArray());
         }
 
         private void btnEvaluate_Click(object sender, EventArgs e)

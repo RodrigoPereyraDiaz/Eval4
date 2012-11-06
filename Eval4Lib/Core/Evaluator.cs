@@ -578,7 +578,7 @@ namespace Eval4.Core
                     else if (IsIdentifierFirstLetter(mCurChar)) return ParseIdentifierOrKeyword();
                     break;
             }
-            throw NewParserException("Unexpected character " + mCurChar);
+            throw NewSyntaxError("Unexpected character " + mCurChar);
         }
 
         public virtual IHasValue ParseLeftExpression(Token token, int precedence)
@@ -638,7 +638,7 @@ namespace Eval4.Core
                     }
                     else
                     {
-                        throw NewParserException(string.Format("Invalid number {0}", token.ValueString));
+                        throw NewSyntaxError(string.Format("Invalid number {0}", token.ValueString));
                     }
                     NextToken();
                     return result;
@@ -653,7 +653,7 @@ namespace Eval4.Core
                     }
                     else
                     {
-                        throw NewParserException(string.Format("Invalid number {0}", token.ValueString));
+                        throw NewSyntaxError(string.Format("Invalid number {0}", token.ValueString));
                     }
 
                 case TokenType.ValueDate:
@@ -667,7 +667,7 @@ namespace Eval4.Core
                     }
                     else
                     {
-                        throw NewParserException(string.Format("Invalid date {0}, it should be #DD/MM/YYYY hh:mm:ss#", token.ValueString));
+                        throw NewSyntaxError(string.Format("Invalid date {0}, it should be #DD/MM/YYYY hh:mm:ss#", token.ValueString));
                     }
 
                 case TokenType.OpenParenthesis:
@@ -713,7 +713,7 @@ namespace Eval4.Core
                     if (MethodApplies(ref valueLeft, valueRight, decl.dlg)) return;
                 }
             }
-            throw NewParserException(string.Format("Cannot find operation {0} {1} {2}", valueLeft.SystemType, tt, valueRight.SystemType));
+            throw NewSyntaxError(string.Format("Cannot find operation {0} {1} {2}", valueLeft.SystemType, tt, valueRight.SystemType));
         }
 
         protected bool MethodApplies(ref IHasValue valueLeft, IHasValue valueRight, Delegate dlg)
@@ -804,7 +804,7 @@ namespace Eval4.Core
         public event EventHandler<FindVariableEventArgs> FindVariable;
 
 
-        internal SyntaxError NewParserException(string msg, Exception ex = null)
+        internal SyntaxError NewSyntaxError(string msg, Exception ex = null)
         {
             if (ex is SyntaxError)
             {
@@ -834,11 +834,11 @@ namespace Eval4.Core
             if (string.IsNullOrEmpty(mCurToken.ValueString))
             {
                 //if (mCurChar == '\0') throw NewParserException(msg + "Unexpected end of formula.");
-                throw NewParserException(msg + "Unexpected " + mCurToken.Type);
+                throw NewSyntaxError(msg + "Unexpected " + mCurToken.Type);
             }
             else
             {
-                throw NewParserException(msg + "Unexpected " + mCurToken.Type + " \"" + mCurToken.ValueString + "\"");
+                throw NewSyntaxError(msg + "Unexpected " + mCurToken.Type + " \"" + mCurToken.ValueString + "\"");
             }
         }
 
@@ -989,7 +989,7 @@ namespace Eval4.Core
 
             if (InQuote)
             {
-                throw NewParserException("Incomplete string, missing " + OriginalChar + "; String started");
+                throw NewSyntaxError("Incomplete string, missing " + OriginalChar + "; String started");
             }
             if (sb.Length > 0 && bits.Count > 0)
             {
@@ -1114,7 +1114,7 @@ namespace Eval4.Core
                     }
                     else
                     {
-                        throw NewParserException("Invalid Environment functions.");
+                        throw NewSyntaxError("Invalid Environment functions.");
                     }
                     if (newExpr != null) break;
                 }
@@ -1157,7 +1157,7 @@ namespace Eval4.Core
             else
             {
                 if (errorIfNotFound)
-                    throw NewParserException("No Variable or public method '" + funcName + "' was not found.");
+                    throw NewSyntaxError("No Variable or public method '" + funcName + "' was not found.");
                 return false;
             }
         }
@@ -1174,17 +1174,17 @@ namespace Eval4.Core
                 {
                     case MemberTypes.Field:
                         if ((CallType & EvalMemberType.Field) == 0)
-                            throw NewParserException("Unexpected Field");
+                            throw NewSyntaxError("Unexpected Field");
                         resultType = (mi as FieldInfo).FieldType;
                         break;
                     case MemberTypes.Method:
                         if ((CallType & EvalMemberType.Method) == 0)
-                            throw NewParserException("Unexpected Method");
+                            throw NewSyntaxError("Unexpected Method");
                         resultType = (mi as MethodInfo).ReturnType;
                         break;
                     case MemberTypes.Property:
                         if ((CallType & EvalMemberType.Property) == 0)
-                            throw NewParserException("Unexpected Property");
+                            throw NewSyntaxError("Unexpected Property");
                         resultType = (mi as PropertyInfo).PropertyType;
                         break;
                     default:
@@ -1412,7 +1412,7 @@ namespace Eval4.Core
                         }
                         else
                         {
-                            throw NewParserException("This array has " + t.GetArrayRank() + " dimensions");
+                            throw NewSyntaxError("This array has " + t.GetArrayRank() + " dimensions");
                         }
                     }
                     else
@@ -1426,7 +1426,7 @@ namespace Eval4.Core
                         }
                         else
                         {
-                            throw NewParserException("Parameters not supported here");
+                            throw NewSyntaxError("Parameters not supported here");
                         }
                     }
                 }
@@ -1488,96 +1488,6 @@ namespace Eval4.Core
             return parameters;
         }
 
-    }
-
-    internal class NewTypedExpr<P1, T> : IHasValue<T>
-    {
-        private IHasValue<P1> mP1;
-        private Func<P1, T> mFunc;
-
-        public NewTypedExpr(IHasValue<P1> p1, Func<P1, T> func)
-        {
-            System.Diagnostics.Debug.Assert(func != null);
-            mP1 = p1;
-            mFunc = func;
-        }
-
-
-        public T Value
-        {
-            get { return mFunc(mP1.Value); }
-        }
-
-        public object ObjectValue
-        {
-            get { return mFunc(mP1.Value); }
-        }
-
-        public event ValueChangedEventHandler ValueChanged;
-
-        public Type SystemType
-        {
-            get { return typeof(T); }
-        }
-
-        public string ShortName
-        {
-            get { return "NewTypedExpr"; }
-        }
-
-        public IEnumerable<Dependency> Dependencies
-        {
-            get
-            {
-                yield return new Dependency("p1", mP1);
-            }
-        }
-    }
-
-    internal class NewTypedExpr<P1, P2, T> : IHasValue<T>
-    {
-        private IHasValue<P1> mP1;
-        private IHasValue<P2> mP2;
-        private Func<P1, P2, T> mFunc;
-
-        public NewTypedExpr(IHasValue<P1> p1, IHasValue<P2> p2, Func<P1, P2, T> func)
-        {
-            mP1 = p1;
-            mP2 = p2;
-            mFunc = func;
-        }
-
-
-        public T Value
-        {
-            get { return mFunc(mP1.Value, mP2.Value); }
-        }
-
-        public object ObjectValue
-        {
-            get { return mFunc(mP1.Value, mP2.Value); }
-        }
-
-        public event ValueChangedEventHandler ValueChanged;
-
-        public Type SystemType
-        {
-            get { return typeof(T); }
-        }
-
-        public string ShortName
-        {
-            get { return "NewTypedExpr"; }
-        }
-
-        public IEnumerable<Dependency> Dependencies
-        {
-            get
-            {
-                yield return new Dependency("p1", mP1);
-                yield return new Dependency("p2", mP2);
-            }
-        }
     }
 
     public enum EvaluatorOptions

@@ -37,16 +37,6 @@
             // 
             this.cbSamples.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.cbSamples.Items.AddRange(new object[] {
-            "123+345",
-            "(2+3)*(4-2)",
-            "(1+1)==2?\"T\":\"F\"",
-            "Now",
-            "Round(Now - Date(2006,1,1))+\" days since new year\"",
-            "aNumber*5",
-            "arr[1]+arr[2]",
-            "theForm.Controls[0].Name",
-            "theForm.Left"});
             this.cbSamples.Location = new System.Drawing.Point(3, 3);
             this.cbSamples.Name = "cbSamples";
             this.cbSamples.Size = new System.Drawing.Size(325, 21);

@@ -4,44 +4,6 @@ using System.Text;
 
 namespace Eval4.Core
 {
-    //public class VariableBag : IVariableBag
-    //{
-    //    Dictionary<string, VariableBase> mVariables;
-
-    //    public VariableBag(bool caseSensitive)
-    //    {
-    //        mVariables = new Dictionary<string, VariableBase>(caseSensitive ? StringComparer.InvariantCulture : StringComparer.InvariantCultureIgnoreCase);
-    //    }
-
-    //    public IHasValue GetVariable(string varname)
-    //    {
-    //        VariableBase result;
-    //        mVariables.TryGetValue(varname, out result);
-    //        return result;
-    //    }
-
-    //    public void SetVariable<T>(string varname, T value)
-    //    {
-    //        VariableBase result;
-    //        if (mVariables.TryGetValue(varname, out result))
-    //        {
-    //            ((Variable<T>)result).Value = value;
-    //        }
-    //        else
-    //        {
-    //            Variable<T> newVariable = new Variable<T>(value, varname);
-    //            mVariables[varname] = newVariable;
-    //        }
-
-    //    }
-
-    //    public void DeleteVariable(string varname)
-    //    {
-    //        mVariables.Remove(varname);
-    //    }
-
-    //}
-
     public abstract class VariableBase : IHasValue
     {
         protected string mDescription;

@@ -143,19 +143,6 @@ namespace Eval4
             get { return false; }
         }
 
-        //protected override List<TypeHandler> GetTypeHandlers()
-        //{
-        //    var typeHandlers = new List<TypeHandler>();
-        //    typeHandlers.Add(new BoolTypeHandler());
-        //    //typeHandlers.Add(new IntTypeHandler());
-        //    typeHandlers.Add(new DoubleTypeHandler());
-        //    typeHandlers.Add(new DateTimeTypeHandler());
-        //    typeHandlers.Add(new StringTypeHandler());
-        //    typeHandlers.Add(new CellTypeHandler()); //<= this is excel specific
-        //    typeHandlers.Add(new ObjectTypeHandler());
-        //    return typeHandlers;
-        //}
-
         public override IHasValue ParseLeftExpression(Token token, int precedence)
         {
             switch (token.Type)

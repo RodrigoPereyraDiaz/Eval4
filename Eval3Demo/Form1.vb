@@ -524,7 +524,7 @@ Public Class Form1
             If res Is Nothing Then
                 TextBox2.AppendText("Result=<nothing>" & vbCrLf)
             Else
-                TextBox2.AppendText("Result=" & ev.ConvertToString(res) & " (" & res.GetType.Name & ")" & vbCrLf)
+                TextBox2.AppendText("Result=" & Evaluator.ConvertToString(res) & " (" & res.GetType.Name & ")" & vbCrLf)
             End If
         Catch ex As Exception
             TextBox2.AppendText(ex.Message & vbCrLf)

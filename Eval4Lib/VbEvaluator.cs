@@ -71,7 +71,7 @@ namespace Eval4
             }
             if (mCurChar != '#')
             {
-                throw NewParserException("Missing character # at the end of the date literal.");
+                return NewToken(TokenType.SyntaxError, "Missing character # at the end of the date literal.");
             }
             else
             {
@@ -80,7 +80,7 @@ namespace Eval4
 
                 if (!DateTime.TryParse(sb.ToString(), out ignoreResult))
                 {
-                    throw NewParserException("Invalid date literal. Expcecting the format #yyyy/mm/dd#");
+                    return NewToken(TokenType.SyntaxError, "Invalid date literal. Expcecting the format #yyyy/mm/dd#");
                 }
             }
             return NewToken(TokenType.ValueDate, sb.ToString());

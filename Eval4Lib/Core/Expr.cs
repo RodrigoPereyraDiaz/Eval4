@@ -392,4 +392,196 @@ namespace Eval4.Core
 
         public event ValueChangedEventHandler ValueChanged;
     }
+
+    internal class NewTypedExpr<P1, T> : IHasValue<T>
+    {
+        private IHasValue<P1> mP1;
+        private Func<P1, T> mFunc;
+
+        public NewTypedExpr(IHasValue<P1> p1, Func<P1, T> func)
+        {
+            System.Diagnostics.Debug.Assert(func != null);
+            mP1 = p1;
+            mFunc = func;
+        }
+
+
+        public T Value
+        {
+            get { return mFunc(mP1.Value); }
+        }
+
+        public object ObjectValue
+        {
+            get { return mFunc(mP1.Value); }
+        }
+
+        public event ValueChangedEventHandler ValueChanged;
+
+        public Type SystemType
+        {
+            get { return typeof(T); }
+        }
+
+        public string ShortName
+        {
+            get { return "NewTypedExpr"; }
+        }
+
+        public IEnumerable<Dependency> Dependencies
+        {
+            get
+            {
+                yield return new Dependency("p1", mP1);
+            }
+        }
+    }
+
+    internal class NewTypedExpr<P1, P2, T> : IHasValue<T>
+    {
+        private IHasValue<P1> mP1;
+        private IHasValue<P2> mP2;
+        private Func<P1, P2, T> mFunc;
+
+        public NewTypedExpr(IHasValue<P1> p1, IHasValue<P2> p2, Func<P1, P2, T> func)
+        {
+            mP1 = p1;
+            mP2 = p2;
+            mFunc = func;
+        }
+
+
+        public T Value
+        {
+            get { return mFunc(mP1.Value, mP2.Value); }
+        }
+
+        public object ObjectValue
+        {
+            get { return mFunc(mP1.Value, mP2.Value); }
+        }
+
+        public event ValueChangedEventHandler ValueChanged;
+
+        public Type SystemType
+        {
+            get { return typeof(T); }
+        }
+
+        public string ShortName
+        {
+            get { return "NewTypedExpr"; }
+        }
+
+        public IEnumerable<Dependency> Dependencies
+        {
+            get
+            {
+                yield return new Dependency("p1", mP1);
+                yield return new Dependency("p2", mP2);
+            }
+        }
+    }
+
+    class GetVariableFromBag<T> : IHasValue<T>
+    {
+        private string mVariableName;
+        private Evaluator mEvaluator;
+        public event ValueChangedEventHandler ValueChanged;
+        private Variable<T> mVariable;
+
+        public GetVariableFromBag(Evaluator evaluator, string variableName)
+        {
+            mEvaluator = evaluator;
+            mVariableName = variableName;
+            mVariable = (Variable<T>)mEvaluator.mVariableBag[mVariableName];
+        }
+
+        public T Value
+        {
+            get
+            {
+                return mVariable.Value;
+            }
+        }
+
+        public object ObjectValue
+        {
+            get
+            {
+                return mVariable.Value;
+            }
+        }
+
+
+        public Type SystemType
+        {
+            get { return typeof(T); }
+        }
+
+        public string ShortName
+        {
+            get { return "GetVariableFromBag"; }
+        }
+
+        public IEnumerable<Dependency> Dependencies
+        {
+            get
+            {
+                yield break;
+            }
+        }
+    }
+
+    class RaiseFindVariableExpr<T> : IHasValue<T>
+    {
+        private string mVariableName;
+        private Evaluator mEvaluator;
+        public event ValueChangedEventHandler ValueChanged;
+        private FindVariableEventArgs mFindVariableResult;
+
+        public RaiseFindVariableExpr(Evaluator evaluator, string variableName)
+        {
+            mEvaluator = evaluator;
+            mVariableName = variableName;
+        }
+
+        public T Value
+        {
+            get
+            {
+                mFindVariableResult = mEvaluator.RaiseFindVariable(mVariableName);
+                return (T)mFindVariableResult.Value;
+            }
+        }
+
+        public object ObjectValue
+        {
+            get
+            {
+                mFindVariableResult = mEvaluator.RaiseFindVariable(mVariableName);
+                return mFindVariableResult.Value;
+            }
+        }
+
+
+        public Type SystemType
+        {
+            get { return typeof(T); }
+        }
+
+        public string ShortName
+        {
+            get { return "FindVariable"; }
+        }
+
+        public IEnumerable<Dependency> Dependencies
+        {
+            get
+            {
+                yield break;
+            }
+        }
+    }
+
 }
