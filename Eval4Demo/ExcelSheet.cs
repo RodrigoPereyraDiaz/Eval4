@@ -37,30 +37,30 @@ namespace Eval4.DemoCSharp
 
         void ev_FindVariable(object sender, FindVariableEventArgs e)
         {
-            var n = e.Name;
+            var variableName = e.Name;
             int i = 0;
             int row = 0, col = 0;
 
-            while (i < n.Length)
+            while (i < variableName.Length)
             {
-                char c = n[i];
+                char c = variableName[i];
                 if (c >= 'A' && c <= 'Z') col = col * 26 + (c - 'A');
                 else if (c >= 'a' && c <= 'z') col = col * 26 + (c - 'a');
                 else break;
                 i++;
             }
-            while (i < n.Length)
+            while (i < variableName.Length)
             {
-                char c = n[i];
+                char c = variableName[i];
                 if (c >= '0' && c <= '9') row = row * 10 + (c - '0');
                 else break;
                 i++;
             }
             row--; //rows start a 1            
-            if (i == n.Length && col >= 0 && row >= 0 && col < NBCOLUMN && row < NBROWS)
+            if (i == variableName.Length && col >= 0 && row >= 0 && col < NBCOLUMN && row < NBROWS)
             {
-                Cell c = mCells[col, row];
-                e.Value = new Variable<Cell>(c);
+                Cell cell = mCells[col, row];
+                e.Value = new Variable<Cell>(cell, variableName);
                 e.Handled = true;
             }
         }

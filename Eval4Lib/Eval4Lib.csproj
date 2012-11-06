@@ -37,13 +37,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Core\Token.cs" />
-    <Compile Include="Core\Variable.cs" />
     <Compile Include="CSharpEvaluator.cs" />
     <Compile Include="Core\Evaluator.cs" />
     <Compile Include="ExcelEvaluator.cs" />
     <Compile Include="JavascriptEvaluator.cs" />
     <Compile Include="SyntaxError.cs" />
-    <Compile Include="Variable.cs" />
     <Compile Include="Core\Expr.cs" />
     <Compile Include="Core\Interfaces.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

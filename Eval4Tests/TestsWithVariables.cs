@@ -35,12 +35,12 @@ namespace Eval4.CSharpTests
         {
             evVB.SetVariable("C", 10);
             var parsed = evVB.Parse("C*5");
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
             //parsed.ValueChanged += parsed_ValueChanged;
             Assert.AreEqual(parsed.ObjectValue, 50);
             evVB.SetVariable("C", 5);
             Assert.AreEqual(parsed.ObjectValue, 25);
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
             //parsed.ValueChanged -= parsed_ValueChanged;
             evVB.SetVariable("C", 10);
             //Assert.AreEqual(parsed.ObjectValue, 99.99);

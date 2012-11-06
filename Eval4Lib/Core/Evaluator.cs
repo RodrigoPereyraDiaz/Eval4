@@ -9,7 +9,7 @@ namespace Eval4.Core
     {
         internal List<object> mEnvironmentFunctionsList;
         public bool RaiseVariableNotFoundException;
-        internal Dictionary<string, VariableBase> mVariableBag;
+        internal Dictionary<string, IVariable> mVariableBag;
         public abstract int GetPrecedence(Token token, bool unary);
         internal Dictionary<TokenType, List<Declaration>> mBinaryDeclarations;
         internal Dictionary<TokenType, List<Declaration>> mUnaryDeclarations;
@@ -28,7 +28,7 @@ namespace Eval4.Core
         {
             mEnvironmentFunctionsList = new List<object>();
             //CompileTypeHandlers(GetTypeHandlers());
-            mVariableBag = new Dictionary<string, VariableBase>((this.Options & EvaluatorOptions.CaseSensitive) != 0 ? StringComparer.InvariantCulture : StringComparer.InvariantCultureIgnoreCase);
+            mVariableBag = new Dictionary<string, IVariable>((this.Options & EvaluatorOptions.CaseSensitive) != 0 ? StringComparer.InvariantCulture : StringComparer.InvariantCultureIgnoreCase);
             mUnaryDeclarations = new Dictionary<TokenType, List<Declaration>>();
             mBinaryDeclarations = new Dictionary<TokenType, List<Declaration>>();
             mImplicitCasts = new Dictionary<TypePair, Declaration>();
@@ -443,10 +443,10 @@ namespace Eval4.Core
 
         public void SetVariable<T>(string variableName, T variableValue)
         {
-            VariableBase variable;
+            IVariable variable;
             if (mVariableBag.TryGetValue(variableName, out variable))
             {
-                variable.ObjectValue = variableValue;
+                variable.SetValue(variableValue);
             }
             else
             {
@@ -1120,7 +1120,7 @@ namespace Eval4.Core
                 }
                 if (newExpr == null && (parameters == null || parameters.Count == 0))
                 {
-                    VariableBase variable;
+                    IVariable variable;
                     if (mVariableBag.TryGetValue(funcName, out variable))
                     {
                         var t = typeof(GetVariableFromBag<>).MakeGenericType(variable.SystemType);
@@ -1191,7 +1191,7 @@ namespace Eval4.Core
                         throw NewUnexpectedToken(mi.MemberType.ToString() + " members are not supported");
                 }
                 var t = typeof(CallMethodExpr<>).MakeGenericType(resultType);
-                return (IHasValue)Activator.CreateInstance(t, this, @base, mi, parameters, casts);
+                return (IHasValue)Activator.CreateInstance(t, @base, mi, parameters, casts);
             }
             //if (@base is IVariableBag && (parameters == null || parameters.Count == 0))
             //{

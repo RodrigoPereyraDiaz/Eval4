@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Windows.Forms;
 using System.Data;
 using Eval4;
+using Eval4.Core;
 
 namespace Eval4.DemoCSharp
 {
@@ -21,9 +22,9 @@ namespace Eval4.DemoCSharp
 
         // Note that these 3 variables are visible from within the evaluator 
         // without needing any assessor 
-        public Eval4.Variable<double> A;
-        public Eval4.Variable<double> B;
-        public Eval4.Variable<double> C;
+        public Eval4.Core.Variable<double> A;
+        public Eval4.Core.Variable<double> B;
+        public Eval4.Core.Variable<double> C;
         public double[] arr = { 1.2, 3.4, 5.6, 7.8 };
 
         // NOTE: The following procedure is required by the Windows Form Designer
@@ -77,6 +78,7 @@ namespace Eval4.DemoCSharp
         private ExcelSheet excelSheet2;
         private ExcelSheet excelSheet3;
         internal System.Windows.Forms.Label lblResults3;
+        private IDisposable formula3subscription;
 
         public Form1()
         {
@@ -92,9 +94,9 @@ namespace Eval4.DemoCSharp
             // This call is required by the Windows Form Designer.
             InitializeComponent();
 
-            A = new Eval4.Variable<double>((double)updownA.Value, "UpDown A");
-            B = new Eval4.Variable<double>((double)updownB.Value, "UpDown B");
-            C = new Eval4.Variable<double>((double)updownC.Value, "UpDown C");
+            A = new Eval4.Core.Variable<double>((double)updownA.Value, "UpDown A");
+            B = new Eval4.Core.Variable<double>((double)updownB.Value, "UpDown B");
+            C = new Eval4.Core.Variable<double>((double)updownC.Value, "UpDown C");
 
             // Add any initialization after the InitializeComponent() call
             mInitializing = false;
@@ -885,27 +887,29 @@ namespace Eval4.DemoCSharp
             btnEvaluate2_Click(sender, e);
         }
 
-        private void mFormula3_ValueChanged(Object sender, System.EventArgs e)
-        {
-            string v = VbEvaluator.ConvertToString(mFormula3.ObjectValue);
-            lblResults3.Text = v;
-            LogBox3.AppendText(System.DateTime.Now.ToLongTimeString() + ": " + v + "\r\n");
-        }
-
-        private Core.ValueChangedEventHandler FormulaHandler = null;
+        //private Core.ValueChangedEventHandler FormulaHandler = null;
 
 
         private void btnEvaluate3_Click(object sender, System.EventArgs e)
         {
             try
             {
-                //throw new NotImplementedException();
-                //if (FormulaHandler != null) mFormula3.ValueChanged -= FormulaHandler;
+                // throw new NotImplementedException();
+                // if (FormulaHandler != null) mFormula3.ValueChanged -= FormulaHandler;
+                if (formula3subscription != null) formula3subscription.Dispose();
                 mFormula3 = ev.Parse(tbExpression3.Text);
-                FormulaHandler = new Eval4.Core.ValueChangedEventHandler(mFormula3_ValueChanged);
-                //throw new NotImplementedException();
-                //mFormula3.ValueChanged += FormulaHandler;
-                mFormula3_ValueChanged(null, null);
+
+                formula3subscription = mFormula3.Subscribe(() =>
+                {
+                    string v = VbEvaluator.ConvertToString(mFormula3.ObjectValue);
+                    lblResults3.Text = v;
+                    LogBox3.AppendText(System.DateTime.Now.ToLongTimeString() + ": " + v + "\r\n");
+                });
+
+
+                //FormulaHandler = new Eval4.Core.ValueChangedEventHandler(mFormula3_ValueChanged);
+                // mFormula3.ValueChanged += FormulaHandler;
+                // mFormula3_ValueChanged(null, null);
             }
             catch (Exception ex)
             {
@@ -915,17 +919,17 @@ namespace Eval4.DemoCSharp
 
         private void updownA_ValueChanged(object sender, System.EventArgs e)
         {
-            A.Value = (double)updownA.Value;
+            A.SetValue((double)updownA.Value);
         }
 
         private void updownB_ValueChanged(object sender, System.EventArgs e)
         {
-            B.Value = (double)updownB.Value;
+            B.SetValue((double)updownB.Value);
         }
 
         private void updownC_ValueChanged(object sender, System.EventArgs e)
         {
-            C.Value = (double)updownC.Value;
+            C.SetValue((double)updownC.Value);
         }
 
         private void TabControl1_SelectedIndexChanged(object sender, EventArgs e)

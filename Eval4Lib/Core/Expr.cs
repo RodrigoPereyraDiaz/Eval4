@@ -4,44 +4,95 @@ using System.Linq.Expressions;
 using System.Reflection;
 namespace Eval4.Core
 {
-    public abstract class Expr<T> : IHasValue<T>, IObserver
+    public abstract class Expr : IHasValue, IObserver
     {
+        internal List<IDisposable> mSubscribedTo = new List<IDisposable>();
+        internal List<Subscription> mSubscribedBy = new List<Subscription>();
 
-        public Expr(params IHasValue[] dependencies)
+        public Expr(IHasValue p0, params IHasValue[] parameters)
         {
-
+            if (p0 != null)
+            {
+                mSubscribedTo.Add(p0.Subscribe(this));
+                if (parameters != null)
+                {
+                    foreach (IHasValue p1 in parameters)
+                    {
+                        mSubscribedTo.Add(p1.Subscribe(this));
+                    }
+                }
+            }
         }
 
-        public abstract T Value { get; }
-
-        public object ObjectValue
-        {
-            get { return Value; }
-        }
+        public abstract object ObjectValue { get; }
 
         public IDisposable Subscribe(IObserver observer)
         {
-            //throw new NotImplementedException();
-            return null;
+            var result = new Subscription(this, observer);
+            mSubscribedBy.Add(result);
+            return result;
         }
 
-        public Type SystemType
-        {
-            get { return typeof(T); }
-        }
+        public abstract Type SystemType { get; }
 
         public abstract string ShortName { get; }
 
         public virtual IEnumerable<Dependency> Dependencies
         {
-            get {
+            get
+            {
                 yield break;
             }
         }
 
         void IObserver.OnValueChanged()
         {
-            throw new NotImplementedException();
+            RaiseValueChanged();
+        }
+
+        protected void RaiseValueChanged()
+        {
+            foreach (var subscription in mSubscribedBy)
+            {
+                subscription.mObserver.OnValueChanged();
+            }
+        }
+    }
+
+    public class Subscription : IDisposable
+    {
+        internal Expr mSource;
+        internal IObserver mObserver;
+
+        public Subscription(Expr source, IObserver observer)
+        {
+            mSource = source;
+            mObserver = observer;
+        }
+        public void Dispose()
+        {
+            mSource.mSubscribedTo.Remove(this);
+        }
+
+    }
+
+    public abstract class Expr<T> : Expr, IHasValue<T>
+    {
+        public abstract T Value { get; }
+
+        public Expr(IHasValue p0, params IHasValue[] parameters)
+            : base(p0, parameters)
+        {
+        }
+
+        public override object ObjectValue
+        {
+            get { return Value; }
+        }
+
+        public override Type SystemType
+        {
+            get { return typeof(T); }
         }
     }
 
@@ -50,16 +101,12 @@ namespace Eval4.Core
         private T mValue;
 
         public ConstantExpr(T value)
+            : base(null)
         {
             mValue = value;
         }
 
         //public event ValueChangedEventHandler ValueChanged;
-
-        public Type SystemType
-        {
-            get { return typeof(T); }
-        }
 
         public override string ShortName
         {
@@ -69,12 +116,6 @@ namespace Eval4.Core
         public override T Value
         {
             get { return mValue; }
-        }
-
-
-        public IDisposable Subscribe(IObserver observer)
-        {
-            throw new NotImplementedException();
         }
     }
 
@@ -91,18 +132,14 @@ namespace Eval4.Core
         private System.Type mResultSystemType;
         private IHasValue withEventsField_mResultValue;
 
-        public CallMethodExpr(Evaluator ev, IHasValue baseObject, MemberInfo method, List<IHasValue> @params, Delegate[] casts)
+        public CallMethodExpr(IHasValue baseObject, MemberInfo method, List<IHasValue> @params, Delegate[] casts)
+            : base(baseObject, @params == null ? null : @params.ToArray())
         {
             if (@params == null)
                 @params = new List<IHasValue>();
             IHasValue[] newParams = @params.ToArray();
             object[] newParamValues = new object[@params.Count];
 
-            foreach (IHasValue p in newParams)
-            {
-                p.Subscribe(this);
-                //if (p != null) p.ValueChanged += p_ValueChanged;
-            }
             mParams = newParams;
             mParamValues = newParamValues;
             mBaseObject = baseObject;
@@ -156,11 +193,6 @@ namespace Eval4.Core
                     }
                 }
             }
-        }
-
-        void p_ValueChanged(object sender, EventArgs e)
-        {
-            throw new NotImplementedException();
         }
 
         public IHasValue mBaseValue
@@ -258,11 +290,6 @@ namespace Eval4.Core
             get { return mValueDelegate(); }
         }
 
-        public Type SystemType
-        {
-            get { return typeof(T); }
-        }
-
         public override string ShortName
         {
             get { return "CallMethod"; }
@@ -280,11 +307,6 @@ namespace Eval4.Core
             }
         }
 
-
-        public IDisposable Subscribe(IObserver observer)
-        {
-            throw new NotImplementedException();
-        }
     }
 
     public class GetArrayEntryExpr<T> : Expr<T>
@@ -302,20 +324,21 @@ namespace Eval4.Core
             {
                 if (withEventsField_mArray != null)
                 {
-                    throw new NotImplementedException();
+                    //throw new NotImplementedException();
                     //withEventsField_mArray.ValueChanged -= mBaseVariable_ValueChanged;
                 }
                 withEventsField_mArray = value;
                 if (withEventsField_mArray != null)
                 {
-                    throw new NotImplementedException();
+                    //throw new NotImplementedException();
                     //withEventsField_mArray.ValueChanged += mBaseVariable_ValueChanged;
                 }
             }
 
         }
-        
+
         public GetArrayEntryExpr(IHasValue array, List<IHasValue> @params)
+            : base(array, @params.ToArray())
         {
             IHasValue[] newParams = @params.ToArray();
             int[] newValues = new int[@params.Count];
@@ -371,11 +394,6 @@ namespace Eval4.Core
         {
             get { return "ArrayEntry[]"; }
         }
-
-        public IDisposable Subscribe(IObserver observer)
-        {
-            throw new NotImplementedException();
-        }
     }
 
     public class OperatorIfExpr<T> : Expr<T>
@@ -386,6 +404,7 @@ namespace Eval4.Core
         private IHasValue elseExpr;
 
         public OperatorIfExpr(IHasValue ifExpr, IHasValue thenExpr, IHasValue elseExpr)
+            : base(ifExpr, thenExpr, elseExpr)
         {
             this.ifExpr = ifExpr;
             this.thenExpr = thenExpr;
@@ -405,12 +424,6 @@ namespace Eval4.Core
                 return (T)result;
             }
         }
-        public Type SystemType
-        {
-            get { return mSystemType; }
-        }
-
-
 
         public override IEnumerable<Dependency> Dependencies
         {
@@ -428,13 +441,6 @@ namespace Eval4.Core
             get { return "OperatorIf"; }
         }
 
-        //public event ValueChangedEventHandler ValueChanged;
-
-
-        public IDisposable Subscribe(IObserver observer)
-        {
-            throw new NotImplementedException();
-        }
     }
 
     internal class NewTypedExpr<P1, T> : Expr<T>
@@ -443,6 +449,7 @@ namespace Eval4.Core
         private Func<P1, T> mFunc;
 
         public NewTypedExpr(IHasValue<P1> p1, Func<P1, T> func)
+            : base(p1)
         {
             System.Diagnostics.Debug.Assert(func != null);
             mP1 = p1;
@@ -457,11 +464,6 @@ namespace Eval4.Core
 
         //public event ValueChangedEventHandler ValueChanged;
 
-        public Type SystemType
-        {
-            get { return typeof(T); }
-        }
-
         public override string ShortName
         {
             get { return "NewTypedExpr"; }
@@ -474,12 +476,6 @@ namespace Eval4.Core
                 yield return new Dependency("p1", mP1);
             }
         }
-
-
-        public IDisposable Subscribe(IObserver observer)
-        {
-            throw new NotImplementedException();
-        }
     }
 
     internal class NewTypedExpr<P1, P2, T> : Expr<T>
@@ -489,6 +485,7 @@ namespace Eval4.Core
         private Func<P1, P2, T> mFunc;
 
         public NewTypedExpr(IHasValue<P1> p1, IHasValue<P2> p2, Func<P1, P2, T> func)
+            : base(p1, p2)
         {
             mP1 = p1;
             mP2 = p2;
@@ -499,13 +496,6 @@ namespace Eval4.Core
         public override T Value
         {
             get { return mFunc(mP1.Value, mP2.Value); }
-        }
-
-        //public event ValueChangedEventHandler ValueChanged;
-
-        public Type SystemType
-        {
-            get { return typeof(T); }
         }
 
         public override string ShortName
@@ -521,12 +511,6 @@ namespace Eval4.Core
                 yield return new Dependency("p2", mP2);
             }
         }
-
-
-        public IDisposable Subscribe(IObserver observer)
-        {
-            throw new NotImplementedException();
-        }
     }
 
     class GetVariableFromBag<T> : Expr<T>
@@ -537,6 +521,7 @@ namespace Eval4.Core
         private Variable<T> mVariable;
 
         public GetVariableFromBag(Evaluator evaluator, string variableName)
+            : base(null)
         {
             mEvaluator = evaluator;
             mVariableName = variableName;
@@ -551,19 +536,9 @@ namespace Eval4.Core
             }
         }
 
-        public Type SystemType
-        {
-            get { return typeof(T); }
-        }
-
         public override string ShortName
         {
             get { return "GetVariableFromBag"; }
-        }        
-
-        public IDisposable Subscribe(IObserver observer)
-        {
-            throw new NotImplementedException();
         }
     }
 
@@ -575,6 +550,7 @@ namespace Eval4.Core
         private FindVariableEventArgs mFindVariableResult;
 
         public RaiseFindVariableExpr(Evaluator evaluator, string variableName)
+            : base(null)
         {
             mEvaluator = evaluator;
             mVariableName = variableName;
@@ -589,20 +565,38 @@ namespace Eval4.Core
             }
         }
 
-        public Type SystemType
-        {
-            get { return typeof(T); }
-        }
-
         public override string ShortName
         {
             get { return "FindVariable"; }
         }
-
-        public IDisposable Subscribe(IObserver observer)
-        {
-            throw new NotImplementedException();
-        }
     }
 
+    public class Variable<T> : Expr<T>, IVariable
+    {
+        private T mValue;
+        private string mVariableName;
+
+        public Variable(T variableValue, string variableName)
+            : base(null)
+        {
+            mValue = variableValue;
+            mVariableName = variableName;
+        }
+
+        public override T Value
+        {
+            get { return mValue; }
+        }
+
+        public override string ShortName
+        {
+            get { return mVariableName; }
+        }
+
+        public void SetValue(object value)
+        {
+            mValue = (T)value;
+            base.RaiseValueChanged();
+        }
+    }
 }
