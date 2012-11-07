@@ -15,12 +15,6 @@ namespace Eval4.Core
         Type SystemType { get; }
         string ShortName { get; }
         IEnumerable<Dependency> Dependencies { get; }
-        //ValueChangedEventHandler ValueChanged { get; set; }
-    }
-
-    public interface IVariable : IHasValue
-    {
-        void SetValue(object variableValue);
     }
 
     public static class StaticIHasValue
@@ -53,27 +47,26 @@ namespace Eval4.Core
         T Value { get; }
     }
 
+    public interface IVariable : IHasValue
+    {
+        void SetValue(object variableValue);
+    }
+
     public interface IObserver
     {
         void OnValueChanged();
     }
-
 
     public class Dependency
     {
         public String Name;
         public IHasValue Expr;
 
-        private static Dependency[] NoDependencies = new Dependency[] { };
-
         public Dependency(string name, IHasValue value)
         {
             this.Name = name;
             this.Expr = value;
         }
-        public static IEnumerable<Dependency> None { get { return NoDependencies; } }
     }
 
-    //    ValueChangedEventHandler ValueChanged { get; set; }
-    //    public event ValueChangedEventHandler(object sender, System.EventArgs e);
 }
