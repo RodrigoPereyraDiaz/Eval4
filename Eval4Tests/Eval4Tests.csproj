@@ -53,6 +53,7 @@
   <ItemGroup>
     <Compile Include="BaseTest.cs" />
     <Compile Include="CommonTests.cs" />
+    <Compile Include="OctaveTests.cs" />
     <Compile Include="CSharpTests.cs" />
     <Compile Include="TestEnvironmentFunctions.cs" />
     <Compile Include="TestArraysAndObjects.cs" />

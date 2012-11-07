@@ -188,7 +188,7 @@ namespace Eval4.Core
                     var targetType = paramInfo[i].ParameterType;
                     if (sourceType != targetType)
                     {
-                        var c2 = typeof(NewTypedExpr<,>).MakeGenericType(sourceType, targetType);
+                        var c2 = typeof(DelegateExpr<,>).MakeGenericType(sourceType, targetType);
                         mParams[i] = (IHasValue)Activator.CreateInstance(c2, mParams[i], casts[i]);
                     }
                 }
@@ -443,30 +443,30 @@ namespace Eval4.Core
 
     }
 
-    internal class NewTypedExpr<P1, T> : Expr<T>
+    internal class DelegateExpr<P1, T> : Expr<T>
     {
         private IHasValue<P1> mP1;
-        private Func<P1, T> mFunc;
+        private Func<P1, T> mDelegate;
 
-        public NewTypedExpr(IHasValue<P1> p1, Func<P1, T> func)
+        public DelegateExpr(IHasValue<P1> p1, Func<P1, T> dlg)
             : base(p1)
         {
-            System.Diagnostics.Debug.Assert(func != null);
+            System.Diagnostics.Debug.Assert(dlg != null);
             mP1 = p1;
-            mFunc = func;
+            mDelegate = dlg;
         }
 
 
         public override T Value
         {
-            get { return mFunc(mP1.Value); }
+            get { return mDelegate(mP1.Value); }
         }
 
         //public event ValueChangedEventHandler ValueChanged;
 
         public override string ShortName
         {
-            get { return "NewTypedExpr"; }
+            get { return "DelegateExpr"; }
         }
 
         public override IEnumerable<Dependency> Dependencies
@@ -478,29 +478,29 @@ namespace Eval4.Core
         }
     }
 
-    internal class NewTypedExpr<P1, P2, T> : Expr<T>
+    internal class DelegateExpr<P1, P2, T> : Expr<T>
     {
         private IHasValue<P1> mP1;
         private IHasValue<P2> mP2;
-        private Func<P1, P2, T> mFunc;
+        private Func<P1, P2, T> mDelegate;
 
-        public NewTypedExpr(IHasValue<P1> p1, IHasValue<P2> p2, Func<P1, P2, T> func)
+        public DelegateExpr(IHasValue<P1> p1, IHasValue<P2> p2, Func<P1, P2, T> dlg)
             : base(p1, p2)
         {
             mP1 = p1;
             mP2 = p2;
-            mFunc = func;
+            mDelegate = dlg;
         }
 
 
         public override T Value
         {
-            get { return mFunc(mP1.Value, mP2.Value); }
+            get { return mDelegate(mP1.Value, mP2.Value); }
         }
 
         public override string ShortName
         {
-            get { return "NewTypedExpr"; }
+            get { return "DelegateExpr"; }
         }
 
         public override IEnumerable<Dependency> Dependencies
@@ -517,7 +517,6 @@ namespace Eval4.Core
     {
         private string mVariableName;
         private Evaluator mEvaluator;
-        //public event ValueChangedEventHandler ValueChanged;
         private Variable<T> mVariable;
 
         public GetVariableFromBag(Evaluator evaluator, string variableName)

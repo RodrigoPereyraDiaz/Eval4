@@ -36,6 +36,7 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="OctaveEvaluator.cs" />
     <Compile Include="Core\Token.cs" />
     <Compile Include="CSharpEvaluator.cs" />
     <Compile Include="Core\Evaluator.cs" />

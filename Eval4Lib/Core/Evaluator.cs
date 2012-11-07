@@ -727,16 +727,16 @@ namespace Eval4.Core
             {
                 if (cast1 != null)
                 {
-                    var c1 = typeof(NewTypedExpr<,>).MakeGenericType(cast1.P1, cast1.T);
+                    var c1 = typeof(DelegateExpr<,>).MakeGenericType(cast1.P1, cast1.T);
                     valueLeft = (IHasValue)Activator.CreateInstance(c1, valueLeft, cast1.dlg);
                 }
                 if (cast2 != null)
                 {
-                    var c2 = typeof(NewTypedExpr<,>).MakeGenericType(cast2.P1, cast2.T);
+                    var c2 = typeof(DelegateExpr<,>).MakeGenericType(cast2.P1, cast2.T);
                     valueRight = (IHasValue)Activator.CreateInstance(c2, valueRight, cast2.dlg);
                 }
 
-                var x = typeof(NewTypedExpr<,,>).MakeGenericType(valueLeft.SystemType, valueRight.SystemType, dlg.Method.ReturnType);
+                var x = typeof(DelegateExpr<,,>).MakeGenericType(valueLeft.SystemType, valueRight.SystemType, dlg.Method.ReturnType);
                 valueLeft = (IHasValue)Activator.CreateInstance(x, valueLeft, valueRight, dlg);
                 return true;
             }
@@ -753,11 +753,11 @@ namespace Eval4.Core
             {
                 if (cast1 != null)
                 {
-                    var c1 = typeof(NewTypedExpr<,>).MakeGenericType(cast1.P1, cast1.T);
+                    var c1 = typeof(DelegateExpr<,>).MakeGenericType(cast1.P1, cast1.T);
                     valueLeft = (IHasValue)Activator.CreateInstance(c1, valueLeft, cast1.dlg);
                 }
 
-                var x = typeof(NewTypedExpr<,>).MakeGenericType(valueLeft.SystemType, dlg.Method.ReturnType);
+                var x = typeof(DelegateExpr<,>).MakeGenericType(valueLeft.SystemType, dlg.Method.ReturnType);
                 valueLeft = (IHasValue)Activator.CreateInstance(x, valueLeft, dlg);
                 return true;
             }
@@ -1564,6 +1564,27 @@ namespace Eval4.Core
         public override Token NewToken()
         {
             return new Token<T>();
+        }
+
+        public static void WriteDependencies(System.IO.TextWriter tw, string name, Eval4.Core.IHasValue expr, string indent = null)
+        {
+            if (indent == null) indent = string.Empty;
+
+            tw.WriteLine("{0} {1} type {2} ({3})", indent, name, expr.ShortName, expr.SystemType);
+            int cpt = 0;
+            foreach (var d in expr.Dependencies)
+            {
+                cpt++;
+                WriteDependencies(tw, d.Name, d.Expr, indent + "  |");
+            }
+            if (cpt == 0)
+            {
+                tw.WriteLine("{0}  +--> {2}", indent, name, expr.ObjectValue);
+            }
+            else
+            {
+                tw.WriteLine("{0}  +--> {2} ({1})", indent, name, expr.ObjectValue);
+            }
         }
 
     }
