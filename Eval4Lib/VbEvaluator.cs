@@ -213,20 +213,20 @@ namespace Eval4
                     {
                         case CustomTokenType.OperatorPercent:
                             NextToken();
-                            if (MethodApplies(ref valueLeft, Acc, new Func<double, double, double>((a, b) => a * b / 100))) return;
+                            if (EmitDelegateExpr(ref valueLeft, Acc, new Func<double, double, double>((a, b) => a * b / 100))) return;
                             break;
 
                         case CustomTokenType.IntegerDiv:
                             NextToken();
                             valueRight = ParseExpr(valueLeft, opPrecedence);
-                            if (MethodApplies(ref valueLeft, Acc, new Func<int, int, int>((a, b) => a / b))) return;
+                            if (EmitDelegateExpr(ref valueLeft, Acc, new Func<int, int, int>((a, b) => a / b))) return;
                             break;
                     }
                     break;
                 case TokenType.OperatorDivide:
                     NextToken();
                     valueRight = ParseExpr(valueLeft, opPrecedence);
-                    if (MethodApplies(ref valueLeft, valueRight, new Func<double, double, double>((a, b) => a / (double)b))) return;
+                    if (EmitDelegateExpr(ref valueLeft, valueRight, new Func<double, double, double>((a, b) => a / (double)b))) return;
                     break;
             }
             base.ParseRight(tk, opPrecedence, Acc, ref valueLeft);

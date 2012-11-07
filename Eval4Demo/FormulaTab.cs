@@ -34,8 +34,8 @@ namespace Eval4.DemoCSharp
                     ev = new CSharpEvaluator();
                     //label1.Text = "Formula evaluator similar to C#";
                     break;
-                case PanelLanguage.matlab:
-                    ev = null;
+                case PanelLanguage.mathEval:
+                    ev = new MathEvaluator();
                     //label1.Text = "Formula evaluator similar to Matlab";
                     break;
                 case PanelLanguage.experiments:
@@ -71,7 +71,7 @@ namespace Eval4.DemoCSharp
         excel,
         vb,
         csharp,
-        matlab,
+        mathEval,
         experiments
     }
 }

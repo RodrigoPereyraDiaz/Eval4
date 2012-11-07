@@ -17,7 +17,7 @@ Scenario: VB has integer divisions
 Formula: 8 \ 3
 ExpectedResult: 2
 
-Text: VB uses parenthesis for arrays
+Scenario: VB uses parenthesis for arrays
 Formula: arr(0)
 ExpectedResult: 1
 
@@ -61,12 +61,12 @@ ExpectedResult: 3
 
 Scenario: Range Addition
 Set A4: SUM(A1:A2)
-Formula: =A4
+Formula: A4
 ExpectedResult: 3
 
 Scenario: Average
 Set A5: =AVERAGE(A1:A2)
-Formula: A4
+Formula: A5
 ExpectedResult: 1.5
 
 Scenario: VLookup
@@ -86,7 +86,7 @@ Formula: 1 + 2 * 3
 ExpectedResult: 6.0
 
 -------------------------------------------------------------------------------
-Language: Matlab
+Language: Math
 -------------------------------------------------------------------------------
 Scenario: Simple matrix
 Formula: [1,2,3]

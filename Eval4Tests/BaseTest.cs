@@ -10,18 +10,23 @@ namespace Eval4
     {
         public VbEvaluator evVB;
         public CSharpEvaluator evCS;
-        public CSharpEvaluator evOctave;
+        public MathEvaluator evMath;
 
         public BaseTest()
         {
             evVB = new VbEvaluator();
             evCS = new CSharpEvaluator();
-            evOctave = new OctaveEvaluator();
+            evMath = new MathEvaluator();
         }
 
         public void TestVBFormula<T>(string formula, T expected)
         {
             TestFormula(evVB, formula, expected);
+        }
+
+        public void TestMath<T>(string formula, T expected)
+        {
+            TestFormula(evMath, formula, expected);
         }
 
         public void TestCSFormula(string formula, object expected)

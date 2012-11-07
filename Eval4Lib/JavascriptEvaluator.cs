@@ -9,7 +9,7 @@ namespace Eval4
     public enum JavascriptToken{
     }
 
-    class JavascriptEvaluator : Evaluator<JavascriptToken>
+    public class JavascriptEvaluator : Evaluator<JavascriptToken>
     {
         protected internal override EvaluatorOptions Options
         {

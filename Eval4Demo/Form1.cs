@@ -63,7 +63,7 @@ namespace Eval4.DemoCSharp
         private FormulaTab evaluatorPanel1;
         private TabPage tabCSharp;
         private FormulaTab evaluatorPanel2;
-        private TabPage tabMatlab;
+        private TabPage tabMathEval;
         private FormulaTab evaluatorPanel3;
         private TabPage tabExcel;
         private TabPage tabExperiments;
@@ -173,7 +173,7 @@ namespace Eval4.DemoCSharp
             this.tabSheet3 = new System.Windows.Forms.TabPage();
             this.tabVB = new System.Windows.Forms.TabPage();
             this.tabCSharp = new System.Windows.Forms.TabPage();
-            this.tabMatlab = new System.Windows.Forms.TabPage();
+            this.tabMathEval = new System.Windows.Forms.TabPage();
             this.tabExperiments = new System.Windows.Forms.TabPage();
             this.TabHeavier = new System.Windows.Forms.TabPage();
             this.cbAuto = new System.Windows.Forms.CheckBox();
@@ -217,7 +217,7 @@ namespace Eval4.DemoCSharp
             this.tabSheet3.SuspendLayout();
             this.tabVB.SuspendLayout();
             this.tabCSharp.SuspendLayout();
-            this.tabMatlab.SuspendLayout();
+            this.tabMathEval.SuspendLayout();
             this.tabExperiments.SuspendLayout();
             this.TabHeavier.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.PictureBox1)).BeginInit();
@@ -233,7 +233,7 @@ namespace Eval4.DemoCSharp
             this.TabControl1.Controls.Add(this.tabExcel);
             this.TabControl1.Controls.Add(this.tabVB);
             this.TabControl1.Controls.Add(this.tabCSharp);
-            this.TabControl1.Controls.Add(this.tabMatlab);
+            this.TabControl1.Controls.Add(this.tabMathEval);
             this.TabControl1.Controls.Add(this.tabExperiments);
             this.TabControl1.Controls.Add(this.TabHeavier);
             this.TabControl1.Controls.Add(this.tabDynamic);
@@ -323,13 +323,13 @@ namespace Eval4.DemoCSharp
             // 
             // tabMatlab
             // 
-            this.tabMatlab.Controls.Add(this.evaluatorPanel3);
-            this.tabMatlab.Location = new System.Drawing.Point(4, 22);
-            this.tabMatlab.Name = "tabMatlab";
-            this.tabMatlab.Size = new System.Drawing.Size(510, 474);
-            this.tabMatlab.TabIndex = 9;
-            this.tabMatlab.Text = "Matlab";
-            this.tabMatlab.UseVisualStyleBackColor = true;
+            this.tabMathEval.Controls.Add(this.evaluatorPanel3);
+            this.tabMathEval.Location = new System.Drawing.Point(4, 22);
+            this.tabMathEval.Name = "tabMathEval";
+            this.tabMathEval.Size = new System.Drawing.Size(510, 474);
+            this.tabMathEval.TabIndex = 9;
+            this.tabMathEval.Text = "Math";
+            this.tabMathEval.UseVisualStyleBackColor = true;
             // 
             // tabExperiments
             // 
@@ -688,7 +688,7 @@ namespace Eval4.DemoCSharp
             this.evaluatorPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.evaluatorPanel3.Location = new System.Drawing.Point(0, 0);
             this.evaluatorPanel3.Name = "evaluatorPanel3";
-            this.evaluatorPanel3.PanelLanguage = Eval4.DemoCSharp.PanelLanguage.matlab;
+            this.evaluatorPanel3.PanelLanguage = Eval4.DemoCSharp.PanelLanguage.mathEval;
             this.evaluatorPanel3.Size = new System.Drawing.Size(510, 474);
             this.evaluatorPanel3.TabIndex = 0;
             // 
@@ -718,7 +718,7 @@ namespace Eval4.DemoCSharp
             this.tabSheet3.ResumeLayout(false);
             this.tabVB.ResumeLayout(false);
             this.tabCSharp.ResumeLayout(false);
-            this.tabMatlab.ResumeLayout(false);
+            this.tabMathEval.ResumeLayout(false);
             this.tabExperiments.ResumeLayout(false);
             this.TabHeavier.ResumeLayout(false);
             this.TabHeavier.PerformLayout();

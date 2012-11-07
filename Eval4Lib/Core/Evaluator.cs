@@ -471,32 +471,7 @@ namespace Eval4.Core
         {
             return NewToken(TokenType.ValueIdentifier, keyword);
         }
-
-        //internal virtual int GetPrecedence(BaseToken tk, bool unary)
-        //{
-        //    var tt = tk.Type;
-        //    if (unary)
-        //    {
-        //        switch (tt)
-        //        {
-        //            case TokenType.Operator_minus:
-        //                tt = TokenType.unary_minus;
-        //                break;
-        //            case TokenType.Operator_plus:
-        //                tt = TokenType.unary_plus;
-        //                break;
-        //            case TokenType.Operator_not:
-        //                tt = TokenType.unary_not;
-        //                break;
-        //            case TokenType.Operator_tilde:
-        //                tt = TokenType.unary_tilde;
-        //                break;
-        //        }
-        //    }
-
-        //}
-
-
+        
         public virtual Token ParseToken()
         {
             switch (mCurChar)
@@ -573,6 +548,9 @@ namespace Eval4.Core
                 case ']':
                     NextChar();
                     return NewToken(TokenType.CloseBracket);
+                case ';':
+                    NextChar();
+                    return NewToken(TokenType.SemiColon);
                 default:
                     if (mCurChar >= '0' && mCurChar <= '9') return ParseNumber();
                     else if (IsIdentifierFirstLetter(mCurChar)) return ParseIdentifierOrKeyword();
@@ -583,7 +561,6 @@ namespace Eval4.Core
 
         public virtual IHasValue ParseLeftExpression(Token token, int precedence)
         {
-
             IHasValue result = null;
             List<Declaration> declarations;
             if (mUnaryDeclarations.TryGetValue(token.Type, out declarations))
@@ -598,7 +575,7 @@ namespace Eval4.Core
                     Declaration cast1;
                     if (CanCast(ValueRight.SystemType, decl.P1, out cast1))
                     {
-                        ApplyMethod(ref ValueRight, decl.dlg);
+                        EmitDelegateExpr(ref ValueRight, decl.dlg);
                         return ValueRight;
                     }
 
@@ -607,7 +584,7 @@ namespace Eval4.Core
             return ParseLeftToken(token, ref result);
         }
 
-        private IHasValue ParseLeftToken(Token token, ref IHasValue result)
+        protected virtual IHasValue ParseLeftToken(Token token, ref IHasValue result)
         {
             switch (token.Type)
             {
@@ -634,7 +611,10 @@ namespace Eval4.Core
                     int intValue;
                     if (int.TryParse(token.ValueString, out intValue))
                     {
-                        result = new ConstantExpr<int>(intValue);
+                        if ((Options & EvaluatorOptions.IntegerValues)!=0)
+                            result = new ConstantExpr<int>(intValue);
+                        else
+                            result = new ConstantExpr<double>(intValue);
                     }
                     else
                     {
@@ -710,13 +690,13 @@ namespace Eval4.Core
             {
                 foreach (var decl in declarations)
                 {
-                    if (MethodApplies(ref valueLeft, valueRight, decl.dlg)) return;
+                    if (EmitDelegateExpr(ref valueLeft, valueRight, decl.dlg)) return;
                 }
             }
             throw NewSyntaxError(string.Format("Cannot find operation {0} {1} {2}", valueLeft.SystemType, tt, valueRight.SystemType));
         }
 
-        protected bool MethodApplies(ref IHasValue valueLeft, IHasValue valueRight, Delegate dlg)
+        protected bool EmitDelegateExpr(ref IHasValue valueLeft, IHasValue valueRight, Delegate dlg)
         {
             Declaration cast1, cast2;
             var parameters = dlg.Method.GetParameters();
@@ -743,7 +723,7 @@ namespace Eval4.Core
             return false;
         }
 
-        protected bool ApplyMethod(ref IHasValue valueLeft, Delegate dlg)
+        protected bool EmitDelegateExpr(ref IHasValue valueLeft, Delegate dlg)
         {
             Declaration cast1;
             var parameters = dlg.Method.GetParameters();
