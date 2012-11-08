@@ -7,7 +7,7 @@ ExpectedResult: 2
 
 Scenario: Addition with prioritary multiplication 
 Formula: 1 + 2 * 3
-ExpectedResult: 6
+ExpectedResult: 7
 
 Scenario: Division in VB return double values
 Formula: 5  / 2
@@ -31,7 +31,7 @@ ExpectedResult: 2
 
 Scenario: Addition with prioritary multiplication 
 Formula: 1 + 2 * 3
-ExpectedResult: 6
+ExpectedResult: 7
 
 Scenario: integer division in C# return integers
 Formula: 8 / 3
@@ -39,7 +39,7 @@ ExpectedResult: 2
 
 Scenario: C# has no integer divisions
 Formula: 8 \ 3
-ExpectedResult: Exception
+ExpectedResult: Eval4.SyntaxError
 
 Scenario: C# uses brackets for arrays
 Formula: arr[0]
@@ -83,7 +83,7 @@ ExpectedResult: 2.0
 
 Scenario: Addition with prioritary multiplication 
 Formula: 1 + 2 * 3
-ExpectedResult: 6.0
+ExpectedResult: 7.0
 
 -------------------------------------------------------------------------------
 Language: Math
@@ -98,7 +98,7 @@ ExpectedResult: [3,5,7]
 
 Scenario: Transposing
 Formula: [1,2,3;4,5,6]'
-ExpectedResult: [1,4;2,5,3,6]
+ExpectedResult: [1,4;2,5;3,6]
 
 Scenario: multiplication
 Formula: [1,2,3]*[2;3;4]

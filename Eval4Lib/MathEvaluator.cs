@@ -111,7 +111,7 @@ namespace Eval4
             }
         }
 
-        protected override IHasValue ParseLeftToken(Token token, ref IHasValue result)
+        protected override IHasValue ParseLeft(Token token, ref IHasValue result)
         {
             switch (token.Type)
             {
@@ -119,7 +119,7 @@ namespace Eval4
                     return ParseMatrix();
 
                 default:
-                    return base.ParseLeftToken(token, ref result);
+                    return base.ParseLeft(token, ref result);
             }
         }
 
@@ -234,14 +234,9 @@ namespace Eval4
                     // 	Assignment	
                     //=  *=  /=  %=  +=  -=  <<=  >>=  &=  ^=  |=
                     return 2;
-                case TokenType.OperatorColon:
-                case TokenType.CloseParenthesis:
-                case TokenType.CloseBracket:
-                case TokenType.Comma:
-                case TokenType.SemiColon:
-                    return 0;
+
                 default:
-                    throw new NotImplementedException();
+                    return 0;
             }
         }
 
@@ -308,39 +303,41 @@ namespace Eval4
             for (var r = 0; r < rowCount; r++) this._data[r] = new double[columnCount];
         }
 
+        public Matrix(IEnumerable<IEnumerable<double>> result)
+        {
+            this._rowCount = result.Count();
+            this._columnCount = result.Max(l => l.Count());
+            int row = 0;
+            this._data = new double[_rowCount][];
+            foreach (var l in result)
+            {
+                int col = 0;
+                var newCol = new double[_columnCount];
+                foreach (var v in l)
+                {
+                    newCol[col++] = v;
+                }
+                this._data[row++] = newCol;
+            }
+        }
+
         public override string ToString()
         {
             var result = new StringBuilder();
             result.Append("[");
             for (var r = 0; r < this._rowCount; r++)
             {
-                if (r > 0) result.Append("\n");
+                if (r > 0) result.Append(";");
                 for (var c = 0; c < this._columnCount; c++)
                 {
-                    if (c > 0) result.Append(",");
+                    if (c > 0) result.Append(","); // "\n"
                     var value = this._data[r][c];
-                    result.Append((value == null /*or undefined*/ ? "NaN" : value.ToString("#,##0.000")));
+                    result.Append((value == null /*or undefined*/ ? "NaN" : value.ToString())); // "#,##0.000"
                 }
             }
             result.Append("]");
-            if (this._rowCount > 3 || this._columnCount > 3) result.Append(" Size:" + this.size().ToString());
+            //if (this._rowCount > 3 || this._columnCount > 3) result.Append(" Size:" + this.size().ToString());
             return result.ToString();
-        }
-
-        public Matrix(IEnumerable<IEnumerable<double>> result)
-        {
-            int maxColCount = result.Max(l => l.Count());
-            int row = 0;
-            foreach (var l in result)
-            {
-                int col = 0;
-                this._data = new double[result.Count()][];
-                this._data[col] = new double[maxColCount];
-                foreach (var v in l)
-                {
-                    this._data[row][col] = v;
-                }
-            }
         }
 
         public static Matrix filledMatrix(int rowCount, int columnCount, double value)

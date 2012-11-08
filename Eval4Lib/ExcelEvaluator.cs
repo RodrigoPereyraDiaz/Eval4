@@ -143,12 +143,12 @@ namespace Eval4
             get { return false; }
         }
 
-        public override IHasValue ParseLeftExpression(Token token, int precedence)
+        public override IHasValue ParseUnaryExpression(Token token, int precedence)
         {
             switch (token.Type)
             {
                 default:
-                    return base.ParseLeftExpression(token, precedence);
+                    return base.ParseUnaryExpression(token, precedence);
             }
 
         }

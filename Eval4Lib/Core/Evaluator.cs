@@ -10,7 +10,7 @@ namespace Eval4.Core
         internal List<object> mEnvironmentFunctionsList;
         public bool RaiseVariableNotFoundException;
         internal Dictionary<string, IVariable> mVariableBag;
-        public abstract int GetPrecedence(Token token, bool unary);
+        internal abstract int InternalGetPrecedence(Token token, bool unary);
         internal Dictionary<TokenType, List<Declaration>> mBinaryDeclarations;
         internal Dictionary<TokenType, List<Declaration>> mUnaryDeclarations;
         internal Dictionary<TypePair, Declaration> mImplicitCasts;
@@ -563,14 +563,14 @@ namespace Eval4.Core
             return NewToken(TokenType.UnrecognisedCharacter, mCurChar.ToString());
         }
 
-        public virtual IHasValue ParseLeftExpression(Token token, int precedence)
+        public virtual IHasValue ParseUnaryExpression(Token token, int precedence)
         {
             IHasValue result = null;
             List<Declaration> declarations;
             if (mUnaryDeclarations.TryGetValue(token.Type, out declarations))
             {
                 var tt = token;
-                var opPrecedence = GetPrecedence(tt, true);
+                var opPrecedence = InternalGetPrecedence(tt, true);
                 NextToken();
                 var ValueRight = ParseExpr(null, opPrecedence);
 
@@ -585,10 +585,10 @@ namespace Eval4.Core
 
                 }
             }
-            return ParseLeftToken(token, ref result);
+            return ParseLeft(token, ref result);
         }
 
-        protected virtual IHasValue ParseLeftToken(Token token, ref IHasValue result)
+        protected virtual IHasValue ParseLeft(Token token, ref IHasValue result)
         {
             switch (token.Type)
             {
@@ -1028,7 +1028,7 @@ namespace Eval4.Core
         internal IHasValue ParseExpr(IHasValue acc, int precedence)
         {
             IHasValue valueLeft = null;
-            valueLeft = ParseLeft(precedence);
+            valueLeft = ParseUnaryExpression(mCurToken, precedence);
             if (valueLeft == null)
             {
                 return NewUnexpectedToken("No Expression found");
@@ -1047,7 +1047,7 @@ namespace Eval4.Core
             {
                 //TokenType tt = default(TokenType);
                 //tt = mCurToken.Type;
-                int opPrecedence = (mCurToken.Type == TokenType.Eof ? 0 : GetPrecedence(mCurToken, unary: false));
+                int opPrecedence = (mCurToken.Type == TokenType.Eof ? 0 : InternalGetPrecedence(mCurToken, unary: false));
 
                 if (precedence >= opPrecedence)
                 {
@@ -1060,18 +1060,6 @@ namespace Eval4.Core
                     ParseRight(mCurToken, opPrecedence, acc, ref valueLeft);
                 }
             }
-        }
-
-        protected IHasValue ParseLeft(int precedence)
-        {
-            IHasValue result = null;
-            while (mCurToken.Type != TokenType.Eof)
-            {
-                // we ignore precedence here, not sure if it is valid
-                result = ParseLeftExpression(mCurToken, precedence);
-                if (result != null) return result;
-            }
-            return null;
         }
 
         protected bool EmitCallFunction(ref IHasValue valueLeft, string funcName, List<IHasValue> parameters, EvalMemberType callType, out IHasValue error)
@@ -1546,13 +1534,6 @@ namespace Eval4.Core
 
     public abstract class Evaluator<T> : Evaluator
     {
-        public abstract int GetPrecedence(Token<T> token, bool unary);
-
-        public override int GetPrecedence(Token token, bool unary)
-        {
-            return this.GetPrecedence((Token<T>)token, unary);
-        }
-
         public Token NewToken(T customTokenType)
         {
             var result = new Token<T>();
@@ -1560,6 +1541,13 @@ namespace Eval4.Core
             result.CustomType = customTokenType;
             return result;
         }
+
+        internal override int InternalGetPrecedence(Token token, bool unary)
+        {
+            return this.GetPrecedence((Token<T>)token, unary);
+        }
+
+        public abstract int GetPrecedence(Token<T> token, bool unary);
 
         public override Token NewToken()
         {

@@ -17,10 +17,18 @@ namespace Eval4ConsoleDemo
 
         static void Main(string[] args)
         {
+            SetLanguage("math");
+            TestFormula("[1,2,3;4,5,6]", "[1,2,3;4,5,6]");
+            RunTemplate("specs.txt");
+        }
+
+
+        static void RunTemplate(string templateFile)
+        {
             Console.BackgroundColor = ConsoleColor.Black;
             Console.ForegroundColor = ConsoleColor.Gray;
 
-            using (var sr = new StreamReader("specs.txt"))
+            using (var sr = new StreamReader(templateFile))
             {
                 string line;
                 while ((line = sr.ReadLine()) != null)
@@ -53,60 +61,13 @@ namespace Eval4ConsoleDemo
                             scenario = restOfLine;
                             break;
                         case "language":
-                            WriteLine(ConsoleColor.Cyan, "Language: " + restOfLine);
-                            switch (restOfLine.Trim().ToLower())
-                            {
-                                case "vb":
-                                    ev = new VbEvaluator();
-                                    break;
-                                case "excel":
-                                    ev = new ExcelEvaluator();
-                                    break;
-                                case "cs":
-                                    ev = new CSharpEvaluator();
-                                    break;
-                                case "javascript":
-                                    ev = new JavascriptEvaluator();
-                                    break;
-                                case "math":
-                                    ev = new MathEvaluator();
-                                    break;
-                                default:
-                                    WriteLine(ConsoleColor.Red, "Unknown language " + restOfLine);
-                                    break;
-                            }
+                            SetLanguage(restOfLine);
                             break;
                         case "formula":
-                            Write(ConsoleColor.Gray, restOfLine);
                             mFormula = restOfLine;
                             break;
                         case "expectedresult":
-                            Write(ConsoleColor.DarkGray, " = ");
-                            String resultString = null;
-                            Exception ex0 = null;
-                            try
-                            {
-                                var result = ev.Eval(mFormula);
-                                resultString = result.ToString();
-                            }
-                            catch (Exception ex)
-                            {
-                                resultString = ex.GetType().Name;
-                            }
-                            if (resultString == restOfLine)
-                            {
-                                WriteLine(ConsoleColor.Green, restOfLine);
-                            }
-                            else
-                            {
-                                WriteLine(ConsoleColor.Red, resultString);
-                                WriteLine(ConsoleColor.Red, "Expected " + restOfLine);
-                            }
-                            if (ex0 != null)
-                            {
-                                WriteLine(ConsoleColor.Red, ex0.Message);
-                            }
-
+                            TestFormula(mFormula, restOfLine);
                             break;
                         case "set":
                             Write(ConsoleColor.Gray, command + ":");
@@ -129,6 +90,63 @@ namespace Eval4ConsoleDemo
             }
             Console.WriteLine("Completed");
             Console.ReadKey();
+        }
+
+        private static void SetLanguage(string language)
+        {
+            WriteLine(ConsoleColor.Cyan, "Language: " + language);
+            switch (language.Trim().ToLower())
+            {
+                case "vb":
+                    ev = new VbEvaluator();
+                    break;
+                case "excel":
+                    ev = new ExcelEvaluator();
+                    break;
+                case "cs":
+                    ev = new CSharpEvaluator();
+                    break;
+                case "javascript":
+                    ev = new JavascriptEvaluator();
+                    break;
+                case "math":
+                    ev = new MathEvaluator();
+                    break;
+                default:
+                    WriteLine(ConsoleColor.Red, "Unknown language " + language);
+                    break;
+            }
+        }
+
+        private static void TestFormula(string formula, string expectedResult)
+        {
+            Write(ConsoleColor.Gray, formula);
+            Write(ConsoleColor.DarkGray, " = ");
+            String resultString = null;
+            Exception ex0 = null;
+            try
+            {
+                var result = ev.Eval(formula);
+                resultString = result.ToString();
+            }
+            catch (Exception ex)
+            {
+                resultString = ex.GetType().Name;
+            }
+            if (resultString == expectedResult)
+            {
+                WriteLine(ConsoleColor.Green, expectedResult);
+            }
+            else
+            {
+                WriteLine(ConsoleColor.Red, resultString);
+                WriteLine(ConsoleColor.Red, "Expected " + expectedResult);
+            }
+            if (ex0 != null)
+            {
+                WriteLine(ConsoleColor.Red, ex0.Message);
+            }
+
         }
 
         private static void Write(ConsoleColor consoleColor, string restOfLine)
