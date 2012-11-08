@@ -425,6 +425,10 @@ namespace Eval4.Core
         public object Eval(string formula)
         {
             IHasValue parsed = InternalParse(formula);
+            if (parsed.SystemType == typeof(SyntaxError))
+            {
+                //                throw ?
+            }
             return parsed.ObjectValue;
         }
 
@@ -471,7 +475,7 @@ namespace Eval4.Core
         {
             return NewToken(TokenType.ValueIdentifier, keyword);
         }
-        
+
         public virtual Token ParseToken()
         {
             switch (mCurChar)
@@ -556,7 +560,7 @@ namespace Eval4.Core
                     else if (IsIdentifierFirstLetter(mCurChar)) return ParseIdentifierOrKeyword();
                     break;
             }
-            throw NewSyntaxError("Unexpected character " + mCurChar);
+            return NewToken(TokenType.UnrecognisedCharacter, mCurChar.ToString());
         }
 
         public virtual IHasValue ParseLeftExpression(Token token, int precedence)
@@ -611,14 +615,14 @@ namespace Eval4.Core
                     int intValue;
                     if (int.TryParse(token.ValueString, out intValue))
                     {
-                        if ((Options & EvaluatorOptions.IntegerValues)!=0)
+                        if ((Options & EvaluatorOptions.IntegerValues) != 0)
                             result = new ConstantExpr<int>(intValue);
                         else
                             result = new ConstantExpr<double>(intValue);
                     }
                     else
                     {
-                        throw NewSyntaxError(string.Format("Invalid number {0}", token.ValueString));
+                        return NewSyntaxError(string.Format("Invalid number {0}", token.ValueString));
                     }
                     NextToken();
                     return result;
@@ -633,7 +637,7 @@ namespace Eval4.Core
                     }
                     else
                     {
-                        throw NewSyntaxError(string.Format("Invalid number {0}", token.ValueString));
+                        return NewSyntaxError(string.Format("Invalid number {0}", token.ValueString));
                     }
 
                 case TokenType.ValueDate:
@@ -647,7 +651,7 @@ namespace Eval4.Core
                     }
                     else
                     {
-                        throw NewSyntaxError(string.Format("Invalid date {0}, it should be #DD/MM/YYYY hh:mm:ss#", token.ValueString));
+                        return NewSyntaxError(string.Format("Invalid date {0}, it should be #DD/MM/YYYY hh:mm:ss#", token.ValueString));
                     }
 
                 case TokenType.OpenParenthesis:
@@ -661,7 +665,7 @@ namespace Eval4.Core
                     }
                     else
                     {
-                        throw NewUnexpectedToken("End parenthesis not found");
+                        return NewUnexpectedToken("End parenthesis not found");
                     }
 
                 case TokenType.OperatorIf:
@@ -670,11 +674,12 @@ namespace Eval4.Core
                     // parameters... 
                     NextToken();
                     bool brackets = false;
-                    parameters = ParseParameters(ref brackets);
+                    IHasValue error = null;
+                    if (!ParseParameters(ref brackets, ref parameters, ref error)) return error;
                     var t = typeof(OperatorIfExpr<>).MakeGenericType(parameters[1].SystemType);
                     return (IHasValue)Activator.CreateInstance(t, parameters[0], parameters[1], parameters[2]);
             }
-            throw NewUnexpectedToken();
+            return NewUnexpectedToken();
         }
 
         internal virtual void ParseRight(Token tk, int opPrecedence, IHasValue acc, ref IHasValue valueLeft)
@@ -693,7 +698,7 @@ namespace Eval4.Core
                     if (EmitDelegateExpr(ref valueLeft, valueRight, decl.dlg)) return;
                 }
             }
-            throw NewSyntaxError(string.Format("Cannot find operation {0} {1} {2}", valueLeft.SystemType, tt, valueRight.SystemType));
+            valueLeft = NewSyntaxError(string.Format("Cannot find operation {0} {1} {2}", valueLeft.SystemType, tt, valueRight.SystemType));
         }
 
         protected bool EmitDelegateExpr(ref IHasValue valueLeft, IHasValue valueRight, Delegate dlg)
@@ -784,24 +789,17 @@ namespace Eval4.Core
         public event EventHandler<FindVariableEventArgs> FindVariable;
 
 
-        internal SyntaxError NewSyntaxError(string msg, Exception ex = null)
+        internal IHasValue<SyntaxError> NewSyntaxError(string msg, Exception ex = null)
         {
-            if (ex is SyntaxError)
+            msg += " " + " at position " + startpos;
+            if ((ex != null))
             {
                 msg += ". " + ex.Message;
             }
-            else
-            {
-                msg += " " + " at position " + startpos;
-                if ((ex != null))
-                {
-                    msg += ". " + ex.Message;
-                }
-            }
-            return new SyntaxError(msg, this.mString, this.mPos);
+            return new ConstantExpr<SyntaxError>(new SyntaxError(msg, this.mString, this.mPos));
         }
 
-        internal SyntaxError NewUnexpectedToken(string msg = null)
+        internal IHasValue<SyntaxError> NewUnexpectedToken(string msg = null)
         {
             if (String.IsNullOrEmpty(msg))
             {
@@ -814,11 +812,11 @@ namespace Eval4.Core
             if (string.IsNullOrEmpty(mCurToken.ValueString))
             {
                 //if (mCurChar == '\0') throw NewParserException(msg + "Unexpected end of formula.");
-                throw NewSyntaxError(msg + "Unexpected " + mCurToken.Type);
+                return NewSyntaxError(msg + "Unexpected " + mCurToken.Type);
             }
             else
             {
-                throw NewSyntaxError(msg + "Unexpected " + mCurToken.Type + " \"" + mCurToken.ValueString + "\"");
+                return NewSyntaxError(msg + "Unexpected " + mCurToken.Type + " \"" + mCurToken.ValueString + "\"");
             }
         }
 
@@ -969,7 +967,7 @@ namespace Eval4.Core
 
             if (InQuote)
             {
-                throw NewSyntaxError("Incomplete string, missing " + OriginalChar + "; String started");
+                return NewToken(TokenType.SyntaxError, "Incomplete string, missing " + OriginalChar + "; String started");
             }
             if (sb.Length > 0 && bits.Count > 0)
             {
@@ -984,15 +982,17 @@ namespace Eval4.Core
             return NewToken(TokenType.ValueString, sb.ToString());
         }
 
-        internal void Expect(TokenType tokenType, string msg)
+        internal bool Expect(TokenType tokenType, string msg, ref IHasValue error)
         {
             if (mCurToken.Type == tokenType)
             {
                 NextToken();
+                return true;
             }
             else
             {
-                throw NewUnexpectedToken(msg);
+                error = NewUnexpectedToken(msg);
+                return false;
             }
         }
 
@@ -1015,7 +1015,7 @@ namespace Eval4.Core
             }
             else
             {
-                throw NewUnexpectedToken();
+                return NewUnexpectedToken();
             }
         }
 
@@ -1031,7 +1031,7 @@ namespace Eval4.Core
             valueLeft = ParseLeft(precedence);
             if (valueLeft == null)
             {
-                throw NewUnexpectedToken("No Expression found");
+                return NewUnexpectedToken("No Expression found");
             }
             while (typeof(IHasValue).IsAssignableFrom(valueLeft.SystemType))
             {
@@ -1074,7 +1074,7 @@ namespace Eval4.Core
             return null;
         }
 
-        protected bool EmitCallFunction(ref IHasValue valueLeft, string funcName, List<IHasValue> parameters, EvalMemberType callType, bool errorIfNotFound)
+        protected bool EmitCallFunction(ref IHasValue valueLeft, string funcName, List<IHasValue> parameters, EvalMemberType callType, out IHasValue error)
         {
             IHasValue newExpr = null;
 
@@ -1094,7 +1094,8 @@ namespace Eval4.Core
                     }
                     else
                     {
-                        throw NewSyntaxError("Invalid Environment functions.");
+                        error = NewSyntaxError("Invalid Environment functions.");
+                        return false;
                     }
                     if (newExpr != null) break;
                 }
@@ -1132,12 +1133,12 @@ namespace Eval4.Core
             if ((newExpr != null))
             {
                 valueLeft = newExpr;
+                error = null;
                 return true;
             }
             else
             {
-                if (errorIfNotFound)
-                    throw NewSyntaxError("No Variable or public method '" + funcName + "' was not found.");
+                error = NewSyntaxError("No Variable or public method '" + funcName + "' was not found.");
                 return false;
             }
         }
@@ -1154,21 +1155,21 @@ namespace Eval4.Core
                 {
                     case MemberTypes.Field:
                         if ((CallType & EvalMemberType.Field) == 0)
-                            throw NewSyntaxError("Unexpected Field");
+                            return NewSyntaxError("Unexpected Field");
                         resultType = (mi as FieldInfo).FieldType;
                         break;
                     case MemberTypes.Method:
                         if ((CallType & EvalMemberType.Method) == 0)
-                            throw NewSyntaxError("Unexpected Method");
+                            return NewSyntaxError("Unexpected Method");
                         resultType = (mi as MethodInfo).ReturnType;
                         break;
                     case MemberTypes.Property:
                         if ((CallType & EvalMemberType.Property) == 0)
-                            throw NewSyntaxError("Unexpected Property");
+                            return NewSyntaxError("Unexpected Property");
                         resultType = (mi as PropertyInfo).PropertyType;
                         break;
                     default:
-                        throw NewUnexpectedToken(mi.MemberType.ToString() + " members are not supported");
+                        return NewUnexpectedToken(mi.MemberType.ToString() + " members are not supported");
                 }
                 var t = typeof(CallMethodExpr<>).MakeGenericType(resultType);
                 return (IHasValue)Activator.CreateInstance(t, @base, mi, parameters, casts);
@@ -1334,6 +1335,7 @@ namespace Eval4.Core
 
         internal void ParseIdentifier(ref IHasValue valueLeft)
         {
+            IHasValue error;
             // first check functions
             List<IHasValue> parameters = null;
             // parameters... 
@@ -1342,7 +1344,7 @@ namespace Eval4.Core
             NextToken();
             bool isBrackets = false;
             Type resultType;
-            parameters = ParseParameters(ref isBrackets);
+            if (!ParseParameters(ref isBrackets, ref parameters, ref valueLeft)) return;
             if ((parameters != null))
             {
                 List<IHasValue> EmptyParameters = new List<IHasValue>();
@@ -1351,10 +1353,14 @@ namespace Eval4.Core
                 {
                     // in vb we don't know if it is array or not as we have only parenthesis
                     // so we try with parameters first
-                    if (!EmitCallFunction(ref valueLeft, func, parameters, EvalMemberType.All, errorIfNotFound: false))
+                    if (!EmitCallFunction(ref valueLeft, func, parameters, EvalMemberType.All, out error))
                     {
                         // and if not found we try as array or default member
-                        EmitCallFunction(ref valueLeft, func, EmptyParameters, EvalMemberType.All, errorIfNotFound: true);
+                        if (!EmitCallFunction(ref valueLeft, func, EmptyParameters, EvalMemberType.All, out error))
+                        {
+                            valueLeft = error;
+                            return;
+                        }
                         ParamsNotUsed = true;
                     }
                 }
@@ -1362,17 +1368,25 @@ namespace Eval4.Core
                 {
                     if (isBrackets)
                     {
-                        if (!EmitCallFunction(ref valueLeft, func, parameters, EvalMemberType.Property, errorIfNotFound: false))
+                        if (!EmitCallFunction(ref valueLeft, func, parameters, EvalMemberType.Property, out error))
                         {
-                            EmitCallFunction(ref valueLeft, func, EmptyParameters, EvalMemberType.All, errorIfNotFound: true);
+                            if (!EmitCallFunction(ref valueLeft, func, EmptyParameters, EvalMemberType.All, out error))
+                            {
+                                valueLeft = error;
+                                return;
+                            }
                             ParamsNotUsed = true;
                         }
                     }
                     else
                     {
-                        if (!EmitCallFunction(ref valueLeft, func, parameters, EvalMemberType.Field | EvalMemberType.Method, errorIfNotFound: false))
+                        if (!EmitCallFunction(ref valueLeft, func, parameters, EvalMemberType.Field | EvalMemberType.Method, out error))
                         {
-                            EmitCallFunction(ref valueLeft, func, EmptyParameters, EvalMemberType.All, errorIfNotFound: true);
+                            if (!EmitCallFunction(ref valueLeft, func, EmptyParameters, EvalMemberType.All, out error))
+                            {
+                                valueLeft = error;
+                                return;
+                            }
                             ParamsNotUsed = true;
                         }
                     }
@@ -1392,7 +1406,8 @@ namespace Eval4.Core
                         }
                         else
                         {
-                            throw NewSyntaxError("This array has " + t.GetArrayRank() + " dimensions");
+                            valueLeft = NewSyntaxError("This array has " + t.GetArrayRank() + " dimensions");
+                            return;
                         }
                     }
                     else
@@ -1406,20 +1421,24 @@ namespace Eval4.Core
                         }
                         else
                         {
-                            throw NewSyntaxError("Parameters not supported here");
+                            valueLeft = NewSyntaxError("Parameters not supported here");
+                            return;
                         }
                     }
                 }
             }
             else
             {
-                EmitCallFunction(ref valueLeft, func, parameters, EvalMemberType.All, errorIfNotFound: true);
+                if (!EmitCallFunction(ref valueLeft, func, parameters, EvalMemberType.All, out error))
+                {
+                    valueLeft = error;
+                    return;
+                }
             }
         }
 
-        internal List<IHasValue> ParseParameters(ref bool brackets)
+        internal bool ParseParameters(ref bool brackets, ref List<IHasValue> parameters, ref IHasValue error)
         {
-            List<IHasValue> parameters = null;
             IHasValue valueleft = null;
             TokenType lClosing = default(TokenType);
 
@@ -1444,7 +1463,7 @@ namespace Eval4.Core
                     {
                         // good we eat the end parenthesis and continue ...
                         NextToken();
-                        return parameters;
+                        return true;
                     }
                     valueleft = ParseExpr(null, 0);
                     parameters.Add(valueleft);
@@ -1453,7 +1472,7 @@ namespace Eval4.Core
                     {
                         // good we eat the end parenthesis and continue ...
                         NextToken();
-                        return parameters;
+                        return true;
                     }
                     else if (mCurToken.Type == TokenType.Comma)
                     {
@@ -1461,11 +1480,12 @@ namespace Eval4.Core
                     }
                     else
                     {
-                        throw NewUnexpectedToken(lClosing.ToString() + " not found");
+                        error = NewUnexpectedToken(lClosing.ToString() + " not found");
+                        return false;
                     }
                 } while (true);
             }
-            return parameters;
+            return true;
         }
 
     }

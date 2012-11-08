@@ -2,7 +2,7 @@
 using Eval4;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Eval4.CSharpTests
+namespace Eval4.Tests
 {
     [TestClass]
     public class VbTests : BaseTest
@@ -142,10 +142,13 @@ namespace Eval4.CSharpTests
         }
 
         [TestMethod]
-        [ExpectedException(typeof(SyntaxError))]
+        //[ExpectedException(typeof(SyntaxError))]
         public void TestImpossibleOperator()
         {
-            TestVBFormula("5-\"A\"", "5-'A' (impossible)");
+            var actualResult = evVB.Eval("5-\"A\"");
+
+            Assert.IsInstanceOfType(actualResult, typeof(SyntaxError));
+            Assert.AreEqual((actualResult as SyntaxError).pos, 5);
         }
 
         [TestMethod]

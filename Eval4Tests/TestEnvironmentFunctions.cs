@@ -2,7 +2,7 @@
 using Eval4;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Eval4.CSharpTests
+namespace Eval4.Tests
 {
     [TestClass]
     public class TestEnvironmentFunctions : BaseTest

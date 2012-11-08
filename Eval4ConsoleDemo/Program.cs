@@ -86,7 +86,7 @@ namespace Eval4ConsoleDemo
                             Exception ex0 = null;
                             try
                             {
-                                var result =    ev.Eval(mFormula);
+                                var result = ev.Eval(mFormula);
                                 resultString = result.ToString();
                             }
                             catch (Exception ex)
@@ -119,7 +119,7 @@ namespace Eval4ConsoleDemo
                             }
                             else
                             {
-                                WriteLine( ConsoleColor.Red, string.Format("* Invalid command \"{0}\"", command));
+                                WriteLine(ConsoleColor.Red, string.Format("* Invalid command \"{0}\"", command));
                             }
                             break;
 

@@ -79,7 +79,8 @@ namespace Eval4.Core
         ExplicitCast,
         Custom,
         SyntaxError,
-        SemiColon
+        SemiColon,
+        UnrecognisedCharacter
     }
 
 }

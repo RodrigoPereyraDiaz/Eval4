@@ -115,7 +115,8 @@ namespace Eval4
                 case TokenType.OperatorIf:
                     NextToken();
                     IHasValue thenExpr = ParseExpr(null, 0);
-                    Expect(TokenType.OperatorColon, "Missing : in ? expression test ? valueIfTrue : valueIfFalse.");
+                    if (!Expect(TokenType.OperatorColon, "Missing : in ? expression test ? valueIfTrue : valueIfFalse.", ref valueLeft))
+                        return;
                     IHasValue elseExpr = ParseExpr(null, 0);
                     var t = typeof(OperatorIfExpr<>).MakeGenericType(thenExpr.SystemType);
 
