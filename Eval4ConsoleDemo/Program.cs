@@ -13,12 +13,12 @@ namespace Eval4ConsoleDemo
     {
         private static string scenario;
         private static string mFormula;
-        private static Evaluator ev;
+        private static IEvaluator ev;
 
         static void Main(string[] args)
         {
             SetLanguage("math");
-            TestFormula("[1,2,3;4,5,6]", "[1,2,3;4,5,6]");
+            TestFormula("[1,2,3;4,5,6]'","[1,4;2,5;3,6]");
             RunTemplate("specs.txt");
         }
 

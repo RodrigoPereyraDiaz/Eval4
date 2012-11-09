@@ -5,12 +5,12 @@ using System.Text;
 
 namespace Eval4.Core
 {
-    public abstract class Evaluator
+
+    public abstract class Evaluator<T> : IEvaluator
     {
         internal List<object> mEnvironmentFunctionsList;
         public bool RaiseVariableNotFoundException;
         internal Dictionary<string, IVariable> mVariableBag;
-        internal abstract int InternalGetPrecedence(Token token, bool unary);
         internal Dictionary<TokenType, List<Declaration>> mBinaryDeclarations;
         internal Dictionary<TokenType, List<Declaration>> mUnaryDeclarations;
         internal Dictionary<TypePair, Declaration> mImplicitCasts;
@@ -22,7 +22,7 @@ namespace Eval4.Core
         protected int mPos;
         public char mCurChar;
         public int startpos;
-        public Token mCurToken;
+        public Token<T> mCurToken;
 
         public Evaluator()
         {
@@ -311,9 +311,7 @@ namespace Eval4.Core
             }
         }
 
-        public abstract Token NewToken();
-
-        public Token NewToken(TokenType type, string value = null)
+        public Token<T> NewToken(TokenType type, string value = null)
         {
             var result = NewToken();
             result.Type = type;
@@ -369,7 +367,7 @@ namespace Eval4.Core
             return parsed;
         }
 
-        public static string ConvertToString(object value)
+        public virtual string ConvertToString(object value)
         {
             if (value is string)
             {
@@ -438,9 +436,9 @@ namespace Eval4.Core
             return parsed.ObjectValue.ToString();
         }
 
-        public IHasValue ParseTemplate(string template)
+        public IHasValue<string> ParseTemplate(string template)
         {
-            IHasValue parsed = InternalParse(template, sourceIsTextTemplate: true);
+            IHasValue<string> parsed = (IHasValue<string>)InternalParse(template, sourceIsTextTemplate: true);
             return parsed;
         }
 
@@ -471,12 +469,12 @@ namespace Eval4.Core
 
         public abstract bool UseParenthesisForArrays { get; }
 
-        public virtual Token CheckKeyword(string keyword)
+        public virtual Token<T> CheckKeyword(string keyword)
         {
             return NewToken(TokenType.ValueIdentifier, keyword);
         }
 
-        public virtual Token ParseToken()
+        public virtual Token<T> ParseToken()
         {
             switch (mCurChar)
             {
@@ -563,14 +561,14 @@ namespace Eval4.Core
             return NewToken(TokenType.UnrecognisedCharacter, mCurChar.ToString());
         }
 
-        public virtual IHasValue ParseUnaryExpression(Token token, int precedence)
+        public virtual IHasValue ParseUnaryExpression(Token<T> token, int precedence)
         {
             IHasValue result = null;
             List<Declaration> declarations;
             if (mUnaryDeclarations.TryGetValue(token.Type, out declarations))
             {
                 var tt = token;
-                var opPrecedence = InternalGetPrecedence(tt, true);
+                var opPrecedence = GetPrecedence(tt, true);
                 NextToken();
                 var ValueRight = ParseExpr(null, opPrecedence);
 
@@ -588,7 +586,9 @@ namespace Eval4.Core
             return ParseLeft(token, ref result);
         }
 
-        protected virtual IHasValue ParseLeft(Token token, ref IHasValue result)
+        protected abstract int GetPrecedence(Token<T> tt, bool unary);
+
+        protected virtual IHasValue ParseLeft(Token<T> token, ref IHasValue result)
         {
             switch (token.Type)
             {
@@ -656,7 +656,7 @@ namespace Eval4.Core
 
                 case TokenType.OpenParenthesis:
                     NextToken();
-                    result = ParseExpr(null, 0);
+                    result = ParseExpr(null, 1);
                     if (mCurToken.Type == TokenType.CloseParenthesis)
                     {
                         // good we eat the end parenthesis and continue ...
@@ -682,7 +682,7 @@ namespace Eval4.Core
             return NewUnexpectedToken();
         }
 
-        internal virtual void ParseRight(Token tk, int opPrecedence, IHasValue acc, ref IHasValue valueLeft)
+        protected virtual void ParseRight(Token<T> tk, int opPrecedence, IHasValue acc, ref IHasValue valueLeft)
         {
             var tt = tk.Type;
             IHasValue valueRight;
@@ -846,7 +846,7 @@ namespace Eval4.Core
             }
         }
 
-        internal Token ParseNumber(bool afterDot = false)
+        internal Token<T> ParseNumber(bool afterDot = false)
         {
             var sb = new StringBuilder();
             if (!afterDot)
@@ -878,7 +878,7 @@ namespace Eval4.Core
             }
         }
 
-        internal Token ParseIdentifierOrKeyword()
+        internal Token<T> ParseIdentifierOrKeyword()
         {
             var sb = new StringBuilder();
             // we eat at least one character
@@ -894,7 +894,7 @@ namespace Eval4.Core
             return mCurToken;
         }
 
-        internal Token ParseString(bool InQuote)
+        internal Token<T> ParseString(bool InQuote)
         {
             var sb = new StringBuilder();
             char OriginalChar = '\0';
@@ -941,7 +941,7 @@ namespace Eval4.Core
                             }
                             else
                             {
-                                sb.Append(Evaluator.ConvertToString(subExpr));
+                                sb.Append(ConvertToString(subExpr));
                             }
                         }
                         catch (Exception ex)
@@ -1006,7 +1006,7 @@ namespace Eval4.Core
             NextToken();
             IHasValue res;
             if (sourceIsTextTemplate) res = ParseTemplate();
-            else res = ParseExpr(null, 0);
+            else res = ParseExpr(null, -1);
             if (mCurToken.Type == TokenType.Eof)
             {
                 if (res == null)
@@ -1046,9 +1046,15 @@ namespace Eval4.Core
             while (true)
             {
                 //TokenType tt = default(TokenType);
-                //tt = mCurToken.Type;
-                int opPrecedence = (mCurToken.Type == TokenType.Eof ? 0 : InternalGetPrecedence(mCurToken, unary: false));
-
+                //tt = mCurToken.Type;                
+                int opPrecedence;
+                if (mCurToken.Type == TokenType.Eof)
+                    opPrecedence = -1;
+                else
+                {
+                    opPrecedence = (mCurToken.Type == TokenType.Eof ? 0 : GetPrecedence(mCurToken, unary: false));
+                    if (opPrecedence < 0) opPrecedence = 0;
+                }
                 if (precedence >= opPrecedence)
                 {
                     // if on we have twice the same operator precedence it is more natural to calculate the left operator first
@@ -1453,7 +1459,7 @@ namespace Eval4.Core
                         NextToken();
                         return true;
                     }
-                    valueleft = ParseExpr(null, 0);
+                    valueleft = ParseExpr(null, 1);
                     parameters.Add(valueleft);
 
                     if (mCurToken.Type == lClosing)
@@ -1476,6 +1482,72 @@ namespace Eval4.Core
             return true;
         }
 
+        public static void WriteDependencies(System.IO.TextWriter tw, string name, Eval4.Core.IHasValue expr, string indent = null)
+        {
+            if (indent == null) indent = string.Empty;
+
+            tw.WriteLine("{0} {1} type {2} ({3})", indent, name, expr.ShortName, expr.SystemType);
+            int cpt = 0;
+            foreach (var d in expr.Dependencies)
+            {
+                cpt++;
+                WriteDependencies(tw, d.Name, d.Expr, indent + "  |");
+            }
+            if (cpt == 0)
+            {
+                tw.WriteLine("{0}  +--> {2}", indent, name, expr.ObjectValue);
+            }
+            else
+            {
+                tw.WriteLine("{0}  +--> {2} ({1})", indent, name, expr.ObjectValue);
+            }
+        }
+
+        public Token<T> NewToken(T customTokenType)
+        {
+            var result = new Token<T>();
+            result.Type = TokenType.Custom;
+            result.CustomType = customTokenType;
+            return result;
+        }
+
+        public Token<T> NewToken()
+        {
+            return new Token<T>();
+        }
+
+        Variable<T> IEvaluator.GetVariable<T>(string variableName)
+        {
+            return (Variable<T>)mVariableBag[variableName];
+        }
+
+
+        IHasValue IEvaluator.Parse(string p)
+        {
+            throw new NotImplementedException();
+        }
+
+
+
+        void IEvaluator.SetVariable<T>(string variableName, T variableValue)
+        {
+            this.SetVariable(variableName, variableValue);
+        }
+
+        IHasValue<string> IEvaluator.ParseTemplate(string template)
+        {
+            return this.ParseTemplate(template);
+        }
+
+        object IEvaluator.Eval(string formula)
+        {
+            return this.Eval(formula);
+        }
+
+        string IEvaluator.EvalTemplate(string formula)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public enum EvaluatorOptions
@@ -1532,50 +1604,6 @@ namespace Eval4.Core
         public bool Handled { get; set; }
     }
 
-    public abstract class Evaluator<T> : Evaluator
-    {
-        public Token NewToken(T customTokenType)
-        {
-            var result = new Token<T>();
-            result.Type = TokenType.Custom;
-            result.CustomType = customTokenType;
-            return result;
-        }
-
-        internal override int InternalGetPrecedence(Token token, bool unary)
-        {
-            return this.GetPrecedence((Token<T>)token, unary);
-        }
-
-        public abstract int GetPrecedence(Token<T> token, bool unary);
-
-        public override Token NewToken()
-        {
-            return new Token<T>();
-        }
-
-        public static void WriteDependencies(System.IO.TextWriter tw, string name, Eval4.Core.IHasValue expr, string indent = null)
-        {
-            if (indent == null) indent = string.Empty;
-
-            tw.WriteLine("{0} {1} type {2} ({3})", indent, name, expr.ShortName, expr.SystemType);
-            int cpt = 0;
-            foreach (var d in expr.Dependencies)
-            {
-                cpt++;
-                WriteDependencies(tw, d.Name, d.Expr, indent + "  |");
-            }
-            if (cpt == 0)
-            {
-                tw.WriteLine("{0}  +--> {2}", indent, name, expr.ObjectValue);
-            }
-            else
-            {
-                tw.WriteLine("{0}  +--> {2} ({1})", indent, name, expr.ObjectValue);
-            }
-        }
-
-    }
     class StaticFunctionsWrapper
     {
         public Type type;
@@ -1594,5 +1622,18 @@ namespace Eval4.Core
         Method = 2,
         Property = 4,
         All = 7
+    }
+
+    public interface IEvaluator
+    {
+        void SetVariable<T>(string variableName, T variableValue);
+
+        Variable<T> GetVariable<T>(string variableName);
+
+        IHasValue Parse(string formula);
+        object Eval(string formula);
+
+        IHasValue<string> ParseTemplate(string template);
+        string EvalTemplate(string template);
     }
 }

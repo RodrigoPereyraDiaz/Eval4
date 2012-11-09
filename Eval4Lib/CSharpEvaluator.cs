@@ -36,7 +36,7 @@ namespace Eval4
         //    return base.GetTypeHandlers();
         //}
 
-        public override Token ParseToken()
+        public override Token<CSharpCustomToken> ParseToken()
         {
             switch (mCurChar)
             {
@@ -96,7 +96,7 @@ namespace Eval4
             }
         }
 
-        public override Token CheckKeyword(string keyword)
+        public override Token<CSharpCustomToken> CheckKeyword(string keyword)
         {
             {
                 switch (keyword.ToString())
@@ -113,17 +113,17 @@ namespace Eval4
             }
         }
 
-        internal override void ParseRight(Token tk, int opPrecedence, IHasValue Acc, ref IHasValue valueLeft)
+        protected override void ParseRight(Token<CSharpCustomToken> tk, int opPrecedence, IHasValue Acc, ref IHasValue valueLeft)
         {
             var tt = tk.Type;
             switch (tt)
             {
                 case TokenType.OperatorIf:
                     NextToken();
-                    IHasValue thenExpr = ParseExpr(null, 0);
+                    IHasValue thenExpr = ParseExpr(null, 1);
                     if (!Expect(TokenType.OperatorColon, "Missing : in ? expression test ? valueIfTrue : valueIfFalse.", ref valueLeft))
                         return;
-                    IHasValue elseExpr = ParseExpr(null, 0);
+                    IHasValue elseExpr = ParseExpr(null, 1);
                     var t = typeof(OperatorIfExpr<>).MakeGenericType(thenExpr.SystemType);
 
                     valueLeft = (IHasValue)Activator.CreateInstance(t, valueLeft, thenExpr, elseExpr);
@@ -134,7 +134,7 @@ namespace Eval4
             }
         }
 
-        public override int GetPrecedence(Token<CSharpCustomToken> token, bool unary)
+        protected override int GetPrecedence(Token<CSharpCustomToken> token, bool unary)
         {
             var tt = token.Type;
             //http://msdn.microsoft.com/en-us/library/aa691323(v=vs.71).aspx

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Eval4.Core;
 
 namespace Eval4
 {
@@ -40,13 +41,13 @@ namespace Eval4
             TestFormula(evCS, formula, expected);
         }
        
-        public void TestFormula<T>(Eval4.Core.Evaluator ev, string formula, T expectedResult)
+        public void TestFormula<T>(IEvaluator ev, string formula, T expectedResult)
         {
             var actualResult = ev.Eval(formula);
             Assert.AreEqual(expectedResult, actualResult, formula);
         }
 
-        private void TestTemplate(Core.Evaluator ev, string formula, string expectedResult)
+        private void TestTemplate(IEvaluator ev, string formula, string expectedResult)
         {
             string result = ev.EvalTemplate(formula);
             Assert.AreEqual(expectedResult, result, "Template " + formula);

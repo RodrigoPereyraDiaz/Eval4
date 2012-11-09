@@ -1,5 +1,6 @@
 ﻿using System;
 using Eval4;
+using Eval4.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Eval4.Tests
@@ -16,7 +17,7 @@ namespace Eval4.Tests
             InitEvaluator(evCS);
         }
 
-        private void InitEvaluator(Eval4.Core.Evaluator ev)
+        private void InitEvaluator(IEvaluator ev)
         {
             ev.SetVariable("pascal", pascal);
             ev.SetVariable("fibonacci", new int[] { 1, 1, 2, 3, 5, 8, 13, 21, 34 });

@@ -6,12 +6,35 @@ using System.Linq;
 
 namespace Eval4
 {
-    public enum OctaveToken
+    public enum MathToken
     {
-        None
+        Transpose,        // '
+        ElementWiseAdd,   // .+
+        ElementWiseSub,   // .-
+        ElementWiseMul,   // .*
+        ElementWiseDiv,   // ./
+        ElementWisePower, // .^
+
     }
 
-    public class MathEvaluator : Core.Evaluator<OctaveToken>
+    //public Matrix ElementWiseAdd(Matrix m2)
+    //public Matrix ElementWiseSubtract(Matrix m2)
+    //public Matrix ElementWiseMultiply(Matrix m2)
+    //public Matrix ElementWiseDivide(Matrix m2)
+    //public Matrix ElementWisePower(Matrix m2)
+
+    //public Matrix ScalarAdd(int n)
+    //public Matrix ScalarSubtract(int n)
+    //public Matrix ScalarMultiply(int n)
+    //public Matrix ScalarDivide(int n)
+    //public Matrix ScalarPower(int n)
+
+    //public Matrix ScalarNeg()
+    //public Matrix ScalarInverse()
+
+    //public Matrix Product(Matrix m2)
+
+    public class MathEvaluator : Core.Evaluator<MathToken>
     {
         protected internal override EvaluatorOptions Options
         {
@@ -27,12 +50,19 @@ namespace Eval4
             }
         }
 
+        protected override void DeclareOperators()
+        {
+            base.DeclareOperators();
+            base.AddBinaryOperation<Matrix, Matrix, Matrix>(TokenType.OperatorPlus, (a, b) => a.ElementWiseAdd(b));
+            base.AddBinaryOperation<Matrix, Matrix, Matrix>(TokenType.OperatorMultiply, (a, b) => a.Product(b));
+        }
+
         public override bool UseParenthesisForArrays
         {
             get { return false; }
         }
 
-        public override Token ParseToken()
+        public override Token<MathToken> ParseToken()
         {
             switch (mCurChar)
             {
@@ -88,13 +118,16 @@ namespace Eval4
                     NextChar();
                     return NewToken(TokenType.OperatorColon);
 
+                case '\'':
+                    NextChar();
+                    return NewToken(MathToken.Transpose);
                 default:
                     return base.ParseToken();
 
             }
         }
 
-        public override Token CheckKeyword(string keyword)
+        public override Token<MathToken> CheckKeyword(string keyword)
         {
             {
                 switch (keyword.ToString())
@@ -111,7 +144,7 @@ namespace Eval4
             }
         }
 
-        protected override IHasValue ParseLeft(Token token, ref IHasValue result)
+        protected override IHasValue ParseLeft(Token<MathToken> token, ref IHasValue result)
         {
             switch (token.Type)
             {
@@ -123,20 +156,28 @@ namespace Eval4
             }
         }
 
-        internal override void ParseRight(Token tk, int opPrecedence, IHasValue Acc, ref IHasValue valueLeft)
+        protected override void ParseRight(Token<MathToken> tk, int opPrecedence, IHasValue Acc, ref IHasValue valueLeft)
         {
             var tt = tk.Type;
             switch (tt)
             {
-                case TokenType.OperatorIf:
-                    NextToken();
-                    IHasValue thenExpr = ParseExpr(null, 0);
-                    if (!Expect(TokenType.OperatorColon, "Missing : in ? expression test ? valueIfTrue : valueIfFalse.", ref valueLeft))
-                        return;
-                    IHasValue elseExpr = ParseExpr(null, 0);
-                    var t = typeof(OperatorIfExpr<>).MakeGenericType(thenExpr.SystemType);
+                case TokenType.Custom:
+                    switch (tk.CustomType)
+                    {
+                        case MathToken.Transpose:
+                            NextToken();
+                            if (EmitDelegateExpr(ref valueLeft, new Func<Matrix, Matrix>((a) => a.Transpose()))) return;
+                            break;
+                    }
+                    //switch(tk.
+                    //NextToken();
+                    //IHasValue thenExpr = ParseExpr(null, 0);
+                    //if (!Expect(TokenType.OperatorColon, "Missing : in ? expression test ? valueIfTrue : valueIfFalse.", ref valueLeft))
+                    //    return;
+                    //IHasValue elseExpr = ParseExpr(null, 0);
+                    //var t = typeof(OperatorIfExpr<>).MakeGenericType(thenExpr.SystemType);
 
-                    valueLeft = (IHasValue)Activator.CreateInstance(t, valueLeft, thenExpr, elseExpr);
+                    //valueLeft = (IHasValue)Activator.CreateInstance(t, valueLeft, thenExpr, elseExpr);
                     break;
                 default:
                     base.ParseRight(tk, opPrecedence, Acc, ref valueLeft);
@@ -144,7 +185,7 @@ namespace Eval4
             }
         }
 
-        public override int GetPrecedence(Token<OctaveToken> token, bool unary)
+        protected override int GetPrecedence(Token<MathToken> token, bool unary)
         {
             var tt = token.Type;
             //http://msdn.microsoft.com/en-us/library/aa691323(v=vs.71).aspx
@@ -235,6 +276,14 @@ namespace Eval4
                     //=  *=  /=  %=  +=  -=  <<=  >>=  &=  ^=  |=
                     return 2;
 
+                case TokenType.Custom:
+                    switch (token.CustomType)
+                    {
+                        case MathToken.Transpose:
+                            return 14; // not really sure
+                        default:
+                            return 0;
+                    }
                 default:
                     return 0;
             }
@@ -290,6 +339,7 @@ namespace Eval4
         private int _rowCount;
         private int _columnCount;
         private double[][] _data;
+        private readonly static Random _rnd = new Random();
 
         public Matrix(int rowCount, int columnCount)
         {
@@ -353,17 +403,17 @@ namespace Eval4
             return m1;
         }
 
-        static Matrix zeros(int rowCount, int columnCount)
+        public static Matrix zeros(int rowCount, int columnCount)
         {
             return filledMatrix(rowCount, columnCount, 0);
         }
 
-        static Matrix ones(int rowCount, int columnCount)
+        public static Matrix ones(int rowCount, int columnCount)
         {
             return filledMatrix(rowCount, columnCount, 1);
         }
 
-        static Matrix vector(double[] array)
+        public static Matrix vector(double[] array)
         {
             var columnCount = array.Length;
             var result = new Matrix(1, columnCount);
@@ -375,23 +425,20 @@ namespace Eval4
             return result;
         }
 
-        static Random Rnd = new Random();
-        private List<List<IHasValue>> result;
-
-        static Matrix rand(int rowCount, int columnCount)
+        public static Matrix rand(int rowCount, int columnCount)
         {
             var result = new Matrix(rowCount, columnCount);
             for (var r = 0; r < rowCount; r++)
             {
                 for (var c = 0; c < columnCount; c++)
                 {
-                    result._data[r][c] = Rnd.NextDouble();
+                    result._data[r][c] = _rnd.NextDouble();
                 }
             }
             return result;
         }
 
-        static Matrix rowVector(double[] array)
+        public static Matrix rowVector(double[] array)
         {
             var len = array.Length;
             var result = new Matrix(len, 1);
@@ -402,112 +449,118 @@ namespace Eval4
             return result;
         }
 
-        int rowCount() { return this._rowCount; }
+        public int RowCount
+        {
+            get { return this._rowCount; }
+        }
 
-        int columnCount() { return this._columnCount; }
+        public int ColumnCount
+        {
+            get { return this._columnCount; }
+        }
 
-        double value(int row, int column)
+        public double Value(int row, int column)
         {
             return this._data[row][column];
         }
 
-        Matrix entrywiseOp(Matrix m2, Func<double, double, double> func)
+        public Matrix ElementWiseOp(Matrix m2, Func<double, double, double> func)
         {
-            var rowCount = this.rowCount();
-            var columnCount = this.columnCount();
-            if (m2.rowCount() != rowCount || m2.columnCount() != columnCount) throw new Exception("Entrywise operations requires same size matrices.");
+            var rowCount = this.RowCount;
+            var columnCount = this.ColumnCount;
+            if (m2.RowCount != rowCount || m2.ColumnCount != columnCount) throw new Exception("ElementWise operations requires same size matrices.");
             var m3 = new Matrix(rowCount, columnCount);
             for (var r = 0; r < rowCount; r++)
             {
                 for (var c = 0; c < columnCount; c++)
                 {
-                    m3._data[r][c] = func(this.value(r, c), m2.value(r, c));
+                    m3._data[r][c] = func(this.Value(r, c), m2.Value(r, c));
                 }
             }
             return m3;
         }
 
-        Matrix scalarOp(Func<double, double> func)
+        public Matrix ElementWiseAdd(Matrix m2)
         {
-            var rowCount = this.rowCount();
-            var columnCount = this.columnCount();
+            return this.ElementWiseOp(m2, (v1, v2) => v1 + v2);
+        }
+
+        public Matrix ElementWiseSubtract(Matrix m2)
+        {
+            return this.ElementWiseOp(m2, (v1, v2) => v1 - v2);
+        }
+
+        public Matrix ElementWiseMultiply(Matrix m2)
+        {
+            return this.ElementWiseOp(m2, (v1, v2) => v1 * v2);
+        }
+
+        public Matrix ElementWiseDivide(Matrix m2)
+        {
+            return this.ElementWiseOp(m2, (v1, v2) => v1 / v2);
+        }
+
+        public Matrix ElementWisePower(Matrix m2)
+        {
+            return this.ElementWiseOp(m2, (v1, v2) => Math.Pow(v1, v2));
+        }
+
+        public Matrix ScalarOp(Func<double, double> func)
+        {
+            var rowCount = this.RowCount;
+            var columnCount = this.ColumnCount;
             var m2 = new Matrix(rowCount, columnCount);
             for (var r = 0; r < rowCount; r++)
             {
                 for (var c = 0; c < columnCount; c++)
                 {
-                    m2._data[r][c] = func(this.value(r, c));
+                    m2._data[r][c] = func(this.Value(r, c));
                 }
             }
             return m2;
         }
 
-        Matrix entrywiseAdd(Matrix m2)
+        public Matrix ScalarAdd(int n)
         {
-            return this.entrywiseOp(m2, (v1, v2) => v1 + v2);
+            return this.ScalarOp((v1) => v1 + n);
         }
 
-        Matrix entrywiseSubtract(Matrix m2)
+        public Matrix ScalarSubtract(int n)
         {
-            return this.entrywiseOp(m2, (v1, v2) => v1 - v2);
+            return this.ScalarOp((v1) => v1 - n);
         }
 
-        Matrix entrywiseMultiply(Matrix m2)
+        public Matrix ScalarMultiply(int n)
         {
-            return this.entrywiseOp(m2, (v1, v2) => v1 * v2);
+            return this.ScalarOp((v1) => v1 * n);
         }
 
-        Matrix entrywiseDivide(Matrix m2)
+        public Matrix ScalarDivide(int n)
         {
-            return this.entrywiseOp(m2, (v1, v2) => v1 / v2);
+            return this.ScalarOp((v1) => v1 / n);
         }
 
-        Matrix entrywisePower(Matrix m2)
+        public Matrix ScalarPower(int n)
         {
-            return this.entrywiseOp(m2, (v1, v2) => Math.Pow(v1, v2));
+            return this.ScalarOp((v1) => Math.Pow(v1, n));
         }
 
-        Matrix scalarAdd(int n)
+        public Matrix ScalarNeg()
         {
-            return this.scalarOp((v1) => v1 + n);
+            return this.ScalarOp((v1) => -v1);
         }
 
-        Matrix scalarSubtract(int n)
+        public Matrix ScalarInverse()
         {
-            return this.scalarOp((v1) => v1 - n);
+            return this.ScalarOp((v1) => 1 / v1);
         }
 
-        Matrix scalarMultiply(int n)
+        public Matrix Product(Matrix m2)
         {
-            return this.scalarOp((v1) => v1 * n);
-        }
-
-        Matrix scalarDivide(int n)
-        {
-            return this.scalarOp((v1) => v1 / n);
-        }
-
-        Matrix scalarPower(int n)
-        {
-            return this.scalarOp((v1) => Math.Pow(v1, n));
-        }
-
-        Matrix scalarNeg()
-        {
-            return this.scalarOp((v1) => -v1);
-        }
-
-        Matrix scalarInverse()
-        {
-            return this.scalarOp((v1) => 1 / v1);
-        }
-
-        Matrix product(Matrix m2)
-        {
-            var rowCount = this.rowCount();
-            var middle = m2.rowCount();
-            var columnCount = m2.columnCount();
-            if (this.columnCount() != m2.rowCount()) throw new Exception("Matrix product function requires compatible matrices (matrice 1 is " + this.size().ToString() + ", matrice 2 is " + m2.size().ToString());
+            var rowCount = this.RowCount;
+            var middle = m2.RowCount;
+            var columnCount = m2.ColumnCount;
+            if (this.ColumnCount != m2.RowCount) throw new Exception("Matrix product function requires compatible matrices (matrice 1 is " + this.Size().ToString() + ", matrice 2 is " + m2.Size().ToString());
 
             var m3 = new Matrix(rowCount, columnCount);
             for (var r = 0; r < rowCount; r++)
@@ -517,7 +570,7 @@ namespace Eval4
                     var v = 0.0;
                     for (var m = 0; m < middle; m++)
                     {
-                        v += this.value(r, m) * m2.value(m, c);
+                        v += this.Value(r, m) * m2.Value(m, c);
                     }
                     m3._data[r][c] = v;
                 }
@@ -525,7 +578,7 @@ namespace Eval4
             return m3;
         }
 
-        Matrix size()
+        public Matrix Size()
         {
             var result = new Matrix(1, 2);
             result._data[0][0] = this._rowCount;
@@ -533,7 +586,7 @@ namespace Eval4
             return result;
         }
 
-        Matrix transpose()
+        public Matrix Transpose()
         {
             var result = new Matrix(/*rowCount:*/this._columnCount, /*columnCount:*/this._rowCount);
             for (var r = 0; r < this._rowCount; r++)
@@ -546,7 +599,7 @@ namespace Eval4
             return result;
         }
 
-        Matrix sum()
+        public Matrix Sum()
         {
             var result = new Matrix(1, this._columnCount);
             for (var c = 0; c < this._columnCount; c++)
@@ -561,12 +614,12 @@ namespace Eval4
             return result;
         }
 
-        double totalSum()
+        public double TotalSum()
         {
             double result;
             if (this._rowCount > 1)
             {
-                result = this.sum().totalSum();
+                result = this.Sum().TotalSum();
             }
             else
             {
@@ -579,9 +632,9 @@ namespace Eval4
             return result;
         }
 
-        Matrix std()
+        public Matrix Std()
         {
-            var result = this.variance();
+            var result = this.Variance();
             for (var c = 0; c < this._columnCount; c++)
             {
                 // here we violate the imutability but it seems safe
@@ -590,13 +643,13 @@ namespace Eval4
             return result;
         }
 
-        Matrix variance()
+        public Matrix Variance()
         {
             // Matlab and Octave are not calculating the textbook variance 
             // but unbiaised variance where we divide by n - 1
             // we'll do the same
             var result = new Matrix(1, this._columnCount);
-            var mean = this.mean();
+            var mean = this.Mean();
             for (var c = 0; c < this._columnCount; c++)
             {
                 var sqDiffSum = 0.0;
@@ -611,18 +664,18 @@ namespace Eval4
             return result;
         }
 
-        Matrix mean()
+        public Matrix Mean()
         {
-            var result = this.sum();
-            result = result.scalarDivide(this._rowCount);
+            var result = this.Sum();
+            result = result.ScalarDivide(this._rowCount);
             return result;
         }
 
-        Matrix transformByColumnCount(int newColumnCount)
+        public Matrix TransformByColumnCount(int newColumnCount)
         {
             var size = this._rowCount * this._columnCount;
             var newrowCount = size / newColumnCount;
-            if (newrowCount * newColumnCount != size) throw new Exception("Current size " + this.size().ToString() + " cannot be transformed into " + newColumnCount + " columnCount.");
+            if (newrowCount * newColumnCount != size) throw new Exception("Current size " + this.Size().ToString() + " cannot be transformed into " + newColumnCount + " columnCount.");
             var result = new Matrix(newrowCount, newColumnCount);
             int r2 = 0, c2 = 0;
             for (var r = 0; r < result._rowCount; r++)
@@ -641,7 +694,7 @@ namespace Eval4
             return result;
         }
 
-        Matrix portion(int rowFrom, int columnFrom, int rowCount = -1, int columnCount = -1)
+        public Matrix Portion(int rowFrom, int columnFrom, int rowCount = -1, int columnCount = -1)
         {
             if (rowCount == -1) rowCount = this._rowCount - rowFrom;
             if (columnCount == -1) columnCount = this._columnCount - columnCount;
@@ -661,9 +714,9 @@ namespace Eval4
             return result;
         }
 
-        Matrix appendRight(Matrix m2)
+        public Matrix AppendRight(Matrix m2)
         {
-            if (m2._rowCount != this._rowCount) throw new Exception("Cannot append a " + m2.rowCount().ToString() + " high matrix to a " + this._rowCount.ToString() + " high matrix.");
+            if (m2._rowCount != this._rowCount) throw new Exception("Cannot append a " + m2.RowCount.ToString() + " high matrix to a " + this._rowCount.ToString() + " high matrix.");
 
             var result = new Matrix(this._rowCount, this._columnCount + m2._columnCount);
             for (var r = 0; r < this._rowCount; r++)
@@ -682,9 +735,9 @@ namespace Eval4
             return result;
         }
 
-        Matrix appendBottom(Matrix m2)
+        public Matrix AppendBottom(Matrix m2)
         {
-            if (m2._columnCount != this._columnCount) throw new Exception("Cannot append a " + m2.columnCount().ToString() + " high matrix to a " + this._columnCount.ToString() + " high matrix.");
+            if (m2._columnCount != this._columnCount) throw new Exception("Cannot append a " + m2.ColumnCount.ToString() + " high matrix to a " + this._columnCount.ToString() + " high matrix.");
 
             var result = new Matrix(this._rowCount + m2._rowCount, this._columnCount);
             int r;

@@ -30,7 +30,7 @@ namespace Eval4
             get { return false; }
         }
 
-        public override Token ParseToken()
+        public override Token<JavascriptToken> ParseToken()
         {
             switch (mCurChar)
             {
@@ -90,7 +90,7 @@ namespace Eval4
             }
         }
 
-        public override Token CheckKeyword(string keyword)
+        public override Token<JavascriptToken> CheckKeyword(string keyword)
         {
             {
                 switch (keyword.ToString())
@@ -107,7 +107,7 @@ namespace Eval4
             }
         }
 
-        internal override void ParseRight(Token tk, int opPrecedence, IHasValue Acc, ref IHasValue valueLeft)
+        protected override void ParseRight(Token<JavascriptToken> tk, int opPrecedence, IHasValue Acc, ref IHasValue valueLeft)
         {
             var tt = tk.Type;
             switch (tt)
@@ -128,7 +128,7 @@ namespace Eval4
             }
         }
 
-        public override int GetPrecedence(Token<JavascriptToken> token, bool unary)
+        protected override int GetPrecedence(Token<JavascriptToken> token, bool unary)
         {
             var tt = token.Type;
             //https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Operators/Operator_Precedence
@@ -217,13 +217,8 @@ namespace Eval4
                     // 	Assignment	
                     //=  *=  /=  %=  +=  -=  <<=  >>=  &=  ^=  |=
                     return 2;
-                case TokenType.OperatorColon:
-                case TokenType.CloseParenthesis:
-                case TokenType.CloseBracket:
-                case TokenType.Comma:
-                    return 0;
                 default:
-                    throw new NotImplementedException();
+                    return 0;
             }
         }
     }

@@ -6,13 +6,13 @@ using Eval4.Core;
 namespace Eval4
 {
 
-    public enum CustomTokenType
+    public enum VbTokenType
     {
         OperatorPercent,
         IntegerDiv
     }
 
-    public class VbEvaluator : Core.Evaluator<CustomTokenType>
+    public class VbEvaluator : Evaluator<VbTokenType>
     {
         protected internal override EvaluatorOptions Options
         {
@@ -33,14 +33,14 @@ namespace Eval4
             get { return true; }
         }
 
-        public override Token ParseToken()
+        public override Token<VbTokenType> ParseToken()
         {
             //TODO:Check we advance
             switch (mCurChar)
             {
                 case '%':
                     NextChar();
-                    return NewToken(CustomTokenType.OperatorPercent);
+                    return NewToken(VbTokenType.OperatorPercent);
 
                 case '=':
                     NextChar();
@@ -59,7 +59,7 @@ namespace Eval4
             }
         }
 
-        internal Token ParseDate()
+        internal Token<VbTokenType> ParseDate()
         {
             var sb = new StringBuilder();
             NextChar();
@@ -88,7 +88,7 @@ namespace Eval4
 
 
 
-        public override Token CheckKeyword(string keyword)
+        public override Token<VbTokenType> CheckKeyword(string keyword)
         {
             switch (keyword.ToString())
             {
@@ -201,22 +201,21 @@ namespace Eval4
         //}
 
 
-        internal override void ParseRight(Token tk, int opPrecedence, IHasValue Acc, ref IHasValue valueLeft)
+        protected override void ParseRight(Token<VbTokenType> tk, int opPrecedence, IHasValue Acc, ref IHasValue valueLeft)
         {
             switch (tk.Type)
             {
                 case TokenType.Custom:
 
                     IHasValue valueRight;
-                    var tk2 = tk as Token<CustomTokenType>;
-                    switch (tk2.CustomType)
+                    switch (tk.CustomType)
                     {
-                        case CustomTokenType.OperatorPercent:
+                        case VbTokenType.OperatorPercent:
                             NextToken();
                             if (EmitDelegateExpr(ref valueLeft, Acc, new Func<double, double, double>((a, b) => a * b / 100))) return;
                             break;
 
-                        case CustomTokenType.IntegerDiv:
+                        case VbTokenType.IntegerDiv:
                             NextToken();
                             valueRight = ParseExpr(valueLeft, opPrecedence);
                             if (EmitDelegateExpr(ref valueLeft, Acc, new Func<int, int, int>((a, b) => a / b))) return;
@@ -233,7 +232,7 @@ namespace Eval4
 
         }
 
-        public override int GetPrecedence(Token<CustomTokenType> token, bool unary)
+        protected override int GetPrecedence(Token<VbTokenType> token, bool unary)
         {
             var tt = token;
             //if (unary)
@@ -265,12 +264,13 @@ namespace Eval4
                     return (unary ? 14 : 9);
 
                 case TokenType.Custom:
-                    if (tt.CustomType == CustomTokenType.OperatorPercent)
+                    if (tt.CustomType == VbTokenType.OperatorPercent)
                     {
                         // the percent operator is something I created 
                         // it allows formula like 10 + 5% 
                         return 13;
                     }
+                    else return 1;
                     break;
                 case TokenType.OperatorMultiply:
                 case TokenType.OperatorDivide:
@@ -323,9 +323,9 @@ namespace Eval4
                 case TokenType.OperatorXor:
                     //Exclusive disjunction (Xor)
                     return 2;
-
+                default:
+                    return 0;
             }
-            return 0;
         }
     }
 

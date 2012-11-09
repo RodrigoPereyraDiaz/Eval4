@@ -901,7 +901,7 @@ namespace Eval4.DemoCSharp
 
                 formula3subscription = mFormula3.Subscribe(() =>
                 {
-                    string v = VbEvaluator.ConvertToString(mFormula3.ObjectValue);
+                    string v = ev.ConvertToString(mFormula3.ObjectValue);
                     lblResults3.Text = v;
                     LogBox3.AppendText(System.DateTime.Now.ToLongTimeString() + ": " + v + "\r\n");
                 });

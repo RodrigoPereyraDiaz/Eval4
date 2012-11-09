@@ -17,13 +17,13 @@ namespace Eval4
 
     public class Cell
     {
-        private Evaluator mEv;
+        private IEvaluator mEv;
         private string mFormula;
         private string mName;
         private IHasValue mValue;
         public Exception Exception;
 
-        public Cell(Evaluator ev, int col, int row)
+        public Cell(IEvaluator ev, int col, int row)
         {
             mName = GetCellName(col + 1, row + 1);
             this.mEv = ev;
@@ -143,7 +143,7 @@ namespace Eval4
             get { return false; }
         }
 
-        public override IHasValue ParseUnaryExpression(Token token, int precedence)
+        public override IHasValue ParseUnaryExpression(Token<ExcelToken> token, int precedence)
         {
             switch (token.Type)
             {
@@ -152,7 +152,7 @@ namespace Eval4
             }
 
         }
-        public override Token ParseToken()
+        public override Token<ExcelToken> ParseToken()
         {
             switch (mCurChar)
             {
@@ -212,7 +212,7 @@ namespace Eval4
             }
         }
 
-        public override Token CheckKeyword(string keyword)
+        public override Token<ExcelToken> CheckKeyword(string keyword)
         {
             {
                 switch (keyword.ToString())
@@ -229,7 +229,7 @@ namespace Eval4
             }
         }
 
-        internal override void ParseRight(Token tk, int opPrecedence, IHasValue Acc, ref IHasValue valueLeft)
+        protected override void ParseRight(Token<ExcelToken> tk, int opPrecedence, IHasValue Acc, ref IHasValue valueLeft)
         {
             var tt = tk.Type;
             switch (tt)
@@ -250,7 +250,7 @@ namespace Eval4
             }
         }
 
-        public override int GetPrecedence(Token<ExcelToken> token, bool unary)
+        protected override int GetPrecedence(Token<ExcelToken> token, bool unary)
         {
             var tt = token.Type;
             //http://msdn.microsoft.com/en-us/library/aa691323(v=vs.71).aspx
@@ -340,13 +340,8 @@ namespace Eval4
                     // 	Assignment	
                     //=  *=  /=  %=  +=  -=  <<=  >>=  &=  ^=  |=
                     return 2;
-                case TokenType.OperatorColon:
-                case TokenType.CloseParenthesis:
-                case TokenType.CloseBracket:
-                case TokenType.Comma:
-                    return 0;
                 default:
-                    throw new NotImplementedException();
+                    return 0;
             }
         }
     }

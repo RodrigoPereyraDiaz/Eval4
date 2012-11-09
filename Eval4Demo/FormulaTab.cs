@@ -6,12 +6,13 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using Eval4.Core;
 
 namespace Eval4.DemoCSharp
 {
     public partial class FormulaTab : UserControl
     {
-        Core.Evaluator ev;
+        IEvaluator ev;
 
         public FormulaTab()
         {

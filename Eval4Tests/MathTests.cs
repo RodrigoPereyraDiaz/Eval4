@@ -5,7 +5,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Eval4.Tests
 {
     [TestClass]
-    public class OctaveTests : BaseTest
+    public class MathTests : BaseTest
     {
         [TestMethod]
         public void TestArithmetic()

@@ -516,15 +516,15 @@ namespace Eval4.Core
     class GetVariableFromBag<T> : Expr<T>
     {
         private string mVariableName;
-        private Evaluator mEvaluator;
+        private IEvaluator mEvaluator;
         private Variable<T> mVariable;
 
-        public GetVariableFromBag(Evaluator evaluator, string variableName)
+        public GetVariableFromBag(IEvaluator evaluator, string variableName)
             : base(null)
         {
             mEvaluator = evaluator;
             mVariableName = variableName;
-            mVariable = (Variable<T>)mEvaluator.mVariableBag[mVariableName];
+            mVariable = mEvaluator.GetVariable<T>(mVariableName);
         }
 
         public override T Value
@@ -541,14 +541,18 @@ namespace Eval4.Core
         }
     }
 
+    interface IRaiseFindVariableExpr
+    {
+        FindVariableEventArgs RaiseFindVariable(string variableName);
+    }
+
     class RaiseFindVariableExpr<T> : Expr<T>
     {
         private string mVariableName;
-        private Evaluator mEvaluator;
-        //public event ValueChangedEventHandler ValueChanged;
+        private IRaiseFindVariableExpr mEvaluator;
         private FindVariableEventArgs mFindVariableResult;
 
-        public RaiseFindVariableExpr(Evaluator evaluator, string variableName)
+        public RaiseFindVariableExpr(IRaiseFindVariableExpr evaluator, string variableName)
             : base(null)
         {
             mEvaluator = evaluator;
