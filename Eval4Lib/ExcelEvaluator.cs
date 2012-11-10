@@ -23,11 +23,12 @@ namespace Eval4.Excel
         private IHasValue mValue;
         public Exception Exception;
 
-        public Cell(IEvaluator ev, int col, int row)
+        public Cell(IEvaluator ev, int col, int row, string formula=null)
         {
-            mName = GetCellName(col + 1, row + 1);
             this.mEv = ev;
+            mName = GetCellName(col + 1, row + 1);
             ev.SetVariable(mName, this);
+            if (formula != null) this.Formula = formula;
         }
 
         public static string GetColName(int x)
@@ -54,6 +55,40 @@ namespace Eval4.Excel
             return cell;
         }
 
+        public static bool GetCellPos(string name, out int x, out int y)
+        {
+            int i = 0;
+            int row = 0, col = 0;
+
+            while (i < name.Length)
+            {
+                char c = name[i];
+                if (c >= 'A' && c <= 'Z') col = col * 26 + (c - 'A');
+                else if (c >= 'a' && c <= 'z') col = col * 26 + (c - 'a');
+                else break;
+                i++;
+            }
+            while (i < name.Length)
+            {
+                char c = name[i];
+                if (c >= '0' && c <= '9') row = row * 10 + (c - '0');
+                else break;
+                i++;
+            }
+            row--; //rows start a 1            
+            if (i == name.Length && col >= 0 && row >= 0)
+            {
+                x = col;
+                y = row;
+                return true;
+            }
+            else
+            {
+                x = 0;
+                y = 0;
+                return false;
+            }
+        }
 
         public string Formula
         {
@@ -81,7 +116,6 @@ namespace Eval4.Excel
             }
         }
 
-
         public override string ToString()
         {
             if (Exception != null) return Exception.Message;
@@ -100,7 +134,8 @@ namespace Eval4.Excel
 
         public object ValueObject
         {
-            get {
+            get
+            {
                 if (mValue != null) return mValue.ObjectValue;
                 else return mFormula;
             }
@@ -108,10 +143,6 @@ namespace Eval4.Excel
 
     }
 
-    public class ExcelSheet
-    {
-        
-    }
 
     public class ExcelEvaluator : Evaluator<ExcelToken>
     {
@@ -148,7 +179,7 @@ namespace Eval4.Excel
             get { return false; }
         }
 
-        public override IHasValue ParseUnaryExpression(Token<ExcelToken> token, int precedence)
+        public override IHasValue ParseUnaryExpression(Token token, int precedence)
         {
             switch (token.Type)
             {
@@ -157,76 +188,76 @@ namespace Eval4.Excel
             }
 
         }
-        public override Token<ExcelToken> ParseToken()
+        public override Token ParseToken()
         {
             switch (mCurChar)
             {
                 case '%':
                     NextChar();
-                    return NewToken(TokenType.OperatorModulo);
+                    return new Token(TokenType.OperatorModulo);
 
                 case '&':
                     NextChar();
                     if (mCurChar == '&')
                     {
                         NextChar();
-                        return NewToken(TokenType.OperatorAndAlso);
+                        return new Token(TokenType.OperatorAndAlso);
                     }
-                    return NewToken(TokenType.OperatorAnd);
+                    return new Token(TokenType.OperatorAnd);
 
                 case '?':
                     NextChar();
-                    return NewToken(TokenType.OperatorIf);
+                    return new Token(TokenType.OperatorIf);
 
                 case '=':
                     NextChar();
                     if (mCurChar == '=')
                     {
                         NextChar();
-                        return NewToken(TokenType.OperatorEQ);
+                        return new Token(TokenType.OperatorEQ);
                     }
-                    return NewToken(TokenType.OperatorAssign);
+                    return new Token(TokenType.OperatorAssign);
 
                 case '!':
                     NextChar();
                     if (mCurChar == '=')
                     {
                         NextChar();
-                        return NewToken(TokenType.OperatorNE);
+                        return new Token(TokenType.OperatorNE);
                     }
-                    return NewToken(TokenType.OperatorNot);
+                    return new Token(TokenType.OperatorNot);
 
                 case '^':
                     NextChar();
-                    return NewToken(TokenType.OperatorXor);
+                    return new Token(TokenType.OperatorXor);
 
                 case '|':
                     NextChar();
                     if (mCurChar == '|')
                     {
                         NextChar();
-                        return NewToken(TokenType.OperatorOrElse);
+                        return new Token(TokenType.OperatorOrElse);
                     }
-                    return NewToken(TokenType.OperatorOr);
+                    return new Token(TokenType.OperatorOr);
                 case ':':
                     NextChar();
-                    return NewToken(TokenType.OperatorColon);
+                    return new Token(TokenType.OperatorColon);
                 default:
                     return base.ParseToken();
 
             }
         }
 
-        public override Token<ExcelToken> CheckKeyword(string keyword)
+        public override Token CheckKeyword(string keyword)
         {
             {
                 switch (keyword.ToString())
                 {
                     case "true":
-                        return NewToken(TokenType.ValueTrue);
+                        return new Token(TokenType.ValueTrue);
 
                     case "false":
-                        return NewToken(TokenType.ValueFalse);
+                        return new Token(TokenType.ValueFalse);
 
                     default:
                         return base.CheckKeyword(keyword);
@@ -234,7 +265,7 @@ namespace Eval4.Excel
             }
         }
 
-        protected override void ParseRight(Token<ExcelToken> tk, int opPrecedence, IHasValue Acc, ref IHasValue valueLeft)
+        protected override void ParseRight(Token tk, int opPrecedence, IHasValue Acc, ref IHasValue valueLeft)
         {
             var tt = tk.Type;
             switch (tt)
@@ -255,7 +286,7 @@ namespace Eval4.Excel
             }
         }
 
-        protected override int GetPrecedence(Token<ExcelToken> token, bool unary)
+        protected override int GetPrecedence(Token token, bool unary)
         {
             var tt = token.Type;
             //http://msdn.microsoft.com/en-us/library/aa691323(v=vs.71).aspx
@@ -348,6 +379,25 @@ namespace Eval4.Excel
                 default:
                     return 0;
             }
+        }
+
+        public override string ConvertToString(object value)
+        {
+            if (value is Cell)
+            {
+                return ConvertToString(((Cell)value).ValueObject);
+            }
+            else return base.ConvertToString(value);
+        }
+        public void SetCell(string cellName, string formula)
+        {
+            int x, y;
+            if (Cell.GetCellPos(cellName, out x, out y))
+            {
+                var cell = new Cell(this,x,y, formula);
+                SetVariable<Cell>(cellName, cell);
+            }
+            else throw new Exception(string.Format("Invalid Cell \"{0}\"", cellName));
         }
     }
 }

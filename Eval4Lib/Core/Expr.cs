@@ -2,27 +2,36 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Linq;
+
 namespace Eval4.Core
 {
     public abstract class Expr : IHasValue, IObserver
     {
-        internal List<IDisposable> mSubscribedTo = new List<IDisposable>();
         internal List<Subscription> mSubscribedBy = new List<Subscription>();
-
-        public Expr(IHasValue p0, params IHasValue[] parameters)
+        internal List<Dependency> mDependencies = new List<Dependency>();
+        internal List<IDisposable> mSubscribedTo = new List<IDisposable>();
+        
+        public Expr(Dependency p0, params Dependency[] parameters)
         {
-            if (p0 != null)
-            {
-                mSubscribedTo.Add(p0.Subscribe(this));
-            }
+            AddDependency(p0);
             if (parameters != null)
             {
-                foreach (IHasValue p1 in parameters)
+                foreach (Dependency p1 in parameters)
                 {
-                    if (p1 != null) mSubscribedTo.Add(p1.Subscribe(this));
+                    AddDependency(p1);
                 }
             }
 
+        }
+
+        private void AddDependency(Dependency p0)
+        {
+            if (p0 != null)
+            {
+                mDependencies.Add(p0);
+                if (p0.Expr != null) mSubscribedTo.Add(p0.Expr.Subscribe(this));
+            }
         }
 
         public abstract object ObjectValue { get; }
@@ -37,15 +46,7 @@ namespace Eval4.Core
         public abstract Type ValueType { get; }
 
         public abstract string ShortName { get; }
-
-        public virtual IEnumerable<Dependency> Dependencies
-        {
-            get
-            {
-                yield break;
-            }
-        }
-
+        
         void IObserver.OnValueChanged()
         {
             RaiseValueChanged();
@@ -56,6 +57,14 @@ namespace Eval4.Core
             foreach (var subscription in mSubscribedBy)
             {
                 subscription.mObserver.OnValueChanged();
+            }
+        }
+
+        public IEnumerable<Dependency> Dependencies
+        {
+            get
+            {
+                return this.mDependencies.ToArray();
             }
         }
     }
@@ -81,7 +90,7 @@ namespace Eval4.Core
     {
         public abstract T Value { get; }
 
-        public Expr(IHasValue p0, params IHasValue[] parameters)
+        public Expr(Dependency p0, params Dependency[] parameters)
             : base(p0, parameters)
         {
         }
@@ -134,7 +143,7 @@ namespace Eval4.Core
         private IHasValue withEventsField_mResultValue;
 
         public CallMethodExpr(IHasValue baseObject, MemberInfo method, List<IHasValue> @params, Delegate[] casts)
-            : base(baseObject, @params == null ? null : @params.ToArray())
+            : base(new Dependency("baseobject", baseObject), Dependency.Group("parameter", @params))
         {
             if (@params == null)
                 @params = new List<IHasValue>();
@@ -295,19 +304,6 @@ namespace Eval4.Core
         {
             get { return "CallMethod"; }
         }
-
-        public override IEnumerable<Dependency> Dependencies
-        {
-            get
-            {
-                if (mBaseValue != null) yield return new Dependency("base", mBaseValue);
-                for (int i = 0; i < mParams.Length; i++)
-                {
-                    yield return new Dependency("#" + i, mParams[i]);
-                }
-            }
-        }
-
     }
 
     public class GetArrayEntryExpr<T> : Expr<T>
@@ -339,7 +335,7 @@ namespace Eval4.Core
         }
 
         public GetArrayEntryExpr(IHasValue array, List<IHasValue> @params)
-            : base(array, @params.ToArray())
+            : base(new Dependency("Array", array), Dependency.Group("index", @params))
         {
             IHasValue[] newParams = @params.ToArray();
             int[] newValues = new int[@params.Count];
@@ -378,19 +374,6 @@ namespace Eval4.Core
             //if (ValueChanged != null) ValueChanged(sender, e);
         }
 
-
-        public override IEnumerable<Dependency> Dependencies
-        {
-            get
-            {
-                yield return new Dependency("Array", mArray);
-                for (int i = 0; i < mValues.Length; i++)
-                {
-                    yield return new Dependency("P" + i, mParams[i]);
-                }
-            }
-        }
-
         public override string ShortName
         {
             get { return "ArrayEntry[]"; }
@@ -405,7 +388,7 @@ namespace Eval4.Core
         private IHasValue elseExpr;
 
         public OperatorIfExpr(IHasValue ifExpr, IHasValue thenExpr, IHasValue elseExpr)
-            : base(ifExpr, thenExpr, elseExpr)
+            : base(new Dependency("if", ifExpr), new Dependency("then", thenExpr), new Dependency("else", elseExpr))
         {
             this.ifExpr = ifExpr;
             this.thenExpr = thenExpr;
@@ -426,17 +409,6 @@ namespace Eval4.Core
             }
         }
 
-        public override IEnumerable<Dependency> Dependencies
-        {
-            get
-            {
-                yield return new Dependency("if", ifExpr);
-                yield return new Dependency("then ", thenExpr);
-                yield return new Dependency("else", elseExpr);
-
-            }
-        }
-
         public override string ShortName
         {
             get { return "OperatorIf"; }
@@ -450,7 +422,7 @@ namespace Eval4.Core
         private Func<P1, T> mDelegate;
 
         public DelegateExpr(IHasValue<P1> p1, Func<P1, T> dlg)
-            : base(p1)
+            : base(new Dependency("p1", p1))
         {
             System.Diagnostics.Debug.Assert(dlg != null);
             mP1 = p1;
@@ -470,13 +442,6 @@ namespace Eval4.Core
             get { return "DelegateExpr"; }
         }
 
-        public override IEnumerable<Dependency> Dependencies
-        {
-            get
-            {
-                yield return new Dependency("p1", mP1);
-            }
-        }
     }
 
     internal class DelegateExpr<P1, P2, T> : Expr<T>
@@ -486,7 +451,7 @@ namespace Eval4.Core
         private Func<P1, P2, T> mDelegate;
 
         public DelegateExpr(IHasValue<P1> p1, IHasValue<P2> p2, Func<P1, P2, T> dlg)
-            : base(p1, p2)
+            : base(new Dependency("p1", p1), new Dependency("p2", p2))
         {
             mP1 = p1;
             mP2 = p2;
@@ -502,15 +467,6 @@ namespace Eval4.Core
         public override string ShortName
         {
             get { return "DelegateExpr"; }
-        }
-
-        public override IEnumerable<Dependency> Dependencies
-        {
-            get
-            {
-                yield return new Dependency("p1", mP1);
-                yield return new Dependency("p2", mP2);
-            }
         }
     }
 

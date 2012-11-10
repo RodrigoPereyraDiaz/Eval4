@@ -33,29 +33,29 @@ namespace Eval4.VB
             get { return true; }
         }
 
-        public override Token<VbTokenType> ParseToken()
+        public override Token ParseToken()
         {
             //TODO:Check we advance
             switch (mCurChar)
             {
                 case '%':
                     NextChar();
-                    return NewToken(VbTokenType.OperatorPercent);
+                    return new Token(VbTokenType.OperatorPercent);
 
                 case '=':
                     NextChar();
-                    return NewToken(TokenType.OperatorEQ);
+                    return new Token(TokenType.OperatorEQ);
 
                 case '#':
                     return ParseDate();
 
                 case '&':
                     NextChar();
-                    return NewToken(TokenType.OperatorConcat);
+                    return new Token(TokenType.OperatorConcat);
 
                 case '\\':
                     NextChar();
-                    return NewToken(VbTokenType.IntegerDiv);
+                    return new Token(VbTokenType.IntegerDiv);
 
                 default:
                     return base.ParseToken();
@@ -63,7 +63,7 @@ namespace Eval4.VB
             }
         }
 
-        internal Token<VbTokenType> ParseDate()
+        internal Token ParseDate()
         {
             var sb = new StringBuilder();
             NextChar();
@@ -75,7 +75,7 @@ namespace Eval4.VB
             }
             if (mCurChar != '#')
             {
-                return NewToken(TokenType.SyntaxError, "Missing character # at the end of the date literal.");
+                return new Token(TokenType.SyntaxError, "Missing character # at the end of the date literal.");
             }
             else
             {
@@ -84,46 +84,46 @@ namespace Eval4.VB
 
                 if (!DateTime.TryParse(sb.ToString(), out ignoreResult))
                 {
-                    return NewToken(TokenType.SyntaxError, "Invalid date literal. Expcecting the format #yyyy/mm/dd#");
+                    return new Token(TokenType.SyntaxError, "Invalid date literal. Expcecting the format #yyyy/mm/dd#");
                 }
             }
-            return NewToken(TokenType.ValueDate, sb.ToString());
+            return new Token(TokenType.ValueDate, sb.ToString());
         }
 
 
 
-        public override Token<VbTokenType> CheckKeyword(string keyword)
+        public override Token CheckKeyword(string keyword)
         {
             switch (keyword.ToString())
             {
                 case "and":
-                    return NewToken(TokenType.OperatorAnd);
+                    return new Token(TokenType.OperatorAnd);
 
                 case "andalso":
-                    return NewToken(TokenType.OperatorAndAlso);
+                    return new Token(TokenType.OperatorAndAlso);
 
                 case "or":
-                    return NewToken(TokenType.OperatorOr);
+                    return new Token(TokenType.OperatorOr);
 
                 case "orelse":
-                    return NewToken(TokenType.OperatorOrElse);
+                    return new Token(TokenType.OperatorOrElse);
 
                 case "xor":
-                    return NewToken(TokenType.OperatorXor);
+                    return new Token(TokenType.OperatorXor);
 
                 case "not":
-                    return NewToken(TokenType.OperatorNot);
+                    return new Token(TokenType.OperatorNot);
 
                 case "true":
                 case "yes":
-                    return NewToken(TokenType.ValueTrue);
+                    return new Token(TokenType.ValueTrue);
 
                 case "if":
-                    return NewToken(TokenType.OperatorIf);
+                    return new Token(TokenType.OperatorIf);
 
                 case "false":
                 case "no":
-                    return NewToken(TokenType.ValueFalse);
+                    return new Token(TokenType.ValueFalse);
 
                 default:
                     return base.CheckKeyword(keyword);
@@ -205,7 +205,7 @@ namespace Eval4.VB
         //}
 
 
-        protected override void ParseRight(Token<VbTokenType> tk, int opPrecedence, IHasValue Acc, ref IHasValue valueLeft)
+        protected override void ParseRight(Token tk, int opPrecedence, IHasValue Acc, ref IHasValue valueLeft)
         {
             switch (tk.Type)
             {
@@ -236,7 +236,7 @@ namespace Eval4.VB
 
         }
 
-        protected override int GetPrecedence(Token<VbTokenType> token, bool unary)
+        protected override int GetPrecedence(Token token, bool unary)
         {
             var tt = token;
             //if (unary)

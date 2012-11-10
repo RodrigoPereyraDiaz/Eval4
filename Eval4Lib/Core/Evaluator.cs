@@ -10,7 +10,7 @@ namespace Eval4.Core
     {
         internal List<object> mEnvironmentFunctionsList;
         public bool RaiseVariableNotFoundException;
-        internal Dictionary<string, IVariable> mVariableBag;
+        private Dictionary<string, IVariable> mVariableBag;
         internal Dictionary<TokenType, List<Declaration>> mBinaryDeclarations;
         internal Dictionary<TokenType, List<Declaration>> mUnaryDeclarations;
         internal Dictionary<TypePair, Declaration> mImplicitCasts;
@@ -22,7 +22,7 @@ namespace Eval4.Core
         protected int mPos;
         public char mCurChar;
         public int startpos;
-        public Token<T> mCurToken;
+        public Token mCurToken;
 
         public Evaluator()
         {
@@ -293,13 +293,13 @@ namespace Eval4.Core
             }
         }
 
-        public Token<T> NewToken(TokenType type, string value = null)
-        {
-            var result = NewToken();
-            result.Type = type;
-            if (value != null) result.ValueString = value;
-            return result;
-        }
+        //public Token new Token(TokenType type, object value = null)
+        //{
+        //    var result = new Token();
+        //    result.Type = type;
+        //    result.ValueObject = value;
+        //    return result;
+        //}
 
         abstract internal protected EvaluatorOptions Options { get; }
 
@@ -391,10 +391,6 @@ namespace Eval4.Core
         public object Eval(string formula)
         {
             IHasValue parsed = InternalParse(formula);
-            if (parsed.ValueType == typeof(SyntaxError))
-            {
-                //                throw ?
-            }
             return parsed.ObjectValue;
         }
 
@@ -437,12 +433,12 @@ namespace Eval4.Core
 
         public abstract bool UseParenthesisForArrays { get; }
 
-        public virtual Token<T> CheckKeyword(string keyword)
+        public virtual Token CheckKeyword(string keyword)
         {
-            return NewToken(TokenType.ValueIdentifier, keyword);
+            return new Token(TokenType.ValueIdentifier, keyword);
         }
 
-        public virtual Token<T> ParseToken()
+        public virtual Token ParseToken()
         {
             switch (mCurChar)
             {
@@ -451,85 +447,85 @@ namespace Eval4.Core
                 case '\r':
                 case '\n':
                     NextChar();
-                    return NewToken(TokenType.Undefined);
+                    return new Token(TokenType.Undefined);
 
                 case '\0': //null:
-                    return NewToken(TokenType.Eof);
+                    return new Token(TokenType.Eof);
 
                 case '-':
                     NextChar();
 
-                    return NewToken(TokenType.OperatorMinus);
+                    return new Token(TokenType.OperatorMinus);
                 case '+':
                     NextChar();
-                    return NewToken(TokenType.OperatorPlus);
+                    return new Token(TokenType.OperatorPlus);
                 case '*':
                     NextChar();
-                    return NewToken(TokenType.OperatorMultiply);
+                    return new Token(TokenType.OperatorMultiply);
                 case '/':
                     NextChar();
-                    return NewToken(TokenType.OperatorDivide);
+                    return new Token(TokenType.OperatorDivide);
                 case '(':
                     NextChar();
-                    return NewToken(TokenType.OpenParenthesis);
+                    return new Token(TokenType.OpenParenthesis);
                 case ')':
                     NextChar();
-                    return NewToken(TokenType.CloseParenthesis);
+                    return new Token(TokenType.CloseParenthesis);
                 case '<':
                     NextChar();
                     if (mCurChar == '=')
                     {
                         NextChar();
-                        return NewToken(TokenType.OperatorLE);
+                        return new Token(TokenType.OperatorLE);
                     }
                     else if (mCurChar == '>')
                     {
                         NextChar();
-                        return NewToken(TokenType.OperatorNE);
+                        return new Token(TokenType.OperatorNE);
                     }
                     else
                     {
-                        return NewToken(TokenType.OperatorLT);
+                        return new Token(TokenType.OperatorLT);
                     }
                 case '>':
                     NextChar();
                     if (mCurChar == '=')
                     {
                         NextChar();
-                        return NewToken(TokenType.OperatorGE);
+                        return new Token(TokenType.OperatorGE);
                     }
                     else
                     {
-                        return NewToken(TokenType.OperatorGT);
+                        return new Token(TokenType.OperatorGT);
                     }
                 case ',':
                     NextChar();
-                    return NewToken(TokenType.Comma);
+                    return new Token(TokenType.Comma);
                 case '.':
                     NextChar();
                     if (mCurChar >= '0' && mCurChar <= '9') return ParseNumber(afterDot: true);
-                    else return NewToken(TokenType.Dot);
+                    else return new Token(TokenType.Dot);
                 case '\'':
                 case '"':
                     return ParseString(true);
                 case '[':
                     NextChar();
-                    return NewToken(TokenType.OpenBracket);
+                    return new Token(TokenType.OpenBracket);
                 case ']':
                     NextChar();
-                    return NewToken(TokenType.CloseBracket);
+                    return new Token(TokenType.CloseBracket);
                 case ';':
                     NextChar();
-                    return NewToken(TokenType.SemiColon);
+                    return new Token(TokenType.SemiColon);
                 default:
                     if (mCurChar >= '0' && mCurChar <= '9') return ParseNumber();
                     else if (IsIdentifierFirstLetter(mCurChar)) return ParseIdentifierOrKeyword();
                     break;
             }
-            return NewToken(TokenType.UnrecognisedCharacter, mCurChar.ToString());
+            return new Token(TokenType.UnrecognisedCharacter, mCurChar.ToString());
         }
 
-        public virtual IHasValue ParseUnaryExpression(Token<T> token, int precedence)
+        public virtual IHasValue ParseUnaryExpression(Token token, int precedence)
         {
             IHasValue result = null;
             List<Declaration> declarations;
@@ -554,9 +550,9 @@ namespace Eval4.Core
             return ParseLeft(token, ref result);
         }
 
-        protected abstract int GetPrecedence(Token<T> tt, bool unary);
+        protected abstract int GetPrecedence(Token tt, bool unary);
 
-        protected virtual IHasValue ParseLeft(Token<T> token, ref IHasValue result)
+        protected virtual IHasValue ParseLeft(Token token, ref IHasValue result)
         {
             switch (token.Type)
             {
@@ -650,7 +646,7 @@ namespace Eval4.Core
             return NewUnexpectedToken();
         }
 
-        protected virtual void ParseRight(Token<T> tk, int opPrecedence, IHasValue acc, ref IHasValue valueLeft)
+        protected virtual void ParseRight(Token tk, int opPrecedence, IHasValue acc, ref IHasValue valueLeft)
         {
             var tt = tk.Type;
             if (tt == TokenType.Dot)
@@ -824,7 +820,7 @@ namespace Eval4.Core
             }
         }
 
-        internal Token<T> ParseNumber(bool afterDot = false)
+        internal Token ParseNumber(bool afterDot = false)
         {
             var sb = new StringBuilder();
             if (!afterDot)
@@ -848,15 +844,15 @@ namespace Eval4.Core
                     sb.Append(mCurChar);
                     NextChar();
                 }
-                return NewToken(TokenType.ValueDecimal, sb.ToString());
+                return new Token(TokenType.ValueDecimal, sb.ToString());
             }
             else
             {
-                return NewToken(TokenType.ValueInteger, sb.ToString());
+                return new Token(TokenType.ValueInteger, sb.ToString());
             }
         }
 
-        internal Token<T> ParseIdentifierOrKeyword()
+        internal Token ParseIdentifierOrKeyword()
         {
             var sb = new StringBuilder();
             // we eat at least one character
@@ -872,7 +868,7 @@ namespace Eval4.Core
             return mCurToken;
         }
 
-        internal Token<T> ParseString(bool InQuote)
+        internal Token ParseString(bool InQuote)
         {
             var sb = new StringBuilder();
             char OriginalChar = '\0';
@@ -895,7 +891,7 @@ namespace Eval4.Core
                     else
                     {
                         //End of String
-                        return NewToken(TokenType.ValueString, sb.ToString());
+                        return new Token(TokenType.ValueString, sb.ToString());
                     }
                 }
                 else if (mCurChar == '%')
@@ -945,7 +941,7 @@ namespace Eval4.Core
 
             if (InQuote)
             {
-                return NewToken(TokenType.SyntaxError, "Incomplete string, missing " + OriginalChar + "; String started");
+                return new Token(TokenType.SyntaxError, "Incomplete string, missing " + OriginalChar + "; String started");
             }
             if (sb.Length > 0 && bits.Count > 0)
             {
@@ -957,7 +953,7 @@ namespace Eval4.Core
                     else sb.Append((o as IHasValue).ObjectValue);
                 }
             }
-            return NewToken(TokenType.ValueString, sb.ToString());
+            return new Token(TokenType.ValueString, sb.ToString());
         }
 
         internal bool Expect(TokenType tokenType, string msg, ref IHasValue error)
@@ -1000,7 +996,7 @@ namespace Eval4.Core
         private IHasValue ParseTemplate()
         {
             var token = ParseString(false);
-            return (IHasValue)token.ValueObject;
+            return (IHasValue)token.Value;
         }
 
         internal IHasValue ParseExpr(IHasValue acc, int precedence)
@@ -1022,17 +1018,10 @@ namespace Eval4.Core
         {
             while (true)
             {
-                if (valueLeft.ValueType == typeof(SyntaxError)) return valueLeft;
-                //TokenType tt = default(TokenType);
-                //tt = mCurToken.Type;                
-                int opPrecedence;
-                if (mCurToken.Type == TokenType.Eof)
-                    opPrecedence = -1;
-                else
-                {
-                    opPrecedence = GetPrecedence(mCurToken, unary: false);
-                    if (opPrecedence < 0) opPrecedence = 0;
-                }
+                if (mCurToken.Type == TokenType.Eof || valueLeft.ValueType == typeof(SyntaxError)) return valueLeft;
+                
+                int opPrecedence = GetPrecedence(mCurToken, unary: false);
+
                 if (precedence >= opPrecedence)
                 {
                     // if on we have twice the same operator precedence it is more natural to calculate the left operator first
@@ -1462,19 +1451,6 @@ namespace Eval4.Core
             }
         }
 
-        public Token<T> NewToken(T customTokenType)
-        {
-            var result = new Token<T>();
-            result.Type = TokenType.Custom;
-            result.CustomType = customTokenType;
-            return result;
-        }
-
-        public Token<T> NewToken()
-        {
-            return new Token<T>();
-        }
-
         Variable<T> IEvaluator.GetVariable<T>(string variableName)
         {
             return (Variable<T>)mVariableBag[variableName];
@@ -1507,6 +1483,39 @@ namespace Eval4.Core
         {
             throw new NotImplementedException();
         }
+
+        public class Token
+        {
+            public TokenType Type { get; set; }
+            public T CustomType { get; set; }
+            public Object Value { get; set; }
+
+            public Token(TokenType tokenType, object value = null)
+            {
+                this.Type = tokenType;
+                this.Value = value;
+            }
+
+            public Token(T customType, object value = null)
+            {
+                this.Type = TokenType.Custom;
+                this.CustomType = customType;
+                this.Value = value;
+            }
+
+            public String ValueString
+            {
+                get { return Value == null ? null : Value.ToString(); }
+            }
+
+            public override string ToString()
+            {
+                return (Type == TokenType.Custom ? CustomType.ToString() : Type.ToString())
+                    + " " + (String.IsNullOrEmpty(ValueString) ? Value : ValueString);
+            }
+
+        }
+
     }
 
     public enum EvaluatorOptions

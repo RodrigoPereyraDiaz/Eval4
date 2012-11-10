@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Eval4.Core
 {
@@ -51,6 +52,12 @@ namespace Eval4.Core
         {
             this.Name = name;
             this.Expr = value;
+        }
+
+        internal static Dependency[] Group(string groupname, IEnumerable<IHasValue> @params)
+        {
+            if (@params == null) return new Dependency[] { };
+            return @params.Select((p, n) => new Dependency(groupname + (n + 1), p)).ToArray();
         }
     }
 

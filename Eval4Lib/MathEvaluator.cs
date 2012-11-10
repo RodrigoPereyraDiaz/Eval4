@@ -17,23 +17,6 @@ namespace Eval4.Math
 
     }
 
-    //public Matrix ElementWiseAdd(Matrix m2)
-    //public Matrix ElementWiseSubtract(Matrix m2)
-    //public Matrix ElementWiseMultiply(Matrix m2)
-    //public Matrix ElementWiseDivide(Matrix m2)
-    //public Matrix ElementWisePower(Matrix m2)
-
-    //public Matrix ScalarAdd(int n)
-    //public Matrix ScalarSubtract(int n)
-    //public Matrix ScalarMultiply(int n)
-    //public Matrix ScalarDivide(int n)
-    //public Matrix ScalarPower(int n)
-
-    //public Matrix ScalarNeg()
-    //public Matrix ScalarInverse()
-
-    //public Matrix Product(Matrix m2)
-
     public class MathEvaluator : Core.Evaluator<MathToken>
     {
         protected internal override EvaluatorOptions Options
@@ -64,81 +47,81 @@ namespace Eval4.Math
             get { return false; }
         }
 
-        public override Token<MathToken> ParseToken()
+        public override Token ParseToken()
         {
             switch (mCurChar)
             {
                 case '%':
                     NextChar();
-                    return NewToken(TokenType.OperatorModulo);
+                    return new Token(TokenType.OperatorModulo);
 
                 case '&':
                     NextChar();
                     if (mCurChar == '&')
                     {
                         NextChar();
-                        return NewToken(TokenType.OperatorAndAlso);
+                        return new Token(TokenType.OperatorAndAlso);
                     }
-                    return NewToken(TokenType.OperatorAnd);
+                    return new Token(TokenType.OperatorAnd);
 
                 case '?':
                     NextChar();
-                    return NewToken(TokenType.OperatorIf);
+                    return new Token(TokenType.OperatorIf);
 
                 case '=':
                     NextChar();
                     if (mCurChar == '=')
                     {
                         NextChar();
-                        return NewToken(TokenType.OperatorEQ);
+                        return new Token(TokenType.OperatorEQ);
                     }
-                    return NewToken(TokenType.OperatorAssign);
+                    return new Token(TokenType.OperatorAssign);
 
                 case '!':
                     NextChar();
                     if (mCurChar == '=')
                     {
                         NextChar();
-                        return NewToken(TokenType.OperatorNE);
+                        return new Token(TokenType.OperatorNE);
                     }
-                    return NewToken(TokenType.OperatorNot);
+                    return new Token(TokenType.OperatorNot);
 
                 case '^':
                     NextChar();
-                    return NewToken(TokenType.OperatorXor);
+                    return new Token(TokenType.OperatorXor);
 
                 case '|':
                     NextChar();
                     if (mCurChar == '|')
                     {
                         NextChar();
-                        return NewToken(TokenType.OperatorOrElse);
+                        return new Token(TokenType.OperatorOrElse);
                     }
-                    return NewToken(TokenType.OperatorOr);
+                    return new Token(TokenType.OperatorOr);
 
                 case ':':
                     NextChar();
-                    return NewToken(TokenType.OperatorColon);
+                    return new Token(TokenType.OperatorColon);
 
                 case '\'':
                     NextChar();
-                    return NewToken(MathToken.Transpose);
+                    return new Token(MathToken.Transpose);
                 default:
                     return base.ParseToken();
 
             }
         }
 
-        public override Token<MathToken> CheckKeyword(string keyword)
+        public override Token CheckKeyword(string keyword)
         {
             {
                 switch (keyword.ToString())
                 {
                     case "true":
-                        return NewToken(TokenType.ValueTrue);
+                        return new Token(TokenType.ValueTrue);
 
                     case "false":
-                        return NewToken(TokenType.ValueFalse);
+                        return new Token(TokenType.ValueFalse);
 
                     default:
                         return base.CheckKeyword(keyword);
@@ -146,7 +129,7 @@ namespace Eval4.Math
             }
         }
 
-        protected override IHasValue ParseLeft(Token<MathToken> token, ref IHasValue result)
+        protected override IHasValue ParseLeft(Token token, ref IHasValue result)
         {
             switch (token.Type)
             {
@@ -158,7 +141,7 @@ namespace Eval4.Math
             }
         }
 
-        protected override void ParseRight(Token<MathToken> tk, int opPrecedence, IHasValue Acc, ref IHasValue valueLeft)
+        protected override void ParseRight(Token tk, int opPrecedence, IHasValue Acc, ref IHasValue valueLeft)
         {
             var tt = tk.Type;
             switch (tt)
@@ -187,7 +170,7 @@ namespace Eval4.Math
             }
         }
 
-        protected override int GetPrecedence(Token<MathToken> token, bool unary)
+        protected override int GetPrecedence(Token token, bool unary)
         {
             var tt = token.Type;
             //http://msdn.microsoft.com/en-us/library/aa691323(v=vs.71).aspx

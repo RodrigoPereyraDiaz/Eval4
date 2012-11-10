@@ -13,15 +13,18 @@ namespace Eval4.ConsoleDemo
     {
         private static string scenario;
         private static string mFormula;
-        private static Eval4.Excel.ExcelSheet sheet;
         private static IEvaluator ev;
 
         static void Main(string[] args)
         {
             //SetLanguage("math");
             //TestFormula("[1,2,3;4,5,6]", "[1,2,3;4,5,6]");
-            SetLanguage("javascript");
-            TestFormula("1+1", "2.000");
+            //SetLanguage("javascript");
+            //TestFormula("1+1", "2.000");
+            //RunTemplate("specs.txt");
+            SetLanguage("excel");
+            ((Excel.ExcelEvaluator)ev).SetCell("A1", "1");
+            TestFormula("A1+A1", "2.000");
             RunTemplate("specs.txt");
         }
 
@@ -70,10 +73,12 @@ namespace Eval4.ConsoleDemo
                             mFormula = restOfLine;
                             break;
                         case "cell":
-                            SetCell(cmd2, restOfLine);
+                            WriteCell(cmd2, restOfLine);
                             break;
                         case "expectedresult":
-                            TestFormula(mFormula, restOfLine);
+                        case "expectedvalue":
+                            if (string.IsNullOrEmpty(cmd2)) cmd2 = mFormula;
+                            TestFormula(cmd2, restOfLine);
                             break;
                         case "set":
                             SetVariable(cmd2, restOfLine);
@@ -97,10 +102,15 @@ namespace Eval4.ConsoleDemo
             Console.ReadKey();
         }
 
-        private static void SetCell(string cellName, string formula)
+        private static void WriteCell(string CellNo, string formula)
         {
-            
+            Write(ConsoleColor.Gray, "Cell ");
+            Write(ConsoleColor.White, CellNo);
+            Write(ConsoleColor.Gray, ": ");
+            WriteLine(ConsoleColor.White, formula);
+            ((Excel.ExcelEvaluator)ev).SetCell(CellNo, formula);
         }
+
 
         private static void SetLanguage(string language)
         {
@@ -163,6 +173,7 @@ namespace Eval4.ConsoleDemo
         private static void SetVariable(string variableName, string formula)
         {
             Write(ConsoleColor.Gray, "Set " + variableName + ":");
+            Write(ConsoleColor.Gray, formula);
             try
             {
                 var parsed = ev.Parse(formula);
@@ -171,7 +182,6 @@ namespace Eval4.ConsoleDemo
             }
             catch (Exception ex)
             {
-                WriteLine(ConsoleColor.Red, formula);
                 WriteLine(ConsoleColor.Red, ex.GetType().Name);
             }
 

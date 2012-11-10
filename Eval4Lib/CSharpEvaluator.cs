@@ -7,6 +7,7 @@ namespace Eval4.CSharp
 {
     public enum CSharpCustomToken
     {
+        Coalesce,
         None
     }
 
@@ -31,81 +32,82 @@ namespace Eval4.CSharp
             get { return false; }
         }
 
-        //protected override List<TypeHandler> GetTypeHandlers()
-        //{
-        //    return base.GetTypeHandlers();
-        //}
-
-        public override Token<CSharpCustomToken> ParseToken()
+        public override Token ParseToken()
         {
             switch (mCurChar)
             {
                 case '%':
                     NextChar();
-                    return NewToken(TokenType.OperatorModulo);
+                    return new Token(TokenType.OperatorModulo);
+
 
                 case '&':
                     NextChar();
                     if (mCurChar == '&')
                     {
                         NextChar();
-                        return NewToken(TokenType.OperatorAndAlso);
+                        return new Token(TokenType.OperatorAndAlso);
                     }
-                    return NewToken(TokenType.OperatorAnd);
+                    return new Token(TokenType.OperatorAnd);
 
                 case '?':
                     NextChar();
-                    return NewToken(TokenType.OperatorIf);
+                    if (mCurChar == '?')
+                    {
+                        NextChar();
+                        return new Token(CSharpCustomToken.Coalesce);
+                    }
+                    else return new Token(TokenType.OperatorIf);
 
                 case '=':
                     NextChar();
                     if (mCurChar == '=')
                     {
                         NextChar();
-                        return NewToken(TokenType.OperatorEQ);
+                        return new Token(TokenType.OperatorEQ);
                     }
-                    return NewToken(TokenType.OperatorAssign);
+                    return new Token(TokenType.OperatorAssign);
 
                 case '!':
                     NextChar();
                     if (mCurChar == '=')
                     {
                         NextChar();
-                        return NewToken(TokenType.OperatorNE);
+                        return new Token(TokenType.OperatorNE);
                     }
-                    return NewToken(TokenType.OperatorNot);
+                    return new Token(TokenType.OperatorNot);
 
                 case '^':
                     NextChar();
-                    return NewToken(TokenType.OperatorXor);
+                    return new Token(TokenType.OperatorXor);
 
                 case '|':
                     NextChar();
                     if (mCurChar == '|')
                     {
                         NextChar();
-                        return NewToken(TokenType.OperatorOrElse);
+                        return new Token(TokenType.OperatorOrElse);
                     }
-                    return NewToken(TokenType.OperatorOr);
+                    return new Token(TokenType.OperatorOr);
                 case ':':
                     NextChar();
-                    return NewToken(TokenType.OperatorColon);
+                    return new Token(TokenType.OperatorColon);
                 default:
                     return base.ParseToken();
 
             }
         }
 
-        public override Token<CSharpCustomToken> CheckKeyword(string keyword)
+        public override Token CheckKeyword(string keyword)
         {
             {
                 switch (keyword.ToString())
                 {
                     case "true":
-                        return NewToken(TokenType.ValueTrue);
+                        return new Token(TokenType.ValueTrue);
 
                     case "false":
-                        return NewToken(TokenType.ValueFalse);
+                        return new Token(TokenType.ValueFalse);
 
                     default:
                         return base.CheckKeyword(keyword);
@@ -113,7 +115,7 @@ namespace Eval4.CSharp
             }
         }
 
-        protected override void ParseRight(Token<CSharpCustomToken> tk, int opPrecedence, IHasValue Acc, ref IHasValue valueLeft)
+        protected override void ParseRight(Token tk, int opPrecedence, IHasValue Acc, ref IHasValue valueLeft)
         {
             var tt = tk.Type;
             switch (tt)
@@ -134,7 +136,7 @@ namespace Eval4.CSharp
             }
         }
 
-        protected override int GetPrecedence(Token<CSharpCustomToken> token, bool unary)
+        protected override int GetPrecedence(Token token, bool unary)
         {
             var tt = token.Type;
             //http://msdn.microsoft.com/en-us/library/aa691323(v=vs.71).aspx
