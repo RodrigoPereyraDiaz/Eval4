@@ -1,4 +1,4 @@
-﻿namespace Eval4.DemoCSharp
+﻿namespace Eval4.Demo
 {
     partial class ExcelSheet
     {
@@ -28,9 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.textBox1 = new Eval4.DemoCSharp.FormulaTextBox();
+            this.textBox1 = new Eval4.Demo.FormulaTextBox();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.panel2 = new Eval4.DemoCSharp.CellsViewer();
+            this.panel2 = new Eval4.Demo.CellsViewer();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 

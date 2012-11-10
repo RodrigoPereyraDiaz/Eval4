@@ -7,7 +7,7 @@ namespace Eval4.Tests
     [TestClass]
     public class VbTests : BaseTest
     {
-        [TestMethod]
+        [TestMethod, TestCategory("VB")]
         public void TestArithmetic()
         {
             TestVBFormula("3", 3);
@@ -76,19 +76,19 @@ namespace Eval4.Tests
             TestVBFormula("#2012/12/25#", christmas);
         }
 
-        [TestMethod]
-        public void TestDateArithmetic()
-        {
-            TestVBFormula("#2012/12/25# + 1", christmas.AddDays(1));
-            TestVBFormula("1 + #2012/12/25#", christmas.AddDays(1));
-            TestVBFormula("#2012/12/25# - 1", christmas.AddDays(-1));
-        }
+        //[TestMethod]
+        //public void TestDateArithmetic()
+        //{
+        //    TestVBFormula("#2012/12/25# + 1", christmas.AddDays(1));
+        //    TestVBFormula("1 + #2012/12/25#", christmas.AddDays(1));
+        //    TestVBFormula("#2012/12/25# - 1", christmas.AddDays(-1));
+        //}
 
-        [TestMethod]
-        public void TestTimeSpan()
-        {
-            TestVBFormula("#2012/12/25# - #2013/01/01#", new TimeSpan(-7, 0, 0, 0));
-        }
+        //[TestMethod]
+        //public void TestTimeSpan()
+        //{
+        //    TestVBFormula("#2012/12/25# - #2013/01/01#", new TimeSpan(-7, 0, 0, 0));
+        //}
 
         [TestMethod]
         public void StringConcat()

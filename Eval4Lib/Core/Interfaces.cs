@@ -3,43 +3,28 @@ using System.Collections.Generic;
 
 namespace Eval4.Core
 {
-    //public interface IVariableBag
-    //{
-    //    IHasValue GetVariable(string varname);
-    //}
+    public interface IEvaluator
+    {
+        void SetVariable<T>(string variableName, T variableValue);
+
+        Variable<T> GetVariable<T>(string variableName);
+
+        IHasValue Parse(string formula);
+        object Eval(string formula);
+
+        IHasValue<string> ParseTemplate(string template);
+        string EvalTemplate(string template);
+
+        string ConvertToString(object result);
+    }
 
     public interface IHasValue
     {
         object ObjectValue { get; }
         IDisposable Subscribe(IObserver observer);
-        Type SystemType { get; }
+        Type ValueType { get; }
         string ShortName { get; }
         IEnumerable<Dependency> Dependencies { get; }
-    }
-
-    public static class StaticIHasValue
-    {
-        public static IDisposable Subscribe(this IHasValue source, Action action)
-        {
-            return source.Subscribe(new SmallObserver(source, action));
-        }
-
-        public class SmallObserver : IObserver
-        {
-            private IHasValue mSource;
-            private Action mAction;
-            
-            public SmallObserver(IHasValue source, Action action)
-            {
-                mSource = source;
-                mAction = action;
-            }
-
-            public void OnValueChanged()
-            {
-                mAction();
-            }
-        }
     }
 
     public interface IHasValue<T> : IHasValue
@@ -69,4 +54,28 @@ namespace Eval4.Core
         }
     }
 
+    public static class IHasValueExtensionMethods
+    {
+        public static IDisposable Subscribe(this IHasValue source, Action action)
+        {
+            return source.Subscribe(new SimpleObserver(source, action));
+        }
+
+        public class SimpleObserver : IObserver
+        {
+            private IHasValue mSource;
+            private Action mAction;
+
+            public SimpleObserver(IHasValue source, Action action)
+            {
+                mSource = source;
+                mAction = action;
+            }
+
+            public void OnValueChanged()
+            {
+                mAction();
+            }
+        }
+    }
 }

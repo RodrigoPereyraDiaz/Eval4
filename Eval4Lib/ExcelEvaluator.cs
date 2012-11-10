@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Eval4
+namespace Eval4.Excel
 {
     public enum ExcelToken
     {
@@ -108,6 +108,11 @@ namespace Eval4
 
     }
 
+    public class ExcelSheet
+    {
+        
+    }
+
     public class ExcelEvaluator : Evaluator<ExcelToken>
     {
 
@@ -118,7 +123,7 @@ namespace Eval4
                 return EvaluatorOptions.BooleanLogic
                     | EvaluatorOptions.CaseSensitive
                     | EvaluatorOptions.DoubleValues
-                    | EvaluatorOptions.IntegerValues
+                    //| EvaluatorOptions.IntegerValues
                     | EvaluatorOptions.ObjectValues
                     | EvaluatorOptions.StringValues;
             }
@@ -240,7 +245,7 @@ namespace Eval4
                     if (!Expect(TokenType.OperatorColon, "Missing : in ? expression test ? valueIfTrue : valueIfFalse.", ref valueLeft))
                         return;
                     IHasValue elseExpr = ParseExpr(null, 0);
-                    var t = typeof(OperatorIfExpr<>).MakeGenericType(thenExpr.SystemType);
+                    var t = typeof(OperatorIfExpr<>).MakeGenericType(thenExpr.ValueType);
 
                     valueLeft = (IHasValue)Activator.CreateInstance(t, valueLeft, thenExpr, elseExpr);
                     break;

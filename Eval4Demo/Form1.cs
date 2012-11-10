@@ -7,7 +7,7 @@ using System.Data;
 using Eval4;
 using Eval4.Core;
 
-namespace Eval4.DemoCSharp
+namespace Eval4.Demo
 {
     /// <summary>
     /// Summary description for Form1.
@@ -16,7 +16,7 @@ namespace Eval4.DemoCSharp
     {
 
         // Required by the Windows Form Designer
-        private CSharpEvaluator ev;
+        private CSharp.CSharpEvaluator ev;
         private bool mInitializing;
         private Eval4.Core.IHasValue mFormula3;
 
@@ -83,7 +83,7 @@ namespace Eval4.DemoCSharp
         public Form1()
         {
             mInitializing = true;
-            ev = new Eval4.CSharpEvaluator();
+            ev = new Eval4.CSharp.CSharpEvaluator();
             //ev.AddEnvironmentFunctions(this);
             //ev.AddEnvironmentFunctions(new EvalFunctions());
             ev.SetVariable("EvalFunctions", new EvalFunctions());
@@ -202,13 +202,13 @@ namespace Eval4.DemoCSharp
             this.lblResults3 = new System.Windows.Forms.Label();
             this.panel3 = new System.Windows.Forms.Panel();
             this.label11 = new System.Windows.Forms.Label();
-            this.excelSheet1 = new Eval4.DemoCSharp.ExcelSheet();
-            this.excelSheet2 = new Eval4.DemoCSharp.ExcelSheet();
-            this.excelSheet3 = new Eval4.DemoCSharp.ExcelSheet();
-            this.evaluatorPanel1 = new Eval4.DemoCSharp.FormulaTab();
-            this.evaluatorPanel2 = new Eval4.DemoCSharp.FormulaTab();
-            this.evaluatorPanel3 = new Eval4.DemoCSharp.FormulaTab();
-            this.evaluatorPanel5 = new Eval4.DemoCSharp.FormulaTab();
+            this.excelSheet1 = new Eval4.Demo.ExcelSheet();
+            this.excelSheet2 = new Eval4.Demo.ExcelSheet();
+            this.excelSheet3 = new Eval4.Demo.ExcelSheet();
+            this.evaluatorPanel1 = new Eval4.Demo.FormulaTab();
+            this.evaluatorPanel2 = new Eval4.Demo.FormulaTab();
+            this.evaluatorPanel3 = new Eval4.Demo.FormulaTab();
+            this.evaluatorPanel5 = new Eval4.Demo.FormulaTab();
             this.TabControl1.SuspendLayout();
             this.tabExcel.SuspendLayout();
             this.tabControl2.SuspendLayout();
@@ -670,7 +670,7 @@ namespace Eval4.DemoCSharp
             this.evaluatorPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.evaluatorPanel1.Location = new System.Drawing.Point(0, 0);
             this.evaluatorPanel1.Name = "evaluatorPanel1";
-            this.evaluatorPanel1.PanelLanguage = Eval4.DemoCSharp.PanelLanguage.vb;
+            this.evaluatorPanel1.PanelLanguage = Eval4.Demo.PanelLanguage.vb;
             this.evaluatorPanel1.Size = new System.Drawing.Size(510, 474);
             this.evaluatorPanel1.TabIndex = 0;
             // 
@@ -679,7 +679,7 @@ namespace Eval4.DemoCSharp
             this.evaluatorPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.evaluatorPanel2.Location = new System.Drawing.Point(0, 0);
             this.evaluatorPanel2.Name = "evaluatorPanel2";
-            this.evaluatorPanel2.PanelLanguage = Eval4.DemoCSharp.PanelLanguage.csharp;
+            this.evaluatorPanel2.PanelLanguage = Eval4.Demo.PanelLanguage.csharp;
             this.evaluatorPanel2.Size = new System.Drawing.Size(510, 474);
             this.evaluatorPanel2.TabIndex = 0;
             // 
@@ -688,7 +688,7 @@ namespace Eval4.DemoCSharp
             this.evaluatorPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.evaluatorPanel3.Location = new System.Drawing.Point(0, 0);
             this.evaluatorPanel3.Name = "evaluatorPanel3";
-            this.evaluatorPanel3.PanelLanguage = Eval4.DemoCSharp.PanelLanguage.mathEval;
+            this.evaluatorPanel3.PanelLanguage = Eval4.Demo.PanelLanguage.mathEval;
             this.evaluatorPanel3.Size = new System.Drawing.Size(510, 474);
             this.evaluatorPanel3.TabIndex = 0;
             // 
@@ -697,7 +697,7 @@ namespace Eval4.DemoCSharp
             this.evaluatorPanel5.Dock = System.Windows.Forms.DockStyle.Fill;
             this.evaluatorPanel5.Location = new System.Drawing.Point(0, 0);
             this.evaluatorPanel5.Name = "evaluatorPanel5";
-            this.evaluatorPanel5.PanelLanguage = Eval4.DemoCSharp.PanelLanguage.experiments;
+            this.evaluatorPanel5.PanelLanguage = Eval4.Demo.PanelLanguage.experiments;
             this.evaluatorPanel5.Size = new System.Drawing.Size(510, 474);
             this.evaluatorPanel5.TabIndex = 0;
             // 
@@ -785,7 +785,7 @@ namespace Eval4.DemoCSharp
                     PictureBox1.Image = bm;
                 }
                 double mult = (2
-                    * (Math.PI / 256));
+                    * (System.Math.PI / 256));
                 double r = 0;
                 double g = 0;
                 double b = 0;

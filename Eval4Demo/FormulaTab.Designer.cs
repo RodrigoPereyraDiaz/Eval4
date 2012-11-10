@@ -1,4 +1,4 @@
-﻿namespace Eval4.DemoCSharp
+﻿namespace Eval4.Demo
 {
     partial class FormulaTab
     {

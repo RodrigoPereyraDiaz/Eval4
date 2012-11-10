@@ -8,7 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using Eval4.Core;
 
-namespace Eval4.DemoCSharp
+namespace Eval4.Demo
 {
     public partial class FormulaTab : UserControl
     {
@@ -28,15 +28,15 @@ namespace Eval4.DemoCSharp
             switch (PanelLanguage)
             {
                 case PanelLanguage.vb:
-                    ev = new VbEvaluator();
+                    ev = new VB.VbEvaluator();
                     items.Add("1+2*3");
                     break;
                 case PanelLanguage.csharp:
-                    ev = new CSharpEvaluator();
+                    ev = new CSharp.CSharpEvaluator();
                     //label1.Text = "Formula evaluator similar to C#";
                     break;
                 case PanelLanguage.mathEval:
-                    ev = new MathEvaluator();
+                    ev = new Math.MathEvaluator();
                     //label1.Text = "Formula evaluator similar to Matlab";
                     break;
                 case PanelLanguage.experiments:

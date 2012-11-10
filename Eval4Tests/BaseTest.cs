@@ -9,15 +9,15 @@ namespace Eval4
 {
     public class BaseTest
     {
-        public VbEvaluator evVB;
-        public CSharpEvaluator evCS;
-        public MathEvaluator evMath;
+        public VB.VbEvaluator evVB;
+        public CSharp.CSharpEvaluator evCS;
+        public Math.MathEvaluator evMath;
 
         public BaseTest()
         {
-            evVB = new VbEvaluator();
-            evCS = new CSharpEvaluator();
-            evMath = new MathEvaluator();
+            evVB = new VB.VbEvaluator();
+            evCS = new CSharp.CSharpEvaluator();
+            evMath = new Math.MathEvaluator();
         }
 
         public void TestVBFormula<T>(string formula, T expected)

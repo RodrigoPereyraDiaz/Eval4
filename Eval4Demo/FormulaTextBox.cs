@@ -5,7 +5,7 @@ using System.Text;
 using System.Diagnostics;
 using System.Windows.Forms;
 
-namespace Eval4.DemoCSharp
+namespace Eval4.Demo
 {
     class FormulaTextBox : TextBox
     {

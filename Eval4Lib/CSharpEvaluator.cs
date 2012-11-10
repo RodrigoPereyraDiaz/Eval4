@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Eval4.Core;
 
-namespace Eval4
+namespace Eval4.CSharp
 {
     public enum CSharpCustomToken
     {
@@ -124,7 +124,7 @@ namespace Eval4
                     if (!Expect(TokenType.OperatorColon, "Missing : in ? expression test ? valueIfTrue : valueIfFalse.", ref valueLeft))
                         return;
                     IHasValue elseExpr = ParseExpr(null, 1);
-                    var t = typeof(OperatorIfExpr<>).MakeGenericType(thenExpr.SystemType);
+                    var t = typeof(OperatorIfExpr<>).MakeGenericType(thenExpr.ValueType);
 
                     valueLeft = (IHasValue)Activator.CreateInstance(t, valueLeft, thenExpr, elseExpr);
                     break;

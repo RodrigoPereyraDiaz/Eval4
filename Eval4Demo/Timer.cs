@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Eval4.DemoCSharp
+namespace Eval4.Demo
 {
 	/// <summary>
 	/// Summary description for Timer.

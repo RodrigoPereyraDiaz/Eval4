@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Eval4.Core;
 
-namespace Eval4
+namespace Eval4.VB
 {
 
     public enum VbTokenType
@@ -52,6 +52,10 @@ namespace Eval4
                 case '&':
                     NextChar();
                     return NewToken(TokenType.OperatorConcat);
+
+                case '\\':
+                    NextChar();
+                    return NewToken(VbTokenType.IntegerDiv);
 
                 default:
                     return base.ParseToken();
@@ -218,7 +222,7 @@ namespace Eval4
                         case VbTokenType.IntegerDiv:
                             NextToken();
                             valueRight = ParseExpr(valueLeft, opPrecedence);
-                            if (EmitDelegateExpr(ref valueLeft, Acc, new Func<int, int, int>((a, b) => a / b))) return;
+                            if (EmitDelegateExpr(ref valueLeft, valueRight, new Func<int, int, int>((a, b) => a / b))) return;
                             break;
                     }
                     break;

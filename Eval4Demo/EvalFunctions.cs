@@ -1,7 +1,7 @@
 using System;
 using Eval4;
 
-namespace Eval4.DemoCSharp
+namespace Eval4.Demo
 {
     /// <summary>
     /// Summary description for EvalFunctions.
@@ -53,12 +53,12 @@ namespace Eval4.DemoCSharp
 
         public double Sin(double v)
         {
-            return Math.Sin(v);
+            return System.Math.Sin(v);
         }
 
         public double Cos(double v)
         {
-            return Math.Cos(v);
+            return System.Math.Cos(v);
         }
 
         public DateTime Now()
@@ -199,9 +199,9 @@ namespace Eval4.DemoCSharp
 
         public int Trunc(double value, int prec)
         {
-            value = (value - (0.5 / Math.Pow(10, prec)));
+            value = (value - (0.5 / System.Math.Pow(10, prec)));
             // Warning!!! Optional parameters not supported
-            return (int)(Math.Round(value, prec));
+            return (int)(System.Math.Round(value, prec));
         }
 
         public double Dec(object value)
@@ -211,7 +211,7 @@ namespace Eval4.DemoCSharp
 
         public double Round(object value)
         {
-            return Math.Round((double)(value));
+            return System.Math.Round((double)(value));
         }
 
         public string Chr(int c)
@@ -236,7 +236,7 @@ namespace Eval4.DemoCSharp
 
         public double Exp(double Base, double pexp)
         {
-            return Math.Pow(Base, pexp);
+            return System.Math.Pow(Base, pexp);
         }
 
         public string[] Split(string s, string delimiter)
@@ -269,12 +269,12 @@ namespace Eval4.DemoCSharp
 
         public double Sqrt(double v)
         {
-            return Math.Sqrt(v);
+            return System.Math.Sqrt(v);
         }
 
         public double Power(double v, double e)
         {
-            return Math.Pow(v, e);
+            return System.Math.Pow(v, e);
         }
 
         public System.Type SystemType

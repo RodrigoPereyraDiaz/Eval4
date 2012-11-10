@@ -14,14 +14,15 @@ namespace Eval4.Core
             if (p0 != null)
             {
                 mSubscribedTo.Add(p0.Subscribe(this));
-                if (parameters != null)
+            }
+            if (parameters != null)
+            {
+                foreach (IHasValue p1 in parameters)
                 {
-                    foreach (IHasValue p1 in parameters)
-                    {
-                        mSubscribedTo.Add(p1.Subscribe(this));
-                    }
+                    if (p1 != null) mSubscribedTo.Add(p1.Subscribe(this));
                 }
             }
+
         }
 
         public abstract object ObjectValue { get; }
@@ -33,7 +34,7 @@ namespace Eval4.Core
             return result;
         }
 
-        public abstract Type SystemType { get; }
+        public abstract Type ValueType { get; }
 
         public abstract string ShortName { get; }
 
@@ -90,7 +91,7 @@ namespace Eval4.Core
             get { return Value; }
         }
 
-        public override Type SystemType
+        public override Type ValueType
         {
             get { return typeof(T); }
         }
@@ -168,7 +169,7 @@ namespace Eval4.Core
                 Expression expr = null;
                 if (baseObject != null)
                 {
-                    var expectedType = typeof(IHasValue<>).MakeGenericType(baseObject.SystemType);
+                    var expectedType = typeof(IHasValue<>).MakeGenericType(baseObject.ValueType);
                     expr = Expression.MakeMemberAccess(Expression.Constant(baseObject), expectedType.GetProperty("Value"));
                     expr = Expression.Field(expr, (FieldInfo)method);
                 }
@@ -184,7 +185,7 @@ namespace Eval4.Core
             {
                 if (i < paramInfo.Length)
                 {
-                    var sourceType = mParams[i].SystemType;
+                    var sourceType = mParams[i].ValueType;
                     var targetType = paramInfo[i].ParameterType;
                     if (sourceType != targetType)
                     {
@@ -346,7 +347,7 @@ namespace Eval4.Core
             mArray = array;
             mParams = newParams;
             mValues = newValues;
-            mResultSystemType = array.SystemType.GetElementType();
+            mResultSystemType = array.ValueType.GetElementType();
         }
 
         public override T Value
@@ -409,7 +410,7 @@ namespace Eval4.Core
             this.ifExpr = ifExpr;
             this.thenExpr = thenExpr;
             this.elseExpr = elseExpr;
-            mSystemType = thenExpr.SystemType;
+            mSystemType = thenExpr.ValueType;
         }
 
         public override T Value

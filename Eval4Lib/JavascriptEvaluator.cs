@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Eval4
+namespace Eval4.Javascript
 {
     public enum JavascriptToken{
     }
@@ -118,7 +118,7 @@ namespace Eval4
                     if (!Expect(TokenType.OperatorColon, "Missing : in ? expression test ? valueIfTrue : valueIfFalse.", ref valueLeft))
                         return;
                     IHasValue elseExpr = ParseExpr(null, 0);
-                    var t = typeof(OperatorIfExpr<>).MakeGenericType(thenExpr.SystemType);
+                    var t = typeof(OperatorIfExpr<>).MakeGenericType(thenExpr.ValueType);
 
                     valueLeft = (IHasValue)Activator.CreateInstance(t, valueLeft, thenExpr, elseExpr);
                     break;

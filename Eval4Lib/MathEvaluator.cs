@@ -4,7 +4,7 @@ using System.Text;
 using Eval4.Core;
 using System.Linq;
 
-namespace Eval4
+namespace Eval4.Math
 {
     public enum MathToken
     {
@@ -55,6 +55,8 @@ namespace Eval4
             base.DeclareOperators();
             base.AddBinaryOperation<Matrix, Matrix, Matrix>(TokenType.OperatorPlus, (a, b) => a.ElementWiseAdd(b));
             base.AddBinaryOperation<Matrix, Matrix, Matrix>(TokenType.OperatorMultiply, (a, b) => a.Product(b));
+            base.AddBinaryOperation<Matrix, double, Matrix>(TokenType.OperatorMultiply, (a, b) => a.ScalarMultiply(b));
+            base.AddBinaryOperation<double, Matrix, Matrix>(TokenType.OperatorMultiply, (a, b) => b.ScalarMultiply(a));
         }
 
         public override bool UseParenthesisForArrays
@@ -502,7 +504,7 @@ namespace Eval4
 
         public Matrix ElementWisePower(Matrix m2)
         {
-            return this.ElementWiseOp(m2, (v1, v2) => Math.Pow(v1, v2));
+            return this.ElementWiseOp(m2, (v1, v2) => System.Math.Pow(v1, v2));
         }
 
         public Matrix ScalarOp(Func<double, double> func)
@@ -520,29 +522,29 @@ namespace Eval4
             return m2;
         }
 
-        public Matrix ScalarAdd(int n)
+        public Matrix ScalarAdd(double n)
         {
             return this.ScalarOp((v1) => v1 + n);
         }
 
-        public Matrix ScalarSubtract(int n)
+        public Matrix ScalarSubtract(double n)
         {
             return this.ScalarOp((v1) => v1 - n);
         }
 
-        public Matrix ScalarMultiply(int n)
+        public Matrix ScalarMultiply(double n)
         {
             return this.ScalarOp((v1) => v1 * n);
         }
 
-        public Matrix ScalarDivide(int n)
+        public Matrix ScalarDivide(double n)
         {
             return this.ScalarOp((v1) => v1 / n);
         }
 
-        public Matrix ScalarPower(int n)
+        public Matrix ScalarPower(double n)
         {
-            return this.ScalarOp((v1) => Math.Pow(v1, n));
+            return this.ScalarOp((v1) => System.Math.Pow(v1, n));
         }
 
         public Matrix ScalarNeg()
@@ -638,7 +640,7 @@ namespace Eval4
             for (var c = 0; c < this._columnCount; c++)
             {
                 // here we violate the imutability but it seems safe
-                result._data[0][c] = Math.Sqrt(result._data[0][c]);
+                result._data[0][c] = System.Math.Sqrt(result._data[0][c]);
             }
             return result;
         }

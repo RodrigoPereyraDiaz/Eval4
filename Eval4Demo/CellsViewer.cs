@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
-namespace Eval4.DemoCSharp
+namespace Eval4.Demo
 {
     public class CellsViewer : UserControl
     {

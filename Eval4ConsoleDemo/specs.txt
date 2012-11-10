@@ -11,7 +11,7 @@ ExpectedResult: 7
 
 Scenario: Division in VB return double values
 Formula: 5  / 2
-ExpectedResult: 2.5
+ExpectedResult: 2.500
 
 Scenario: VB has integer divisions
 Formula: 8 \ 3
@@ -19,7 +19,11 @@ ExpectedResult: 2
 
 Scenario: VB uses parenthesis for arrays
 Formula: arr(0)
-ExpectedResult: 1
+ExpectedResult: 2
+Formula: arr(1)
+ExpectedResult: 4
+Formula: arr(4)
+ExpectedResult: IndexOutOfRangeException
 
 
 -------------------------------------------------------------------------------
@@ -43,47 +47,51 @@ ExpectedResult: Eval4.SyntaxError
 
 Scenario: C# uses brackets for arrays
 Formula: arr[0]
-ExpectedResult: 1
+ExpectedResult: 2
+Formula: arr[1]
+ExpectedResult: 4
+Formula: arr[4]
+ExpectedResult: IndexOutOfRangeException
 
 -------------------------------------------------------------------------------
 Language: Excel
 -------------------------------------------------------------------------------
 Scenario: Setting Some Values
-Set A1: 1
-Set A2: 2
-Set B1: "a"
-Set B2: "b"
+Cell A1: 1
+Cell A2: 2
+Cell B1: a
+Cell B2: b
+
+Scenario: Read Cell
+Cell A3: =A1
+ExpectedValue A3: 1.000
 
 Scenario: Simple Addition
-Set A4: SUM(A1,A2)
-Formula: A4
-ExpectedResult: 3
+Cell A4: =SUM(A1,A2)
+ExpectedValue A4: 3.000
 
 Scenario: Range Addition
-Set A4: SUM(A1:A2)
-Formula: A4
-ExpectedResult: 3
+Cell A5: =SUM(A1:A2)
+ExpectedValue A5: 3.000
 
 Scenario: Average
-Set A5: =AVERAGE(A1:A2)
-Formula: A5
-ExpectedResult: 1.5
+Cell A6: =AVERAGE(A1:A2)
+ExpectedValue A6: 1.500
 
 Scenario: VLookup
-Set A6: =VLOOKUP(2,A1:B2,2,FALSE)
-Formula A6
-ExpectedResult: "b"
+Cell A7: =VLOOKUP(2,A1:B2,2,FALSE)
+ExpectedValue A7: "b"
 
 -------------------------------------------------------------------------------
 Language: Javascript
 -------------------------------------------------------------------------------
 Scenario: Simple addition (javascript only returns double)
 Formula: 1 + 1
-ExpectedResult: 2.0
+ExpectedResult: 2.000
 
 Scenario: Addition with prioritary multiplication 
 Formula: 1 + 2 * 3
-ExpectedResult: 7.0
+ExpectedResult: 7.000
 
 -------------------------------------------------------------------------------
 Language: Math
@@ -102,7 +110,7 @@ ExpectedResult: [1,4;2,5;3,6]
 
 Scenario: multiplication
 Formula: [1,2,3]*[2;3;4]
-ExpectedResult: 20
+ExpectedResult: [20]
 
 Scenario: scalar multiplication
 Formula: 3*[2,3,4]

@@ -7,18 +7,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Eval4ConsoleDemo
+namespace Eval4.ConsoleDemo
 {
     class Program
     {
         private static string scenario;
         private static string mFormula;
+        private static Eval4.Excel.ExcelSheet sheet;
         private static IEvaluator ev;
 
         static void Main(string[] args)
         {
-            SetLanguage("math");
-            TestFormula("[1,2,3;4,5,6]'","[1,4;2,5;3,6]");
+            //SetLanguage("math");
+            //TestFormula("[1,2,3;4,5,6]", "[1,2,3;4,5,6]");
+            SetLanguage("javascript");
+            TestFormula("1+1", "2.000");
             RunTemplate("specs.txt");
         }
 
@@ -66,12 +69,14 @@ namespace Eval4ConsoleDemo
                         case "formula":
                             mFormula = restOfLine;
                             break;
+                        case "cell":
+                            SetCell(cmd2, restOfLine);
+                            break;
                         case "expectedresult":
                             TestFormula(mFormula, restOfLine);
                             break;
                         case "set":
-                            Write(ConsoleColor.Gray, command + ":");
-                            WriteLine(ConsoleColor.White, restOfLine);
+                            SetVariable(cmd2, restOfLine);
                             break;
                         default:
                             if (line.Length == 0 || command.StartsWith("--"))
@@ -92,30 +97,36 @@ namespace Eval4ConsoleDemo
             Console.ReadKey();
         }
 
+        private static void SetCell(string cellName, string formula)
+        {
+            
+        }
+
         private static void SetLanguage(string language)
         {
             WriteLine(ConsoleColor.Cyan, "Language: " + language);
             switch (language.Trim().ToLower())
             {
                 case "vb":
-                    ev = new VbEvaluator();
+                    ev = new VB.VbEvaluator();
                     break;
                 case "excel":
-                    ev = new ExcelEvaluator();
+                    ev = new Eval4.Excel.ExcelEvaluator();
                     break;
                 case "cs":
-                    ev = new CSharpEvaluator();
+                    ev = new CSharp.CSharpEvaluator();
                     break;
                 case "javascript":
-                    ev = new JavascriptEvaluator();
+                    ev = new Javascript.JavascriptEvaluator();
                     break;
                 case "math":
-                    ev = new MathEvaluator();
+                    ev = new Math.MathEvaluator();
                     break;
                 default:
                     WriteLine(ConsoleColor.Red, "Unknown language " + language);
                     break;
             }
+            ev.SetVariable("arr", new int[] { 2, 4, 6 });
         }
 
         private static void TestFormula(string formula, string expectedResult)
@@ -127,7 +138,7 @@ namespace Eval4ConsoleDemo
             try
             {
                 var result = ev.Eval(formula);
-                resultString = result.ToString();
+                resultString = ev.ConvertToString(result);
             }
             catch (Exception ex)
             {
@@ -145,6 +156,23 @@ namespace Eval4ConsoleDemo
             if (ex0 != null)
             {
                 WriteLine(ConsoleColor.Red, ex0.Message);
+            }
+
+        }
+
+        private static void SetVariable(string variableName, string formula)
+        {
+            Write(ConsoleColor.Gray, "Set " + variableName + ":");
+            try
+            {
+                var parsed = ev.Parse(formula);
+                ev.SetVariable(variableName, parsed);
+                WriteLine(ConsoleColor.Green, formula);
+            }
+            catch (Exception ex)
+            {
+                WriteLine(ConsoleColor.Red, formula);
+                WriteLine(ConsoleColor.Red, ex.GetType().Name);
             }
 
         }
