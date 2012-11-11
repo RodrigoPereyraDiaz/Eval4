@@ -92,6 +92,7 @@ namespace Eval4.CSharp
                 case ':':
                     NextChar();
                     return new Token(TokenType.OperatorColon);
+
                 default:
                     return base.ParseToken();
 

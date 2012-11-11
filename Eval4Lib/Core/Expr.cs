@@ -11,7 +11,7 @@ namespace Eval4.Core
         internal List<Subscription> mSubscribedBy = new List<Subscription>();
         internal List<Dependency> mDependencies = new List<Dependency>();
         internal List<IDisposable> mSubscribedTo = new List<IDisposable>();
-        
+
         public Expr(Dependency p0, params Dependency[] parameters)
         {
             AddDependency(p0);
@@ -46,7 +46,7 @@ namespace Eval4.Core
         public abstract Type ValueType { get; }
 
         public abstract string ShortName { get; }
-        
+
         void IObserver.OnValueChanged()
         {
             RaiseValueChanged();
@@ -129,6 +129,44 @@ namespace Eval4.Core
         }
     }
 
+    public class ArrayBuilder<T> : Expr<T[]>
+    {
+        private IHasValue[] mEntries;
+        private Delegate[] mCasts;
+        private T[] mResult;
+
+        public ArrayBuilder(IHasValue[] entries, object[] casts)
+            : base(null, Dependency.Group("entries", entries))
+        {
+            mEntries = entries;
+            mCasts = casts.Cast<Delegate>().ToArray();
+            mResult = new T[entries.Length];
+        }
+
+        public override T[] Value
+        {
+            get
+            {
+                for (int i = 0; i < mEntries.Length; i++)
+                {
+                    var val = mEntries[i].ObjectValue;
+                    var cast = mCasts[i];
+                    mResult[i] = (cast == null ? (T)val : (T)cast.DynamicInvoke(val));
+                }
+                return mResult;
+            }
+        }
+
+        public override string ShortName
+        {
+            get
+            {
+                return "ArrayBuilder";
+            }
+        }
+    }
+
+
     public class CallMethodExpr<T> : Expr<T>
     {
         Func<T> mValueDelegate;
@@ -142,16 +180,14 @@ namespace Eval4.Core
         private System.Type mResultSystemType;
         private IHasValue withEventsField_mResultValue;
 
-        public CallMethodExpr(IHasValue baseObject, MemberInfo method, List<IHasValue> @params, Delegate[] casts)
+        public CallMethodExpr(IHasValue baseObject, MemberInfo method, List<IHasValue> @params, object[] casts)
             : base(new Dependency("baseobject", baseObject), Dependency.Group("parameter", @params))
         {
             if (@params == null)
                 @params = new List<IHasValue>();
-            IHasValue[] newParams = @params.ToArray();
-            object[] newParamValues = new object[@params.Count];
+            //IHasValue[] newParams = @params.ToArray();
 
-            mParams = newParams;
-            mParamValues = newParamValues;
+            var newParams = new List<IHasValue>();
             mBaseObject = baseObject;
             mMethod = method;
 
@@ -190,19 +226,31 @@ namespace Eval4.Core
                 mValueDelegate = lambda.Compile();
             }
 
-            for (int i = 0; i <= mParams.Length - 1; i++)
+            for (int i = 0; i < @params.Count; i++)
             {
                 if (i < paramInfo.Length)
                 {
-                    var sourceType = mParams[i].ValueType;
+                    var sourceType = @params[i].ValueType;
                     var targetType = paramInfo[i].ParameterType;
-                    if (sourceType != targetType)
+                    if (casts[i]!=null)
                     {
-                        var c2 = typeof(DelegateExpr<,>).MakeGenericType(sourceType, targetType);
-                        mParams[i] = (IHasValue)Activator.CreateInstance(c2, mParams[i], casts[i]);
+                        if (casts[i].GetType().IsArray)
+                        {
+                            var c2 = typeof(ArrayBuilder<>).MakeGenericType(targetType.GetElementType());
+                            newParams.Add((IHasValue)Activator.CreateInstance(c2, new object[] { @params.Skip(i).ToArray(), casts[i] }));
+                            // we have consumed all parameters
+                            break;
+                        }
+                        else
+                        {
+                            var c3 = typeof(DelegateExpr<,>).MakeGenericType(sourceType, targetType);
+                            newParams.Add((IHasValue)Activator.CreateInstance(c3, @params[i], casts[i]));
+                        }
                     }
                 }
             }
+            mParams = newParams.ToArray();
+            mParamValues = new object[mParams.Length];
         }
 
         public IHasValue mBaseValue
@@ -495,39 +543,6 @@ namespace Eval4.Core
         public override string ShortName
         {
             get { return "GetVariableFromBag"; }
-        }
-    }
-
-    interface IRaiseFindVariableExpr
-    {
-        FindVariableEventArgs RaiseFindVariable(string variableName);
-    }
-
-    class RaiseFindVariableExpr<T> : Expr<T>
-    {
-        private string mVariableName;
-        private IRaiseFindVariableExpr mEvaluator;
-        private FindVariableEventArgs mFindVariableResult;
-
-        public RaiseFindVariableExpr(IRaiseFindVariableExpr evaluator, string variableName)
-            : base(null)
-        {
-            mEvaluator = evaluator;
-            mVariableName = variableName;
-        }
-
-        public override T Value
-        {
-            get
-            {
-                mFindVariableResult = mEvaluator.RaiseFindVariable(mVariableName);
-                return (T)mFindVariableResult.Value;
-            }
-        }
-
-        public override string ShortName
-        {
-            get { return "FindVariable"; }
         }
     }
 

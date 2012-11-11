@@ -17,17 +17,12 @@ namespace Eval4.ConsoleDemo
 
         static void Main(string[] args)
         {
-            //SetLanguage("math");
-            //TestFormula("[1,2,3;4,5,6]", "[1,2,3;4,5,6]");
-            //SetLanguage("javascript");
-            //TestFormula("1+1", "2.000");
-            //RunTemplate("specs.txt");
             SetLanguage("excel");
             ((Excel.ExcelEvaluator)ev).SetCell("A1", "1");
-            TestFormula("A1+A1", "2.000");
+            ((Excel.ExcelEvaluator)ev).SetCell("A2", "2");
+            TestFormula("SUM(A1:B2)", "3.000");
             RunTemplate("specs.txt");
         }
-
 
         static void RunTemplate(string templateFile)
         {
@@ -110,7 +105,6 @@ namespace Eval4.ConsoleDemo
             WriteLine(ConsoleColor.White, formula);
             ((Excel.ExcelEvaluator)ev).SetCell(CellNo, formula);
         }
-
 
         private static void SetLanguage(string language)
         {

@@ -391,6 +391,9 @@ namespace Eval4.Core
         public object Eval(string formula)
         {
             IHasValue parsed = InternalParse(formula);
+            var sw = new System.IO.StringWriter();
+            WriteDependencies(sw, "parsed", parsed);
+            System.Diagnostics.Trace.WriteLine(sw.ToString());
             return parsed.ObjectValue;
         }
 
@@ -752,14 +755,6 @@ namespace Eval4.Core
             return (mCurChar >= '0' && mCurChar <= '9') || (mCurChar >= 'a' && mCurChar <= 'z') || (mCurChar >= 'A' && mCurChar <= 'Z') || (mCurChar >= 'A' && mCurChar <= 'Z') || (mCurChar >= 128) || (mCurChar == '_');
         }
 
-        internal FindVariableEventArgs RaiseFindVariable(string variableName)
-        {
-            var result = new FindVariableEventArgs(variableName);
-            if (FindVariable != null) FindVariable(this, result);
-            return result;
-        }
-
-        public event EventHandler<FindVariableEventArgs> FindVariable;
         private bool mHasIntegers;
 
 
@@ -800,8 +795,7 @@ namespace Eval4.Core
             {
                 startpos = mPos;
                 mCurToken = ParseToken();
-                if (mCurToken.Type != TokenType.Undefined)
-                    return;
+                if (mCurToken.Type != TokenType.Undefined) return;
             } while (true);
         }
 
@@ -1019,9 +1013,8 @@ namespace Eval4.Core
             while (true)
             {
                 if (mCurToken.Type == TokenType.Eof || valueLeft.ValueType == typeof(SyntaxError)) return valueLeft;
-                
-                int opPrecedence = GetPrecedence(mCurToken, unary: false);
 
+                int opPrecedence = GetPrecedence(mCurToken, unary: false);
                 if (precedence >= opPrecedence)
                 {
                     // if on we have twice the same operator precedence it is more natural to calculate the left operator first
@@ -1070,15 +1063,15 @@ namespace Eval4.Core
                     }
                     else
                     {
-                        var findVariableResult = RaiseFindVariable(funcName);
-                        if (findVariableResult.Handled)
+                        var value = LastChanceFindVariable(funcName);
+                        if (value != null)
                         {
-                            if (findVariableResult.Type == null)
+                            if (value is IHasValue) newExpr = (IHasValue)value;
+                            else
                             {
-                                findVariableResult.Type = findVariableResult.Value.GetType();
+                                var t = typeof(Variable<>).MakeGenericType(value.GetType());
+                                newExpr = (IHasValue)Activator.CreateInstance(t, value, funcName);
                             }
-                            var t = typeof(RaiseFindVariableExpr<>).MakeGenericType(findVariableResult.Type);
-                            newExpr = (IHasValue)Activator.CreateInstance(t, this, funcName);
                         }
                     }
                 }
@@ -1104,11 +1097,16 @@ namespace Eval4.Core
             }
         }
 
+        protected virtual object LastChanceFindVariable(string funcName)
+        {
+            return null;
+        }
+
         protected IHasValue GetMember(IHasValue @base, Type baseType, string funcName, List<IHasValue> parameters, EvalMemberType CallType)
         {
             MemberInfo mi = null;
             Type resultType;
-            Delegate[] casts;
+            object[] casts;
             if (GetMemberInfo(baseType, isStatic: true, isInstance: @base != null, func: funcName, parameters: parameters, mi: out mi, resultType: out resultType, casts: out casts))
             {
 
@@ -1146,7 +1144,7 @@ namespace Eval4.Core
             return null;
         }
 
-        protected bool GetMemberInfo(Type objType, bool isStatic, bool isInstance, string func, List<IHasValue> parameters, out MemberInfo mi, out Type resultType, out Delegate[] casts)
+        protected bool GetMemberInfo(Type objType, bool isStatic, bool isInstance, string func, List<IHasValue> parameters, out MemberInfo mi, out Type resultType, out object[] casts)
         {
             BindingFlags bindingAttr = default(BindingFlags);
             bindingAttr = BindingFlags.GetProperty | BindingFlags.GetField | BindingFlags.Public | BindingFlags.InvokeMethod;
@@ -1173,7 +1171,7 @@ namespace Eval4.Core
             int score = 0;
             int BestScore = 0;
             MemberInfo BestMember = null;
-            Delegate[] bestCasts = null;
+            object[] bestCasts = null;
             ParameterInfo[] plist = null;
             int idx = 0;
 
@@ -1203,34 +1201,45 @@ namespace Eval4.Core
                     parameters = new List<IHasValue>();
 
                 ParameterInfo pi = null;
-                var castList = new List<Delegate>();
+                var castList = new List<object>();
 
-                if (parameters.Count > plist.Length)
+                for (int index = 0; index < plist.Length; index++)
                 {
-                    score = 0;
-                }
-                else
-                {
-                    for (int index = 0; index <= plist.Length - 1; index++)
+                    pi = plist[index];
+                    if (idx < parameters.Count)
                     {
-                        pi = plist[index];
-                        if (idx < parameters.Count)
+                        Delegate castDlg;
+                        var thisScore = ParamCompatibility(parameters[idx], pi.ParameterType, out castDlg);
+                        if (thisScore == 0
+                            && pi.ParameterType.IsArray
+                            && index == plist.Length - 1)
                         {
-                            Delegate castDlg;
-                            score += ParamCompatibility(parameters[idx], pi.ParameterType, out castDlg);
-                            castList.Add(castDlg);
+                            var elementType = pi.ParameterType.GetElementType();
+                            thisScore = 10;
+                            List<Delegate> entryCasts = new List<Delegate>();
+                            while (idx < parameters.Count)
+                            {
+                                Delegate entryCast;
+                                var entryScore = ParamCompatibility(parameters[idx], elementType, out entryCast);
+                                entryCasts.Add(entryCast);
+                                if (entryScore < thisScore) thisScore = entryScore;
+                                idx++;
+                            }
+                            castList.Add(entryCasts.ToArray());
                         }
-                        else if (pi.IsOptional)
-                        {
-                            score += 10;
-                        }
-                        else
-                        {
-                            // unknown parameter
-                            score = 0;
-                        }
-                        idx += 1;
+                        else castList.Add(castDlg);
+                        score += thisScore;
                     }
+                    else if (pi.IsOptional)
+                    {
+                        score += 10;
+                    }
+                    else
+                    {
+                        // unknown parameter
+                        score = 0;
+                    }
+                    idx += 1;
                 }
                 if (score > BestScore)
                 {
@@ -1355,7 +1364,7 @@ namespace Eval4.Core
                     else
                     {
                         MemberInfo mi;
-                        Delegate[] casts;
+                        object[] casts;
                         if (GetMemberInfo(t, isStatic: true, isInstance: true, func: null, parameters: parameters, mi: out mi, resultType: out resultType, casts: out casts))
                         {
                             var t3 = typeof(CallMethodExpr<>).MakeGenericType(resultType);
@@ -1433,8 +1442,12 @@ namespace Eval4.Core
         public static void WriteDependencies(System.IO.TextWriter tw, string name, Eval4.Core.IHasValue expr, string indent = null)
         {
             if (indent == null) indent = string.Empty;
-
-            tw.WriteLine("{0} {1} type {2} ({3})", indent, name, expr.ShortName, expr.ValueType);
+            if (expr == null)
+            {
+                tw.WriteLine("{0} {1} type {2} ({3})", indent, name, "null","object");
+                return;
+            }
+            else tw.WriteLine("{0} {1} type {2} ({3})", indent, name, expr.ShortName, expr.ValueType);
             int cpt = 0;
             foreach (var d in expr.Dependencies)
             {
@@ -1451,9 +1464,14 @@ namespace Eval4.Core
             }
         }
 
-        Variable<T> IEvaluator.GetVariable<T>(string variableName)
+        public Variable<T> GetVariable<T>(string variableName)
         {
-            return (Variable<T>)mVariableBag[variableName];
+            IVariable value;
+            if (mVariableBag.TryGetValue(variableName, out value))
+            {
+                return value as Variable<T>;
+            }
+            return null;
         }
 
 
@@ -1556,20 +1574,6 @@ namespace Eval4.Core
         internal Type P1;
         internal Type P2;
         internal Type T;
-    }
-
-    public class FindVariableEventArgs : EventArgs
-    {
-        public string Name { get; private set; }
-        public object Value { get; set; }
-        public Type Type { get; set; }
-
-        public FindVariableEventArgs(string name)
-        {
-            Name = name;
-        }
-
-        public bool Handled { get; set; }
     }
 
     class StaticFunctionsWrapper

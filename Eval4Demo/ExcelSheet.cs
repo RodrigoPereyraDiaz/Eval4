@@ -24,7 +24,6 @@ namespace Eval4.Demo
             InitializeComponent();
             panel2.Size = new Size(firstColWidth + NBCOLUMN * colWidth, rowHeight + NBROWS * rowHeight);
             ev = new ExcelEvaluator();
-            ev.FindVariable += ev_FindVariable;
             mCells = new Cell[NBCOLUMN, NBROWS];
             for (int row = 0; row < NBROWS; row++)
             {
@@ -34,12 +33,6 @@ namespace Eval4.Demo
                     mCells[col, row] = new Cell(ev, col, row);
                 }
             }
-        }
-
-        void ev_FindVariable(object sender, FindVariableEventArgs e)
-        {
-            var variableName = e.Name;
-            throw new NotImplementedException("moved to sheet");
         }
 
         int colWidth = 100;

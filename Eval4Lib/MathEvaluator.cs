@@ -24,7 +24,7 @@ namespace Eval4.Math
             get
             {
                 return EvaluatorOptions.BooleanLogic
-                    | EvaluatorOptions.CaseSensitive
+                    //| EvaluatorOptions.CaseSensitive
                     //| EvaluatorOptions.DateTimeValues
                     | EvaluatorOptions.DoubleValues
                     //| EvaluatorOptions.IntegerValues

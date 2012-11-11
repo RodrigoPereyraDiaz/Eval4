@@ -13,46 +13,70 @@ namespace Eval4.Excel
 
     public class Range
     {
+        private Cell c1;
+        private Cell c2;
+
+        int colMin, colMax;
+        int rowMin, rowMax;
+
+        public int ColMin { get { return colMin; } }
+        public int ColMax { get { return colMax; } }
+        public int RowMin { get { return rowMin; } }
+        public int RowMax { get { return rowMax; } }
+
+        public Range(Cell c1, Cell c2)
+        {
+            GetMinMax(c1.Col, c2.Col, out colMin, out colMax);
+            GetMinMax(c1.Row, c2.Row, out rowMin, out rowMax);
+            Ev = c1.Ev;
+        }
+
+        private void GetMinMax(int v1, int v2, out int min, out int max)
+        {
+            if (v1 < v2) { min = v1; max = v2; }
+            else { min = v2; max = v1; }
+        }
+
+        internal double[] ToArray()
+        {
+            var result = new List<double>();
+            for (int r = rowMin; r <= rowMax; r++)
+            {
+                for (int c = colMin; c <= colMax; c++)
+                {
+                    var cell = Ev.GetCell(c, r);
+                    if (cell != null) result.Add(cell.ToDouble());
+                }
+            }
+            return result.ToArray();
+        }
+
+        public ExcelEvaluator Ev { get; private set; }
     }
 
     public class Cell
     {
-        private IEvaluator mEv;
+        public ExcelEvaluator Ev { get; private set; }
         private string mFormula;
         private string mName;
         private IHasValue mValue;
         public Exception Exception;
+        public int Row { get; private set; }
+        public int Col { get; private set; }
 
-        public Cell(IEvaluator ev, int col, int row, string formula=null)
+        public Cell(ExcelEvaluator ev, int col, int row, string formula = null)
         {
-            this.mEv = ev;
-            mName = GetCellName(col + 1, row + 1);
+            this.Row = row;
+            this.Col = col;
+            this.Ev = ev;
+            mName = Cell.GetCellName(col, row);
             ev.SetVariable(mName, this);
             if (formula != null) this.Formula = formula;
         }
 
-        public static string GetColName(int x)
+        public static string GetCellName(int col, int row)
         {
-            string result = string.Empty;
-            if (x <= 26)
-            {
-                result = ((char)(64 + x)).ToString();
-            }
-            else if (x <= 26 * 26)
-            {
-                var x1 = ((x - 1) / 26);
-                var x2 = 1 + ((x - 1) % 26);
-
-                result = ((char)(64 + x1)).ToString() + ((char)(64 + x2)).ToString();
-            }
-            return result;
-        }
-
-        public static string GetCellName(int x, int y)
-        {
-            var col = GetColName(x);
-            var cell = col + y.ToString();
-            return cell;
+            return GetColName(col) + (row + 1);
         }
 
         public static bool GetCellPos(string name, out int x, out int y)
@@ -90,6 +114,23 @@ namespace Eval4.Excel
             }
         }
 
+        public static string GetColName(int x)
+        {
+            string result = string.Empty;
+            if (x < 26)
+            {
+                result = ((char)(65 + x)).ToString();
+            }
+            else if (x <= 26 * 26)
+            {
+                var x1 = (x / 26);
+                var x2 = (x % 26);
+
+                result = ((char)(65 + x1)).ToString() + ((char)(65 + x2)).ToString();
+            }
+            return result;
+        }
+
         public string Formula
         {
             get
@@ -106,7 +147,7 @@ namespace Eval4.Excel
                 {
                     try
                     {
-                        mValue = mEv.Parse((firstChar == '=' ? mFormula.Substring(1) : mFormula));
+                        mValue = Ev.Parse((firstChar == '=' ? mFormula.Substring(1) : mFormula));
                     }
                     catch (Exception ex)
                     {
@@ -141,18 +182,95 @@ namespace Eval4.Excel
             }
         }
 
+        static DateTime EPOCH = new DateTime(1900, 1, 1);
+
+        internal double ToDouble()
+        {
+            var value = ValueObject;
+            if (value is double) return (double)value;
+            if (value is bool) return ((bool)value) ? 1 : 0;
+            if (value is DateTime) return ((DateTime)value).Subtract(EPOCH).TotalDays;
+            return double.NaN;
+        }
     }
 
 
+    public static class ExcelFunctions
+    {
+        public static double Sum(params double[] items)
+        {
+            return items.Where(a => !double.IsNaN(a)).Sum();
+        }
+
+        public static double Average(params double[] items)
+        {
+            return items.Where(a => !double.IsNaN(a)).Average();
+        }
+
+        public static double VLookup(double lookup_value, Range table_array, int column_index, bool range_lookup)
+        {
+            var ev = table_array.Ev;
+            int foundRow = -1;
+            if (range_lookup)
+            {
+                for (int r = table_array.RowMin; r < table_array.RowMax; r++)
+                {
+                    var c = ev.GetCell(table_array.ColMin, r);
+                    if (c != null && c.ToDouble() == lookup_value)
+                    {
+                        foundRow = r;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                int min = table_array.RowMin;
+                int max = table_array.RowMax;
+                while (min < max)
+                {
+                    int mid = (min + max) / 2;
+                    var c = ev.GetCell(table_array.ColMin, mid);
+                    var val = c.ToDouble();
+                    if (lookup_value < val)
+                    {
+                        max = mid;
+                    }
+                    else if (lookup_value > val)
+                    {
+                        min = mid;
+                    }
+                    else
+                    {
+                        foundRow = mid;
+                        break;
+                    }
+                }
+                if (foundRow < 0) foundRow = min;
+            }
+            if (foundRow >= 0)
+            {
+                var c = ev.GetCell(table_array.ColMin + column_index, foundRow);
+                if (c != null) return c.ToDouble();
+
+            }
+            return double.NaN;
+        }
+    }
     public class ExcelEvaluator : Evaluator<ExcelToken>
     {
+
+        public ExcelEvaluator()
+        {
+            this.AddEnvironmentFunctions(typeof(ExcelFunctions));
+        }
 
         protected internal override EvaluatorOptions Options
         {
             get
             {
                 return EvaluatorOptions.BooleanLogic
-                    | EvaluatorOptions.CaseSensitive
+                    //| EvaluatorOptions.CaseSensitive
                     | EvaluatorOptions.DoubleValues
                     //| EvaluatorOptions.IntegerValues
                     | EvaluatorOptions.ObjectValues
@@ -160,19 +278,24 @@ namespace Eval4.Excel
             }
         }
 
+        protected override object LastChanceFindVariable(string funcName)
+        {
+            int x, y;
+            if (Cell.GetCellPos(funcName, out x, out y))
+            {
+                return new Cell(this, x, y);
+            }
+            return null;
+        }
+
         protected override void DeclareOperators()
         {
             base.DeclareOperators();
-            base.AddImplicitCast<Cell, double>((a) =>
-            {
-                var value = a.ValueObject;
-                if (value is double) return (double)value;
-                if (value is bool) return ((bool)value) ? 1 : 0;
-                if (value is DateTime) return ((DateTime)value).Subtract(EPOCH).TotalDays;
-                return double.NaN;
-            });
+            base.AddImplicitCast<Cell, double>((a) => a.ToDouble());
+
+            base.AddBinaryOperation<Cell, Cell, Range>(TokenType.OperatorColon, (c1, c2) => new Range(c1, c2));
+            base.AddImplicitCast<Range, double[]>((a) => a.ToArray());
         }
-        static DateTime EPOCH = new DateTime(1900, 1, 1);
 
         public override bool UseParenthesisForArrays
         {
@@ -239,9 +362,11 @@ namespace Eval4.Excel
                         return new Token(TokenType.OperatorOrElse);
                     }
                     return new Token(TokenType.OperatorOr);
+
                 case ':':
                     NextChar();
                     return new Token(TokenType.OperatorColon);
+
                 default:
                     return base.ParseToken();
 
@@ -300,11 +425,14 @@ namespace Eval4.Excel
                     // 	Primary	
                     //x.y  f(x)  a[x]  x++  x--  new
                     //typeof  checked  unchecked
-                    return 15;
+                    return 16;
+
+                case TokenType.OperatorColon:
+                    return 13;
 
                 case TokenType.OperatorPlus:
                 case TokenType.OperatorMinus:
-                    return (unary ? 14 : 12);
+                    return (unary ? 15 : 12);
 
                 case TokenType.OperatorNot:
                 case TokenType.OperatorTilde:
@@ -394,10 +522,18 @@ namespace Eval4.Excel
             int x, y;
             if (Cell.GetCellPos(cellName, out x, out y))
             {
-                var cell = new Cell(this,x,y, formula);
+                var cell = new Cell(this, x, y, formula);
                 SetVariable<Cell>(cellName, cell);
             }
             else throw new Exception(string.Format("Invalid Cell \"{0}\"", cellName));
+        }
+
+        internal Cell GetCell(int x, int y)
+        {
+            string cellName = Cell.GetCellName(x, y);
+            IHasValue<Cell> var = base.GetVariable<Cell>(cellName);
+            if (var == null) return null;
+            return var.Value;
         }
     }
 }
