@@ -79,17 +79,17 @@ namespace Eval4.Demo
             var borderColor = Pens.DarkGray;
             StringFormat stringFormat = MiddleLeft;
 
-            if (x == 0)
+            if (x == -1)
             {
                 backColor = (y == curCell.Y ? Brushes.Silver : Brushes.DarkGray);
                 stringFormat = Centered;
-                if (y > 0) text = y.ToString();
+                if (y >= 0) text = (y + 1).ToString();
             }
             else
             {
                 var col = Cell.GetColName(x);
                 var cell = col + y.ToString();
-                if (y == 0)
+                if (y == -1)
                 {
                     text = col;
                     stringFormat = Centered;
@@ -97,9 +97,9 @@ namespace Eval4.Demo
                 }
                 else
                 {
-                    if (x > 0 && x <= NBCOLUMN && y > 0 && y < NBROWS)
+                    if (x >= 0 && x < NBCOLUMN && y >= 0 && y < NBROWS)
                     {
-                        var c = mCells[x - 1, y - 1];
+                        var c = mCells[x, y];
 
                         text = c.ToString();
                         if (c.ValueObject != null) stringFormat = MiddleRight;
@@ -116,16 +116,16 @@ namespace Eval4.Demo
         private Rectangle GetRect(int x, int y)
         {
             Rectangle r = Rectangle.Empty;
-            r.Y = y * rowHeight;
+            r.Y = (y+1) * rowHeight;
             r.Height = rowHeight;
-            if (x == 0)
+            if (x == -1)
             {
                 r.X = 0;
                 r.Width = firstColWidth;
             }
             else
             {
-                r.X = firstColWidth + (x - 1) * colWidth;
+                r.X = firstColWidth + x * colWidth;
                 r.Width = colWidth;
             }
             return r;
@@ -134,8 +134,8 @@ namespace Eval4.Demo
         private Point cellAtPos(int x, int y)
         {
             Point result = Point.Empty;
-            result.X = (x < firstColWidth ? 0 : 1 + (x - firstColWidth) / colWidth);
-            result.Y = (y / rowHeight);
+            result.X = (x < firstColWidth ? -1 : (x - firstColWidth) / colWidth);
+            result.Y = (y / rowHeight - 1);
             return result;
         }
 
@@ -147,26 +147,27 @@ namespace Eval4.Demo
 
         private void SetFocusedCell(int x, int y)
         {
-            if (x > 0 && y > 0 && x <= NBCOLUMN && y <= NBROWS)
+            if (x >= 0 && y >= 0 && x < NBCOLUMN && y < NBROWS)
             {
                 var previousCell = curCell;
                 curCell = new Point(x, y);
                 InvalidateCells(previousCell);
                 InvalidateCells(curCell);
-                Cell c = mCells[curCell.X - 1, curCell.Y - 1];
+                Cell c = mCells[curCell.X, curCell.Y];
 
-                textBox1.Text = c.Formula;
+                mOriginalText = c.Formula;
+                textBox1.Text = mOriginalText;
                 textBox1.SelectAll();
                 textBox1.Focus();
 
-                ScrollCellIntoView(x,y);
+                ScrollCellIntoView(x, y);
             }
         }
 
         private void ScrollCellIntoView(int x, int y)
         {
-            if (x == 1) x = 0;
-            if (y == 1) y = 0;
+            if (x == 0) x = -1;
+            if (y == 0) y = -1;
             var cr = this.GetRect(x, y);
             var dr = panel1.DisplayRectangle;
             Point scroll = new Point(-dr.Left, -dr.Top);
@@ -181,8 +182,8 @@ namespace Eval4.Demo
         private void InvalidateCells(Point cell)
         {
             InvalidateCell(cell.X, cell.Y);
-            InvalidateCell(0, cell.Y);
-            InvalidateCell(cell.X, 0);
+            InvalidateCell(-1, cell.Y);
+            InvalidateCell(cell.X, -1);
         }
 
         private void InvalidateCell(int x, int y)
@@ -212,79 +213,12 @@ namespace Eval4.Demo
                 case "excelSheet3":
                     break;
             }
-            SetFocusedCell(1, 1);
+            SetFocusedCell(0, 0);
         }
-
-
-        //private void panel2_Enter(object sender, EventArgs e)
-        //{
-        //    inPanel2 = true;
-        //    InvalidateCell(curCell.X, curCell.Y);
-        //}
-
-        //private void panel2_Leave(object sender, EventArgs e)
-        //{
-        //    inPanel2 = false;
-        //    InvalidateCell(curCell.X, curCell.Y);
-        //}
-
-        //private void panel2_KeyPress(object sender, KeyPressEventArgs e)
-        //{
-        //    switch (e.KeyChar)
-        //    {
-        //        case '\t':
-        //        case '\r':
-        //            e.Handled = true;
-        //            break;
-        //        default:
-        //            textBox1.Focus();
-        //            textBox1.Text = e.KeyChar.ToString();
-        //            textBox1.SelectionStart = 1;
-        //            break;
-        //    }
-        //}
-
-        //private void panel2_KeyDown(object sender, KeyEventArgs e)
-        //{
-        //    var keyCode = e.KeyCode;
-        //    if (e.KeyCode == Keys.Tab) keyCode = (e.Modifiers == Keys.Shift ? Keys.Left : Keys.Right);
-        //    else if (e.KeyCode == Keys.Return) keyCode = (e.Modifiers == Keys.Shift ? Keys.Up : Keys.Down);
-
-
-        //    switch (keyCode)
-        //    {
-        //        case Keys.Left:
-        //            SetFocusedCell(curCell.X - 1, curCell.Y);
-        //            e.Handled = true;
-        //            break;
-        //        case Keys.Right:
-        //            SetFocusedCell(curCell.X + 1, curCell.Y);
-        //            e.Handled = true;
-        //            break;
-        //        case Keys.Up:
-        //            SetFocusedCell(curCell.X, curCell.Y - 1);
-        //            e.Handled = true;
-        //            break;
-        //        case Keys.Down:
-        //            SetFocusedCell(curCell.X, curCell.Y + 1);
-        //            e.Handled = true;
-        //            break;
-        //        case Keys.F2:
-        //            textBox1.Focus();
-        //            textBox1.SelectionStart = textBox1.Text.Length;
-        //            e.Handled = true;
-        //            break;
-        //        case Keys.Delete:
-        //            textBox1.Text = string.Empty;
-        //            e.Handled = true;
-        //            break;
-
-        //    }
-        //}
 
         private void textBox1_KeyDown(object sender, KeyEventArgs e)
         {
-            bool shift=((e.Modifiers & Keys.Shift) != 0);
+            bool shift = ((e.Modifiers & Keys.Shift) != 0);
 
             switch (e.KeyCode)
             {
@@ -326,7 +260,7 @@ namespace Eval4.Demo
                     textBox1.SelectionLength = 0;
                     break;
                 case Keys.Tab:
-                    if ((curCell.X > 0 || !shift) 
+                    if ((curCell.X > 0 || !shift)
                         && (curCell.X < NBCOLUMN || shift))
                     {
                         e.Handled = true;
@@ -334,7 +268,7 @@ namespace Eval4.Demo
                     }
                     break;
                 case Keys.Return:
-                    if ((curCell.Y > 0 || !shift) 
+                    if ((curCell.Y > 0 || !shift)
                         && (curCell.Y < NBROWS || shift))
                     {
                         e.Handled = true;
@@ -361,7 +295,7 @@ namespace Eval4.Demo
 
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
-            var c = mCells[curCell.X - 1, curCell.Y - 1];
+            var c = mCells[curCell.X, curCell.Y];
             c.Formula = textBox1.Text;
             InvalidateCell(curCell.X, curCell.Y);
         }

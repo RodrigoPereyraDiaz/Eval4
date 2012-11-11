@@ -17,7 +17,7 @@ namespace Eval4.CSharp
         {
             get
             {
-                return EvaluatorOptions.BooleanLogic
+                return EvaluatorOptions.BooleanValues
                     | EvaluatorOptions.CaseSensitive
                     //| EvaluatorOptions.DateTimeValues
                     | EvaluatorOptions.DoubleValues

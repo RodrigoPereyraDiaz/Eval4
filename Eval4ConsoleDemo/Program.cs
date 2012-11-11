@@ -17,6 +17,9 @@ namespace Eval4.ConsoleDemo
 
         static void Main(string[] args)
         {
+            SetLanguage("vb");
+            TestFormula("false xor false", "false");
+            
             SetLanguage("excel");
             ((Excel.ExcelEvaluator)ev).SetCell("A1", "1");
             ((Excel.ExcelEvaluator)ev).SetCell("A2", "2");

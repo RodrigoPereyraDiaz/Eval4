@@ -70,14 +70,8 @@ namespace Eval4.Demo
         private FormulaTab evaluatorPanel5;
         private Panel panel3;
         private Label label11;
-        private TabControl tabControl2;
-        private TabPage tabSheet1;
-        private TabPage tabSheet2;
-        private TabPage tabSheet3;
-        private ExcelSheet excelSheet1;
-        private ExcelSheet excelSheet2;
-        private ExcelSheet excelSheet3;
         internal System.Windows.Forms.Label lblResults3;
+        private ExcelSheet excelSheet1;
         private IDisposable formula3subscription;
 
         public Form1()
@@ -167,14 +161,15 @@ namespace Eval4.Demo
         {
             this.TabControl1 = new System.Windows.Forms.TabControl();
             this.tabExcel = new System.Windows.Forms.TabPage();
-            this.tabControl2 = new System.Windows.Forms.TabControl();
-            this.tabSheet1 = new System.Windows.Forms.TabPage();
-            this.tabSheet2 = new System.Windows.Forms.TabPage();
-            this.tabSheet3 = new System.Windows.Forms.TabPage();
+            this.excelSheet1 = new Eval4.Demo.ExcelSheet();
             this.tabVB = new System.Windows.Forms.TabPage();
+            this.evaluatorPanel1 = new Eval4.Demo.FormulaTab();
             this.tabCSharp = new System.Windows.Forms.TabPage();
+            this.evaluatorPanel2 = new Eval4.Demo.FormulaTab();
             this.tabMathEval = new System.Windows.Forms.TabPage();
+            this.evaluatorPanel3 = new Eval4.Demo.FormulaTab();
             this.tabExperiments = new System.Windows.Forms.TabPage();
+            this.evaluatorPanel5 = new Eval4.Demo.FormulaTab();
             this.TabHeavier = new System.Windows.Forms.TabPage();
             this.cbAuto = new System.Windows.Forms.CheckBox();
             this.Label1 = new System.Windows.Forms.Label();
@@ -202,19 +197,8 @@ namespace Eval4.Demo
             this.lblResults3 = new System.Windows.Forms.Label();
             this.panel3 = new System.Windows.Forms.Panel();
             this.label11 = new System.Windows.Forms.Label();
-            this.excelSheet1 = new Eval4.Demo.ExcelSheet();
-            this.excelSheet2 = new Eval4.Demo.ExcelSheet();
-            this.excelSheet3 = new Eval4.Demo.ExcelSheet();
-            this.evaluatorPanel1 = new Eval4.Demo.FormulaTab();
-            this.evaluatorPanel2 = new Eval4.Demo.FormulaTab();
-            this.evaluatorPanel3 = new Eval4.Demo.FormulaTab();
-            this.evaluatorPanel5 = new Eval4.Demo.FormulaTab();
             this.TabControl1.SuspendLayout();
             this.tabExcel.SuspendLayout();
-            this.tabControl2.SuspendLayout();
-            this.tabSheet1.SuspendLayout();
-            this.tabSheet2.SuspendLayout();
-            this.tabSheet3.SuspendLayout();
             this.tabVB.SuspendLayout();
             this.tabCSharp.SuspendLayout();
             this.tabMathEval.SuspendLayout();
@@ -249,7 +233,7 @@ namespace Eval4.Demo
             // 
             // tabExcel
             // 
-            this.tabExcel.Controls.Add(this.tabControl2);
+            this.tabExcel.Controls.Add(this.excelSheet1);
             this.tabExcel.Location = new System.Drawing.Point(4, 22);
             this.tabExcel.Name = "tabExcel";
             this.tabExcel.Size = new System.Drawing.Size(510, 474);
@@ -257,49 +241,13 @@ namespace Eval4.Demo
             this.tabExcel.Text = "Excel";
             this.tabExcel.UseVisualStyleBackColor = true;
             // 
-            // tabControl2
+            // excelSheet1
             // 
-            this.tabControl2.Appearance = System.Windows.Forms.TabAppearance.Buttons;
-            this.tabControl2.Controls.Add(this.tabSheet1);
-            this.tabControl2.Controls.Add(this.tabSheet2);
-            this.tabControl2.Controls.Add(this.tabSheet3);
-            this.tabControl2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabControl2.Location = new System.Drawing.Point(0, 0);
-            this.tabControl2.Multiline = true;
-            this.tabControl2.Name = "tabControl2";
-            this.tabControl2.SelectedIndex = 0;
-            this.tabControl2.Size = new System.Drawing.Size(510, 474);
-            this.tabControl2.TabIndex = 0;
-            // 
-            // tabSheet1
-            // 
-            this.tabSheet1.Controls.Add(this.excelSheet1);
-            this.tabSheet1.Location = new System.Drawing.Point(4, 25);
-            this.tabSheet1.Name = "tabSheet1";
-            this.tabSheet1.Size = new System.Drawing.Size(502, 445);
-            this.tabSheet1.TabIndex = 0;
-            this.tabSheet1.Text = "Sheet1";
-            this.tabSheet1.UseVisualStyleBackColor = true;
-            // 
-            // tabSheet2
-            // 
-            this.tabSheet2.Controls.Add(this.excelSheet2);
-            this.tabSheet2.Location = new System.Drawing.Point(4, 25);
-            this.tabSheet2.Name = "tabSheet2";
-            this.tabSheet2.Size = new System.Drawing.Size(502, 445);
-            this.tabSheet2.TabIndex = 1;
-            this.tabSheet2.Text = "Sheet2";
-            this.tabSheet2.UseVisualStyleBackColor = true;
-            // 
-            // tabSheet3
-            // 
-            this.tabSheet3.Controls.Add(this.excelSheet3);
-            this.tabSheet3.Location = new System.Drawing.Point(4, 25);
-            this.tabSheet3.Name = "tabSheet3";
-            this.tabSheet3.Size = new System.Drawing.Size(502, 445);
-            this.tabSheet3.TabIndex = 2;
-            this.tabSheet3.Text = "Sheet3";
-            this.tabSheet3.UseVisualStyleBackColor = true;
+            this.excelSheet1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.excelSheet1.Location = new System.Drawing.Point(0, 0);
+            this.excelSheet1.Name = "excelSheet1";
+            this.excelSheet1.Size = new System.Drawing.Size(510, 474);
+            this.excelSheet1.TabIndex = 2;
             // 
             // tabVB
             // 
@@ -311,6 +259,15 @@ namespace Eval4.Demo
             this.tabVB.Text = "VB";
             this.tabVB.UseVisualStyleBackColor = true;
             // 
+            // evaluatorPanel1
+            // 
+            this.evaluatorPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.evaluatorPanel1.Location = new System.Drawing.Point(0, 0);
+            this.evaluatorPanel1.Name = "evaluatorPanel1";
+            this.evaluatorPanel1.PanelLanguage = Eval4.Demo.PanelLanguage.vb;
+            this.evaluatorPanel1.Size = new System.Drawing.Size(510, 474);
+            this.evaluatorPanel1.TabIndex = 0;
+            // 
             // tabCSharp
             // 
             this.tabCSharp.Controls.Add(this.evaluatorPanel2);
@@ -321,7 +278,16 @@ namespace Eval4.Demo
             this.tabCSharp.Text = "C#";
             this.tabCSharp.UseVisualStyleBackColor = true;
             // 
-            // tabMatlab
+            // evaluatorPanel2
+            // 
+            this.evaluatorPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.evaluatorPanel2.Location = new System.Drawing.Point(0, 0);
+            this.evaluatorPanel2.Name = "evaluatorPanel2";
+            this.evaluatorPanel2.PanelLanguage = Eval4.Demo.PanelLanguage.csharp;
+            this.evaluatorPanel2.Size = new System.Drawing.Size(510, 474);
+            this.evaluatorPanel2.TabIndex = 0;
+            // 
+            // tabMathEval
             // 
             this.tabMathEval.Controls.Add(this.evaluatorPanel3);
             this.tabMathEval.Location = new System.Drawing.Point(4, 22);
@@ -330,6 +296,15 @@ namespace Eval4.Demo
             this.tabMathEval.TabIndex = 9;
             this.tabMathEval.Text = "Math";
             this.tabMathEval.UseVisualStyleBackColor = true;
+            // 
+            // evaluatorPanel3
+            // 
+            this.evaluatorPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.evaluatorPanel3.Location = new System.Drawing.Point(0, 0);
+            this.evaluatorPanel3.Name = "evaluatorPanel3";
+            this.evaluatorPanel3.PanelLanguage = Eval4.Demo.PanelLanguage.mathEval;
+            this.evaluatorPanel3.Size = new System.Drawing.Size(510, 474);
+            this.evaluatorPanel3.TabIndex = 0;
             // 
             // tabExperiments
             // 
@@ -340,6 +315,15 @@ namespace Eval4.Demo
             this.tabExperiments.TabIndex = 11;
             this.tabExperiments.Text = "Experiments";
             this.tabExperiments.UseVisualStyleBackColor = true;
+            // 
+            // evaluatorPanel5
+            // 
+            this.evaluatorPanel5.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.evaluatorPanel5.Location = new System.Drawing.Point(0, 0);
+            this.evaluatorPanel5.Name = "evaluatorPanel5";
+            this.evaluatorPanel5.PanelLanguage = Eval4.Demo.PanelLanguage.experiments;
+            this.evaluatorPanel5.Size = new System.Drawing.Size(510, 474);
+            this.evaluatorPanel5.TabIndex = 0;
             // 
             // TabHeavier
             // 
@@ -641,66 +625,6 @@ namespace Eval4.Demo
             this.label11.Text = "label11";
             this.label11.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // excelSheet1
-            // 
-            this.excelSheet1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.excelSheet1.Location = new System.Drawing.Point(0, 0);
-            this.excelSheet1.Name = "excelSheet1";
-            this.excelSheet1.Size = new System.Drawing.Size(502, 445);
-            this.excelSheet1.TabIndex = 1;
-            // 
-            // excelSheet2
-            // 
-            this.excelSheet2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.excelSheet2.Location = new System.Drawing.Point(0, 0);
-            this.excelSheet2.Name = "excelSheet2";
-            this.excelSheet2.Size = new System.Drawing.Size(502, 445);
-            this.excelSheet2.TabIndex = 1;
-            // 
-            // excelSheet3
-            // 
-            this.excelSheet3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.excelSheet3.Location = new System.Drawing.Point(0, 0);
-            this.excelSheet3.Name = "excelSheet3";
-            this.excelSheet3.Size = new System.Drawing.Size(502, 445);
-            this.excelSheet3.TabIndex = 2;
-            // 
-            // evaluatorPanel1
-            // 
-            this.evaluatorPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.evaluatorPanel1.Location = new System.Drawing.Point(0, 0);
-            this.evaluatorPanel1.Name = "evaluatorPanel1";
-            this.evaluatorPanel1.PanelLanguage = Eval4.Demo.PanelLanguage.vb;
-            this.evaluatorPanel1.Size = new System.Drawing.Size(510, 474);
-            this.evaluatorPanel1.TabIndex = 0;
-            // 
-            // evaluatorPanel2
-            // 
-            this.evaluatorPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.evaluatorPanel2.Location = new System.Drawing.Point(0, 0);
-            this.evaluatorPanel2.Name = "evaluatorPanel2";
-            this.evaluatorPanel2.PanelLanguage = Eval4.Demo.PanelLanguage.csharp;
-            this.evaluatorPanel2.Size = new System.Drawing.Size(510, 474);
-            this.evaluatorPanel2.TabIndex = 0;
-            // 
-            // evaluatorPanel3
-            // 
-            this.evaluatorPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.evaluatorPanel3.Location = new System.Drawing.Point(0, 0);
-            this.evaluatorPanel3.Name = "evaluatorPanel3";
-            this.evaluatorPanel3.PanelLanguage = Eval4.Demo.PanelLanguage.mathEval;
-            this.evaluatorPanel3.Size = new System.Drawing.Size(510, 474);
-            this.evaluatorPanel3.TabIndex = 0;
-            // 
-            // evaluatorPanel5
-            // 
-            this.evaluatorPanel5.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.evaluatorPanel5.Location = new System.Drawing.Point(0, 0);
-            this.evaluatorPanel5.Name = "evaluatorPanel5";
-            this.evaluatorPanel5.PanelLanguage = Eval4.Demo.PanelLanguage.experiments;
-            this.evaluatorPanel5.Size = new System.Drawing.Size(510, 474);
-            this.evaluatorPanel5.TabIndex = 0;
-            // 
             // Form1
             // 
             this.AutoScaleBaseSize = new System.Drawing.Size(5, 13);
@@ -709,13 +633,9 @@ namespace Eval4.Demo
             this.Controls.Add(this.panel3);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Name = "Form1";
-            this.Text = "Expression Evaluator 100% managed .net  (C# Version)";
+            this.Text = "Function Evaluation in C#";
             this.TabControl1.ResumeLayout(false);
             this.tabExcel.ResumeLayout(false);
-            this.tabControl2.ResumeLayout(false);
-            this.tabSheet1.ResumeLayout(false);
-            this.tabSheet2.ResumeLayout(false);
-            this.tabSheet3.ResumeLayout(false);
             this.tabVB.ResumeLayout(false);
             this.tabCSharp.ResumeLayout(false);
             this.tabMathEval.ResumeLayout(false);
@@ -797,44 +717,37 @@ namespace Eval4.Demo
                     {
                         Y = ((Yi - 128)
                             * mult);
-                        try
+
+                        r = Convert.ToDouble(lCodeR.ObjectValue);
+                        g = Convert.ToDouble(lCodeG.ObjectValue);
+                        b = Convert.ToDouble(lCodeB.ObjectValue);
+
+                        if (((r < 0)
+                            || double.IsNaN(r)))
                         {
-
-                            r = Convert.ToDouble(lCodeR.ObjectValue);
-                            g = Convert.ToDouble(lCodeG.ObjectValue);
-                            b = Convert.ToDouble(lCodeB.ObjectValue);
-
-                            if (((r < 0)
-                                || double.IsNaN(r)))
-                            {
-                                r = 0;
-                            }
-                            else if ((r > 1))
-                            {
-                                r = 1;
-                            }
-                            if (((g < 0)
-                                || double.IsNaN(g)))
-                            {
-                                g = 0;
-                            }
-                            else if ((g > 1))
-                            {
-                                g = 1;
-                            }
-                            if (((b < 0)
-                                || double.IsNaN(b)))
-                            {
-                                b = 0;
-                            }
-                            else if ((b > 1))
-                            {
-                                b = 1;
-                            }
+                            r = 0;
                         }
-                        catch
+                        else if ((r > 1))
                         {
-                            //  ignore (same as previous pixel)
+                            r = 1;
+                        }
+                        if (((g < 0)
+                            || double.IsNaN(g)))
+                        {
+                            g = 0;
+                        }
+                        else if ((g > 1))
+                        {
+                            g = 1;
+                        }
+                        if (((b < 0)
+                            || double.IsNaN(b)))
+                        {
+                            b = 0;
+                        }
+                        else if ((b > 1))
+                        {
+                            b = 1;
                         }
                         bm.SetPixel(Xi, Yi, Color.FromArgb((int)(r * 255), (int)(g * 255), (int)(b * 255)));
                     }

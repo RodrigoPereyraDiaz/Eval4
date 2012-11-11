@@ -47,10 +47,10 @@ namespace Eval4
             Assert.AreEqual(expectedResult, actualResult, formula);
         }
 
-        private void TestTemplate(IEvaluator ev, string formula, string expectedResult)
-        {
-            string result = ev.EvalTemplate(formula);
-            Assert.AreEqual(expectedResult, result, "Template " + formula);
-        }
+        //private void TestTemplate(IEvaluator ev, string formula, string expectedResult)
+        //{
+        //    string result = ev.EvalTemplate(formula);
+        //    Assert.AreEqual(expectedResult, result, "Template " + formula);
+        //}
     }
 }

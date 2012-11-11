@@ -45,10 +45,5 @@ namespace Eval4.Tests
             evVB.SetVariable("C", 10);
             //Assert.AreEqual(parsed.ObjectValue, 99.99);
         }
-
-        void parsed_ValueChanged(object sender, EventArgs e)
-        {
-
-        }
     }
 }

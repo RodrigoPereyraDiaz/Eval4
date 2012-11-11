@@ -15,7 +15,7 @@ namespace Eval4.Javascript
         {
             get
             {
-                return EvaluatorOptions.BooleanLogic
+                return EvaluatorOptions.BooleanValues
                     | EvaluatorOptions.CaseSensitive
                     //| EvaluatorOptions.DateTimeValues
                     | EvaluatorOptions.DoubleValues

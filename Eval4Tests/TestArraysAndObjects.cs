@@ -42,11 +42,6 @@ namespace Eval4.Tests
             {
                 return value * ((100 + vat) / 100.0);
             }
-
-            public Decimal Sum(Int16 a, UInt32 b, Single c, decimal d)
-            {
-                return ((decimal)(a + b + c)) + d;
-            }
         }
 
         [TestMethod]
@@ -88,7 +83,6 @@ namespace Eval4.Tests
             TestVbAndCsFormula("accounts.Int16Value * 1.0", 123.0);
             //TestVbAndCsFormula("accounts.DecimalValue * 1.0", accountInstance.DecimalValue * 1.0);
             //TestVbAndCsFormula("accounts.Sum(1,2,3,4)", (decimal)10.0);
-
         }
     }
 }

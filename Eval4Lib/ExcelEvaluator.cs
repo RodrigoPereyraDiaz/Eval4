@@ -268,7 +268,7 @@ namespace Eval4.Excel
         {
             get
             {
-                return EvaluatorOptions.BooleanLogic
+                return EvaluatorOptions.BooleanValues
                     //| EvaluatorOptions.CaseSensitive
                     | EvaluatorOptions.DoubleValues
                     //| EvaluatorOptions.IntegerValues

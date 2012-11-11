@@ -6,13 +6,13 @@ using System.Text;
 namespace Eval4.Core
 {
 
-    public abstract class Evaluator<T> : IEvaluator
+    public abstract class Evaluator<CustomToken> : IEvaluator // where CustomToken : IEquatable<CustomToken>
     {
         internal List<object> mEnvironmentFunctionsList;
         public bool RaiseVariableNotFoundException;
         private Dictionary<string, IVariable> mVariableBag;
-        internal Dictionary<TokenType, List<Declaration>> mBinaryDeclarations;
-        internal Dictionary<TokenType, List<Declaration>> mUnaryDeclarations;
+        internal Dictionary<ICompleteTokenType, List<Declaration>> mBinaryDeclarations;
+        internal Dictionary<ICompleteTokenType, List<Declaration>> mUnaryDeclarations;
         internal Dictionary<TypePair, Declaration> mImplicitCasts;
         internal Dictionary<TypePair, Declaration> mExplicitCasts;
         Dictionary<string, IHasValue> mExpressions = new Dictionary<string, IHasValue>();
@@ -29,18 +29,18 @@ namespace Eval4.Core
         {
             mEnvironmentFunctionsList = new List<object>();
             mVariableBag = new Dictionary<string, IVariable>((this.Options & EvaluatorOptions.CaseSensitive) != 0 ? StringComparer.InvariantCulture : StringComparer.InvariantCultureIgnoreCase);
-            mUnaryDeclarations = new Dictionary<TokenType, List<Declaration>>();
-            mBinaryDeclarations = new Dictionary<TokenType, List<Declaration>>();
+            var comparer = new CompleteTokenComparer();
+            mUnaryDeclarations = new Dictionary<ICompleteTokenType, List<Declaration>>(comparer);
+            mBinaryDeclarations = new Dictionary<ICompleteTokenType, List<Declaration>>(comparer);
             mImplicitCasts = new Dictionary<TypePair, Declaration>();
             mExplicitCasts = new Dictionary<TypePair, Declaration>();
-
             DeclareOperators();
         }
 
         protected virtual void DeclareOperators()
         {
             mOptions = this.Options;
-            if ((mOptions & EvaluatorOptions.BooleanLogic) != 0) DeclareOperators(EvaluatorOptions.BooleanLogic);
+            if ((mOptions & EvaluatorOptions.BooleanValues) != 0) DeclareOperators(EvaluatorOptions.BooleanValues);
             if ((mOptions & EvaluatorOptions.IntegerValues) != 0) DeclareOperators(EvaluatorOptions.IntegerValues);
             if ((mOptions & EvaluatorOptions.DoubleValues) != 0) DeclareOperators(EvaluatorOptions.DoubleValues);
             if ((mOptions & EvaluatorOptions.DateTimeValues) != 0) DeclareOperators(EvaluatorOptions.DateTimeValues);
@@ -52,7 +52,7 @@ namespace Eval4.Core
         {
             switch (option)
             {
-                case EvaluatorOptions.BooleanLogic:
+                case EvaluatorOptions.BooleanValues:
                     AddBinaryOperation<bool, bool, bool>(TokenType.OperatorAnd, (a, b) => { return a & b; });
                     AddBinaryOperation<bool, bool, bool>(TokenType.OperatorOr, (a, b) => { return a | b; });
                     AddBinaryOperation<bool, bool, bool>(TokenType.OperatorXor, (a, b) => { return a ^ b; });
@@ -62,7 +62,7 @@ namespace Eval4.Core
                     AddBinaryOperation<bool, bool, bool>(TokenType.OperatorNE, (a, b) => { return a != b; });
                     AddUnaryOperation<bool, bool>(TokenType.OperatorNot, (a) => { return !a; });
 
-                    AddExplicitCast<bool, int>((a) => { return (a ? 1 : 0); });
+                    AddExplicitCast<bool, int>((a) => { return (a ? 1 : 0); }, CastCompatibility.NoLoss);
                     break;
 
                 case EvaluatorOptions.IntegerValues:
@@ -73,7 +73,7 @@ namespace Eval4.Core
                     AddBinaryOperation<int, int, int>(TokenType.OperatorModulo, (a, b) => { return a % b; });
                     AddBinaryOperation<int, int, int>(TokenType.OperatorAnd, (a, b) => { return a & b; });
                     AddBinaryOperation<int, int, int>(TokenType.OperatorOr, (a, b) => { return a | b; });
-                    AddBinaryOperation<int, int, int>(TokenType.OperatorXor, (a, b) => { return a ^ b; });                    
+                    AddBinaryOperation<int, int, int>(TokenType.OperatorXor, (a, b) => { return a ^ b; });
                     AddBinaryOperation<int, int, bool>(TokenType.OperatorEQ, (a, b) => { return a == b; });
                     AddBinaryOperation<int, int, bool>(TokenType.OperatorNE, (a, b) => { return a != b; });
                     AddBinaryOperation<int, int, bool>(TokenType.OperatorGE, (a, b) => { return a >= b; });
@@ -89,12 +89,12 @@ namespace Eval4.Core
                     AddImplicitCast<sbyte, int>((a) => { return a; }, CastCompatibility.NoLoss);
                     AddImplicitCast<short, int>((a) => { return a; }, CastCompatibility.NoLoss);
                     AddImplicitCast<ushort, int>((a) => { return a; }, CastCompatibility.NoLoss);
-                    AddExplicitCast<uint, int>((a) => { return (int)a; });
-                    AddExplicitCast<long, int>((a) => { return (int)a; });
-                    AddExplicitCast<ulong, int>((a) => { return (int)a; });
-                    AddExplicitCast<double, int>((a) => { return (int)a; });
-                    AddExplicitCast<float, int>((a) => { return (int)a; });
-                    AddExplicitCast<decimal, int>((a) => { return (int)a; });
+                    AddExplicitCast<uint, int>((a) => { return (int)a; }, CastCompatibility.PossibleLoss);
+                    AddExplicitCast<long, int>((a) => { return (int)a; }, CastCompatibility.PossibleLoss);
+                    AddExplicitCast<ulong, int>((a) => { return (int)a; }, CastCompatibility.PossibleLoss);
+                    AddExplicitCast<double, int>((a) => { return (int)a; }, CastCompatibility.PossibleLoss);
+                    AddExplicitCast<float, int>((a) => { return (int)a; }, CastCompatibility.PossibleLoss);
+                    AddExplicitCast<decimal, int>((a) => { return (int)a; }, CastCompatibility.PossibleLoss);
                     break;
 
                 case EvaluatorOptions.DoubleValues:
@@ -121,7 +121,7 @@ namespace Eval4.Core
                     AddImplicitCast<long, double>((a) => { return a; }, CastCompatibility.NoLoss);
                     AddImplicitCast<ulong, double>((a) => { return a; }, CastCompatibility.NoLoss);
                     AddImplicitCast<float, double>((a) => { return a; }, CastCompatibility.NoLoss);
-                    AddExplicitCast<decimal, double>((a) => { return (int)a; });
+                    AddExplicitCast<decimal, double>((a) => { return (int)a; }, CastCompatibility.PossibleLoss);
 
                     if ((mOptions & EvaluatorOptions.IntegerValues) == 0)
                     {
@@ -175,13 +175,13 @@ namespace Eval4.Core
                     AddImplicitCast<sbyte, string>((a) => { return ConvertToString(a); }, CastCompatibility.PossibleLoss);
                     AddImplicitCast<short, string>((a) => { return ConvertToString(a); }, CastCompatibility.PossibleLoss);
                     AddImplicitCast<ushort, string>((a) => { return ConvertToString(a); }, CastCompatibility.PossibleLoss);
-                    AddExplicitCast<uint, string>((a) => { return ConvertToString(a); });
-                    AddExplicitCast<int, string>((a) => { return ConvertToString(a); });
-                    AddExplicitCast<long, string>((a) => { return ConvertToString(a); });
-                    AddExplicitCast<ulong, string>((a) => { return ConvertToString(a); });
-                    AddExplicitCast<double, string>((a) => { return ConvertToString(a); });
-                    AddExplicitCast<float, string>((a) => { return ConvertToString(a); });
-                    AddExplicitCast<decimal, string>((a) => { return ConvertToString(a); });
+                    AddExplicitCast<uint, string>((a) => { return ConvertToString(a); }, CastCompatibility.PossibleLoss);
+                    AddExplicitCast<int, string>((a) => { return ConvertToString(a); }, CastCompatibility.PossibleLoss);
+                    AddExplicitCast<long, string>((a) => { return ConvertToString(a); }, CastCompatibility.PossibleLoss);
+                    AddExplicitCast<ulong, string>((a) => { return ConvertToString(a); }, CastCompatibility.PossibleLoss);
+                    AddExplicitCast<double, string>((a) => { return ConvertToString(a); }, CastCompatibility.PossibleLoss);
+                    AddExplicitCast<float, string>((a) => { return ConvertToString(a); }, CastCompatibility.PossibleLoss);
+                    AddExplicitCast<decimal, string>((a) => { return ConvertToString(a); }, CastCompatibility.PossibleLoss);
                     break;
 
                 case EvaluatorOptions.ObjectValues:
@@ -207,22 +207,27 @@ namespace Eval4.Core
 
         protected void AddUnaryOperation<P1, T>(TokenType tokenType, Func<P1, T> func)
         {
-            ProcessDeclaration(new Declaration() { tk = tokenType, dlg = func, P1 = typeof(P1), T = typeof(T) });
+            AddDeclaration(new Declaration(tokenType, default(CustomToken), func, typeof(P1), null, typeof(T)));
         }
 
         protected void AddBinaryOperation<P1, P2, T>(TokenType tokenType, Func<P1, P2, T> func)
         {
-            ProcessDeclaration(new Declaration() { tk = tokenType, dlg = func, P1 = typeof(P1), P2 = typeof(P2), T = typeof(T) });
+            AddDeclaration(new Declaration(tokenType, default(CustomToken), func, typeof(P1), typeof(P2), typeof(T)));
+        }
+
+        protected void AddBinaryOperation<P1, P2, T>(CustomToken customToken, Func<P1, P2, T> func)
+        {
+            AddDeclaration(new Declaration(TokenType.Custom, customToken, func, typeof(P1), typeof(P2), typeof(T)));
         }
 
         protected void AddImplicitCast<P1, T>(Func<P1, T> func, CastCompatibility compatibility)
         {
-            ProcessDeclaration(new Declaration() { tk = TokenType.ImplicitCast, dlg = func, P1 = typeof(P1), T = typeof(T), Compatibility = compatibility });
+            AddDeclaration(new Declaration(TokenType.ImplicitCast, default(CustomToken), func, typeof(P1), null, typeof(T), compatibility));
         }
 
-        protected void AddExplicitCast<P1, T>(Func<P1, T> func)
+        protected void AddExplicitCast<P1, T>(Func<P1, T> func, CastCompatibility compatibility)
         {
-            ProcessDeclaration(new Declaration() { tk = TokenType.ExplicitCast, dlg = func, P1 = typeof(P1), T = typeof(T) });
+            AddDeclaration(new Declaration(TokenType.ExplicitCast, default(CustomToken), func, typeof(P1), null, typeof(T), compatibility));
         }
 
         private static int CompareString(string a, string b)
@@ -259,16 +264,16 @@ namespace Eval4.Core
             return a.Equals(b);
         }
 
-        private void ProcessDeclaration(Declaration decl)
+        private void AddDeclaration(Declaration decl)
         {
-            var tk = decl.tk;
+            var tk = decl.Type;
             if (tk == TokenType.ImplicitCast || tk == TokenType.ExplicitCast)
             {
                 var typePair = new TypePair() { Actual = decl.P1, Target = decl.T };
                 Declaration curDecl;
                 var casts = (tk == TokenType.ImplicitCast ? mImplicitCasts : mExplicitCasts);
                 if (!casts.TryGetValue(typePair, out curDecl) ||
-                    (curDecl.tk == TokenType.ExplicitCast && decl.tk == TokenType.ImplicitCast))
+                    (curDecl.Type == TokenType.ExplicitCast && decl.Type == TokenType.ImplicitCast))
                 {
                     casts[typePair] = decl;
                 }
@@ -277,10 +282,10 @@ namespace Eval4.Core
             {
                 var declarations = (decl.P2 == null ? mUnaryDeclarations : mBinaryDeclarations);
                 List<Declaration> tokenDeclarations;
-                if (!declarations.TryGetValue(tk, out tokenDeclarations))
+                if (!declarations.TryGetValue(decl, out tokenDeclarations))
                 {
                     tokenDeclarations = new List<Declaration>();
-                    declarations[tk] = tokenDeclarations;
+                    declarations[decl] = tokenDeclarations;
                 }
                 tokenDeclarations.Add(decl);
             }
@@ -382,17 +387,17 @@ namespace Eval4.Core
             return parsed.ObjectValue;
         }
 
-        public string EvalTemplate(string template)
-        {
-            IHasValue parsed = ParseTemplate(template);
-            return parsed.ObjectValue.ToString();
-        }
+        //public string EvalTemplate(string template)
+        //{
+        //    IHasValue parsed = ParseTemplate(template);
+        //    return parsed.ObjectValue.ToString();
+        //}
 
-        public IHasValue<string> ParseTemplate(string template)
-        {
-            IHasValue<string> parsed = (IHasValue<string>)InternalParse(template, sourceIsTextTemplate: true);
-            return parsed;
-        }
+        //public IHasValue<string> ParseTemplate(string template)
+        //{
+        //    IHasValue<string> parsed = (IHasValue<string>)InternalParse(template, sourceIsTextTemplate: true);
+        //    return parsed;
+        //}
 
 
         public void SetVariable<T>(string variableName, T variableValue)
@@ -517,7 +522,7 @@ namespace Eval4.Core
         {
             IHasValue result = null;
             List<Declaration> declarations;
-            if (mUnaryDeclarations.TryGetValue(token.Type, out declarations))
+            if (mUnaryDeclarations.TryGetValue(token, out declarations))
             {
                 var tt = token;
                 var opPrecedence = GetPrecedence(tt, true);
@@ -651,7 +656,7 @@ namespace Eval4.Core
                 var leftType = valueLeft.ValueType;
                 var rightType = valueRight.ValueType;
                 List<Declaration> declarations;
-                if (this.mBinaryDeclarations.TryGetValue(tt, out declarations))
+                if (this.mBinaryDeclarations.TryGetValue(tk, out declarations))
                 {
                     foreach (var decl in declarations)
                     {
@@ -782,18 +787,21 @@ namespace Eval4.Core
             } while (true);
         }
 
-        internal void NextChar()
+        internal void NextChar(int count = 1)
         {
-            if (mPos < mLen)
+            while (--count >= 0)
             {
-                mCurChar = mString[mPos];
-                CleanUpCharacter(ref mCurChar);
+                if (mPos < mLen)
+                {
+                    mCurChar = mString[mPos];
+                    CleanUpCharacter(ref mCurChar);
 
-                mPos += 1;
-            }
-            else
-            {
-                mCurChar = '\0';
+                    mPos += 1;
+                }
+                else
+                {
+                    mCurChar = '\0';
+                }
             }
         }
 
@@ -993,9 +1001,11 @@ namespace Eval4.Core
 
         protected IHasValue ParseRight(IHasValue acc, int precedence, IHasValue valueLeft)
         {
+            int startingPos = mPos;
+            if (mCurToken.Type == TokenType.Eof || valueLeft.ValueType == typeof(SyntaxError)) return valueLeft;
+
             while (true)
             {
-                if (mCurToken.Type == TokenType.Eof || valueLeft.ValueType == typeof(SyntaxError)) return valueLeft;
 
                 int opPrecedence = GetPrecedence(mCurToken, unary: false);
                 if (precedence >= opPrecedence)
@@ -1007,6 +1017,13 @@ namespace Eval4.Core
                 else
                 {
                     ParseRight(mCurToken, opPrecedence, acc, ref valueLeft);
+                }
+
+                if (mCurToken.Type == TokenType.Eof || valueLeft.ValueType == typeof(SyntaxError)) return valueLeft;
+
+                if (mPos == startingPos)
+                {
+                    throw new InvalidProgramException(string.Format("{0} is not processing correctly.", this.GetType().Name));
                 }
             }
         }
@@ -1192,7 +1209,7 @@ namespace Eval4.Core
                     {
                         Delegate castDlg;
                         var thisScore = ParamCompatibility(parameters[idx], pi.ParameterType, out castDlg);
-                        if (thisScore ==  CompatibilityLevel.Incompatible)
+                        if (thisScore == CompatibilityLevel.Incompatible)
                         {
                             if (pi.ParameterType.IsArray
                             && index == plist.Length - 1)
@@ -1251,7 +1268,7 @@ namespace Eval4.Core
             castDlg = null;
             var actualType = actual.ValueType;
             Declaration cast;
-            
+
             if (actualType == expectedType) return CompatibilityLevel.Identical;
             if (expectedType.IsAssignableFrom(actualType)) return CompatibilityLevel.Assignable;
             if (mImplicitCasts.TryGetValue(new TypePair() { Actual = actualType, Target = expectedType }, out cast))
@@ -1267,7 +1284,7 @@ namespace Eval4.Core
                         return CompatibilityLevel.Cast_SureLoss;
                 }
             }
-            return  CompatibilityLevel.Incompatible;
+            return CompatibilityLevel.Incompatible;
         }
 
         internal void ParseIdentifier(ref IHasValue valueLeft)
@@ -1468,25 +1485,25 @@ namespace Eval4.Core
             this.SetVariable(variableName, variableValue);
         }
 
-        IHasValue<string> IEvaluator.ParseTemplate(string template)
-        {
-            return this.ParseTemplate(template);
-        }
-
         object IEvaluator.Eval(string formula)
         {
             return this.Eval(formula);
         }
 
-        string IEvaluator.EvalTemplate(string formula)
-        {
-            throw new NotImplementedException();
-        }
+        //IHasValue<string> IEvaluator.ParseTemplate(string template)
+        //{
+        //    return this.ParseTemplate(template);
+        //}
 
-        public class Token
+        //string IEvaluator.EvalTemplate(string formula)
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        public class Token : ICompleteTokenType
         {
             public TokenType Type { get; set; }
-            public T CustomType { get; set; }
+            public CustomToken CustomType { get; set; }
             public Object Value { get; set; }
 
             public Token(TokenType tokenType, object value = null)
@@ -1495,7 +1512,7 @@ namespace Eval4.Core
                 this.Value = value;
             }
 
-            public Token(T customType, object value = null)
+            public Token(CustomToken customType, object value = null)
             {
                 this.Type = TokenType.Custom;
                 this.CustomType = customType;
@@ -1513,14 +1530,77 @@ namespace Eval4.Core
                     + " " + (String.IsNullOrEmpty(ValueString) ? Value : ValueString);
             }
 
+
+            TokenType ICompleteTokenType.TokenType { get { return this.Type; } }
+            CustomToken ICompleteTokenType.CustomToken { get { return CustomType; } }
         }
 
+        internal class Declaration : ICompleteTokenType
+        {
+            internal TokenType Type;
+            internal CustomToken CustomToken;
+            internal Delegate dlg;
+            internal Type P1;
+            internal Type P2;
+            internal Type T;
+            internal CastCompatibility Compatibility;
+
+            public Declaration(TokenType tokenType, CustomToken customToken, Delegate func, System.Type type1, System.Type type2, System.Type resultType, CastCompatibility compatibility = CastCompatibility.Undefined)
+            {
+                this.Type = tokenType;
+                this.CustomToken = customToken;
+                this.dlg = func;
+                this.P1 = type1;
+                this.P2 = type2;
+                this.T = resultType;
+                this.Compatibility = compatibility;
+            }
+
+            TokenType ICompleteTokenType.TokenType { get { return this.Type; } }
+            CustomToken ICompleteTokenType.CustomToken { get { return CustomToken; } }
+        }
+
+        public interface ICompleteTokenType
+        {
+            TokenType TokenType { get; }
+            CustomToken CustomToken { get; }
+        }
+
+        public class CompleteTokenComparer : IEqualityComparer<ICompleteTokenType>
+        {
+            bool IEqualityComparer<ICompleteTokenType>.Equals(ICompleteTokenType x, ICompleteTokenType y)
+            {
+                if (x.TokenType != y.TokenType) return false;
+                if (x.TokenType == TokenType.Custom) return x.CustomToken.Equals(y.CustomToken);
+                else return true;
+            }
+
+            int IEqualityComparer<ICompleteTokenType>.GetHashCode(ICompleteTokenType obj)
+            {
+                if (obj.TokenType == TokenType.Custom) return obj.CustomToken.GetHashCode();
+                else return obj.TokenType.GetHashCode();
+            }
+        }
+
+        public char Char(int pos)
+        {
+            if (mPos + pos < mLen)
+            {
+                var result = mString[mPos];
+                CleanUpCharacter(ref result);
+                return result;
+            }
+            else
+            {
+                return '\0';
+            }
+        }
     }
 
     public enum EvaluatorOptions
     {
         CaseSensitive = 1,
-        BooleanLogic = 2,
+        BooleanValues = 2,
         IntegerValues = 4,
         DoubleValues = 8,
         DateTimeValues = 16,
@@ -1548,21 +1628,13 @@ namespace Eval4.Core
         }
     }
 
-    internal class Declaration
-    {
-        internal TokenType tk;
-        internal Delegate dlg;
-        internal Type P1;
-        internal Type P2;
-        internal Type T;
-        internal CastCompatibility Compatibility;
-    }
 
     public enum CastCompatibility
     {
-        NoLoss = 0,
-        PossibleLoss = 2,
-        SevereLoss = 1
+        Undefined,
+        NoLoss,
+        PossibleLoss,
+        SureLoss
     }
 
     public enum CompatibilityLevel

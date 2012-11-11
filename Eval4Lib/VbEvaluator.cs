@@ -18,7 +18,7 @@ namespace Eval4.VB
         {
             get
             {
-                return EvaluatorOptions.BooleanLogic
+                return EvaluatorOptions.BooleanValues
                     //| EvaluatorOptions.CaseSensitive
                     //| EvaluatorOptions.DateTimeValues
                     | EvaluatorOptions.DoubleValues
@@ -226,6 +226,7 @@ namespace Eval4.VB
                             break;
                     }
                     break;
+
                 case TokenType.OperatorDivide:
                     NextToken();
                     valueRight = ParseExpr(valueLeft, opPrecedence);

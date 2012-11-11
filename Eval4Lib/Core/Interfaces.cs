@@ -13,8 +13,8 @@ namespace Eval4.Core
         IHasValue Parse(string formula);
         object Eval(string formula);
 
-        IHasValue<string> ParseTemplate(string template);
-        string EvalTemplate(string template);
+        //IHasValue<string> ParseTemplate(string template);
+        //string EvalTemplate(string template);
 
         string ConvertToString(object result);
     }

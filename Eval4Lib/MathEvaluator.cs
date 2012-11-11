@@ -23,7 +23,7 @@ namespace Eval4.Math
         {
             get
             {
-                return EvaluatorOptions.BooleanLogic
+                return EvaluatorOptions.BooleanValues
                     //| EvaluatorOptions.CaseSensitive
                     //| EvaluatorOptions.DateTimeValues
                     | EvaluatorOptions.DoubleValues
@@ -37,9 +37,18 @@ namespace Eval4.Math
         {
             base.DeclareOperators();
             base.AddBinaryOperation<Matrix, Matrix, Matrix>(TokenType.OperatorPlus, (a, b) => a.ElementWiseAdd(b));
+
+            base.AddBinaryOperation<Matrix, Matrix, Matrix>(TokenType.OperatorMinus, (a, b) => a.ElementWiseSubtract(b));
+
             base.AddBinaryOperation<Matrix, Matrix, Matrix>(TokenType.OperatorMultiply, (a, b) => a.Product(b));
+
             base.AddBinaryOperation<Matrix, double, Matrix>(TokenType.OperatorMultiply, (a, b) => a.ScalarMultiply(b));
             base.AddBinaryOperation<double, Matrix, Matrix>(TokenType.OperatorMultiply, (a, b) => b.ScalarMultiply(a));
+
+            base.AddBinaryOperation<Matrix, Matrix, Matrix>(MathToken.ElementWiseAdd, (a, b) => a.ElementWiseAdd(b));
+            base.AddBinaryOperation<Matrix, Matrix, Matrix>(MathToken.ElementWiseSub, (a, b) => a.ElementWiseSubtract(b));
+            base.AddBinaryOperation<Matrix, Matrix, Matrix>(MathToken.ElementWiseMul, (a, b) => a.ElementWiseMultiply(b));
+            base.AddBinaryOperation<Matrix, Matrix, Matrix>(MathToken.ElementWiseDiv, (a, b) => a.ElementWiseDivide(b));
         }
 
         public override bool UseParenthesisForArrays
@@ -106,6 +115,28 @@ namespace Eval4.Math
                 case '\'':
                     NextChar();
                     return new Token(MathToken.Transpose);
+
+                case '.':
+                    switch (Char(1))
+                    {
+                        case '+':
+                            NextChar(2);
+                            return new Token(MathToken.ElementWiseAdd);
+                        case '-':
+                            NextChar(2);
+                            return new Token(MathToken.ElementWiseSub);
+                        case '*':
+                            NextChar(2);
+                            return new Token(MathToken.ElementWiseMul);
+                        case '/':
+                            NextChar(2);
+                            return new Token(MathToken.ElementWiseDiv);
+                        case '^':
+                            NextChar(2);
+                            return new Token(MathToken.ElementWisePower);
+                        default:
+                            return base.ParseToken();
+                    }
                 default:
                     return base.ParseToken();
 
@@ -153,16 +184,10 @@ namespace Eval4.Math
                             NextToken();
                             if (EmitDelegateExpr(ref valueLeft, new Func<Matrix, Matrix>((a) => a.Transpose()))) return;
                             break;
+                        default:
+                            base.ParseRight(tk, opPrecedence, Acc, ref valueLeft);
+                            break;
                     }
-                    //switch(tk.
-                    //NextToken();
-                    //IHasValue thenExpr = ParseExpr(null, 0);
-                    //if (!Expect(TokenType.OperatorColon, "Missing : in ? expression test ? valueIfTrue : valueIfFalse.", ref valueLeft))
-                    //    return;
-                    //IHasValue elseExpr = ParseExpr(null, 0);
-                    //var t = typeof(OperatorIfExpr<>).MakeGenericType(thenExpr.SystemType);
-
-                    //valueLeft = (IHasValue)Activator.CreateInstance(t, valueLeft, thenExpr, elseExpr);
                     break;
                 default:
                     base.ParseRight(tk, opPrecedence, Acc, ref valueLeft);
@@ -319,7 +344,7 @@ namespace Eval4.Math
 
 
     // Immutable matrix
-    class Matrix
+    public class Matrix : IEquatable<Matrix>
     {
         private int _rowCount;
         private int _columnCount;
@@ -744,6 +769,33 @@ namespace Eval4.Math
             return result;
         }
 
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is Matrix)
+            {
+                return (obj as Matrix).Equals(this);
+            }
+            else return false;
+        }
+
+        public bool Equals(Matrix other)
+        {
+            if (other._rowCount != this.RowCount ||
+                other._columnCount != this.ColumnCount) return false;
+            for (int r = 0; r < this._rowCount; r++)
+            {
+                for (int c = 0; c < this._columnCount; c++)
+                {
+                    if (_data[r][c] != other._data[r][c]) return false;
+                }
+            }
+            return true;
+        }
     }
 }
 
