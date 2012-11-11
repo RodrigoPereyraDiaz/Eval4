@@ -1,167 +1,301 @@
 ﻿using System;
-using Eval4;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Eval4.Tests
 {
     [TestClass]
-    public class VbTests : BaseTest
+    public class VbTests : BaseTest<VbEvaluator>
     {
+        public VbTests()
+        {
+            ev.SetVariable("A", 2);
+            ev.SetVariable("B", 3);
+        }
+
         [TestMethod, TestCategory("VB")]
-        public void TestArithmetic()
+        public void VB_Arithmetic()
         {
-            TestVBFormula("3", 3);
-            TestVBFormula("3 + 2", 5);
-            TestVBFormula("3 - 2", 1);
-            TestVBFormula("3 * 2", 6);
-            TestVBFormula("3 / 2", 3 / 2.0);
-            TestVBFormula("1*2*3*4*5*6*7*8*9", 1 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9);
+            TestFormula("3", 3);
+            TestFormula("3 + 2", 5);
+            TestFormula("3 - 2", 1);
+            TestFormula("3 * 2", 6);
+            TestFormula("3 / 2", 3 / 2.0);
+            TestFormula("1*2*3*4*5*6*7*8*9", 1 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9);
         }
 
         [TestMethod]
-        public void TestPercent()
+        public void VB_Percent()
         {
-            TestVBFormula("200 + 5%", 210.0);
-            TestVBFormula("200 - 5%", 190.0);
+            TestFormula("200 + 5%", 210.0);
+            TestFormula("200 - 5%", 190.0);
         }
 
         [TestMethod]
-        public void TestAnd()
+        public void VB_And()
         {
-            TestVBFormula("false and false", false);
-            TestVBFormula("false and true", false);
-            TestVBFormula("true and false", false);
-            TestVBFormula("true and true", true);
+            TestFormula("false and false", false);
+            TestFormula("false and true", false);
+            TestFormula("true and false", false);
+            TestFormula("true and true", true);
         }
 
         [TestMethod]
-        public void TestOr()
+        public void VB_Or()
         {
-            TestVBFormula("false or false", false);
-            TestVBFormula("false or true", true);
-            TestVBFormula("true or false", true);
-            TestVBFormula("true or true", true);
+            TestFormula("false or false", false);
+            TestFormula("false or true", true);
+            TestFormula("true or false", true);
+            TestFormula("true or true", true);
         }
 
         [TestMethod]
-        public void TestNot()
+        public void VB_Not()
         {
-            TestVBFormula("not false", true);
-            TestVBFormula("not true", false);
-            TestVBFormula("not not false", false);
-            TestVBFormula("false or not false", true);
+            TestFormula("not false", true);
+            TestFormula("not true", false);
+            TestFormula("not not false", false);
+            TestFormula("false or not false", true);
         }
 
         [TestMethod]
-        public void TestIf()
+        public void VB_If()
         {
-            TestVBFormula("if(false,1,0)", 0);
-            TestVBFormula("if(true,1,0)", 1);
+            TestFormula("if(false,1,0)", 0);
+            TestFormula("if(true,1,0)", 1);
         }
 
         [TestMethod]
-        public void TestXor()
+        public void VB_Xor()
         {
-            TestVBFormula("false xor false", false);
-            TestVBFormula("false xor true", true);
-            TestVBFormula("true xor false", true);
-            TestVBFormula("true xor true", false);
+            TestFormula("false xor false", false);
+            TestFormula("false xor true", true);
+            TestFormula("true xor false", true);
+            TestFormula("true xor true", false);
         }
 
         static DateTime christmas = new DateTime(2012, 12, 25);
 
         [TestMethod]
-        public void TestDate()
+        public void VB_Date()
         {
-            TestVBFormula("#2012/12/25#", christmas);
+            TestFormula("#2012/12/25#", christmas);
         }
 
         //[TestMethod]
-        //public void TestDateArithmetic()
+        //public void VB_DateArithmetic()
         //{
-        //    TestVBFormula("#2012/12/25# + 1", christmas.AddDays(1));
-        //    TestVBFormula("1 + #2012/12/25#", christmas.AddDays(1));
-        //    TestVBFormula("#2012/12/25# - 1", christmas.AddDays(-1));
+        //    TestFormula("#2012/12/25# + 1", christmas.AddDays(1));
+        //    TestFormula("1 + #2012/12/25#", christmas.AddDays(1));
+        //    TestFormula("#2012/12/25# - 1", christmas.AddDays(-1));
         //}
 
         //[TestMethod]
-        //public void TestTimeSpan()
+        //public void VB_TimeSpan()
         //{
-        //    TestVBFormula("#2012/12/25# - #2013/01/01#", new TimeSpan(-7, 0, 0, 0));
+        //    TestFormula("#2012/12/25# - #2013/01/01#", new TimeSpan(-7, 0, 0, 0));
         //}
 
         [TestMethod]
-        public void StringConcat()
+        public void VB_StringConcat()
         {
-            TestVBFormula("\"ABC\" + \"DEF\"", "ABCDEF");
+            TestFormula("\"ABC\" + \"DEF\"", "ABCDEF");
         }
 
         [TestMethod]
-        public void TestNumericEquality()
+        public void VB_NumericEquality()
         {
-            TestVBFormula("5=5", true);
-            TestVBFormula("5>4", true);
-            TestVBFormula("5>=4", true);
-            TestVBFormula("5>=5", true);
-            TestVBFormula("5<6", true);
-            TestVBFormula("5<=6", true);
-            TestVBFormula("6<=6", true);
-            TestVBFormula("5<>6", true);
+            TestFormula("5=5", true);
+            TestFormula("5>4", true);
+            TestFormula("5>=4", true);
+            TestFormula("5>=5", true);
+            TestFormula("5<6", true);
+            TestFormula("5<=6", true);
+            TestFormula("6<=6", true);
+            TestFormula("5<>6", true);
 
-            TestVBFormula("5=6", false);
-            TestVBFormula("4>5", false);
-            TestVBFormula("6<5", false);
-            TestVBFormula("4>=5", false);
-            TestVBFormula("6<=5", false);
-            TestVBFormula("5<>5", false);
+            TestFormula("5=6", false);
+            TestFormula("4>5", false);
+            TestFormula("6<5", false);
+            TestFormula("4>=5", false);
+            TestFormula("6<=5", false);
+            TestFormula("5<>5", false);
         }
 
         [TestMethod]
-        public void TestWordStrings()
+        public void VB_WordStrings()
         {
-            TestVBFormula("\"A\"", "A");
-            TestVBFormula("‘A’", "A");
-            TestVBFormula("“A”", "A");
+            TestFormula("\"A\"", "A");
+            TestFormula("‘A’", "A");
+            TestFormula("“A”", "A");
         }
 
         [TestMethod]
-        public void TestStringEquality()
+        public void VB_StringEquality()
         {
-            TestVBFormula("\"A\"=\"A\"", true);
-            TestVBFormula("\"B\">\"A\"", true);
-            TestVBFormula("\"A\"<\"B\"", true);
-            TestVBFormula("\"B\">=\"A\"", true);
-            TestVBFormula("\"A\"<=\"B\"", true);
-            TestVBFormula("\"A\"<>\"B\"", true);
+            TestFormula("\"A\"=\"A\"", true);
+            TestFormula("\"B\">\"A\"", true);
+            TestFormula("\"A\"<\"B\"", true);
+            TestFormula("\"B\">=\"A\"", true);
+            TestFormula("\"A\"<=\"B\"", true);
+            TestFormula("\"A\"<>\"B\"", true);
 
-            TestVBFormula("\"A\">\"B\"", false);
-            TestVBFormula("\"B\"<\"A\"", false);
-            TestVBFormula("\"A\">=\"B\"", false);
-            TestVBFormula("\"B\"<=\"A\"", false);
-            TestVBFormula("\"A\"<>\"A\"", false);
+            TestFormula("\"A\">\"B\"", false);
+            TestFormula("\"B\"<\"A\"", false);
+            TestFormula("\"A\">=\"B\"", false);
+            TestFormula("\"B\"<=\"A\"", false);
+            TestFormula("\"A\"<>\"A\"", false);
         }
 
         [TestMethod]
         //[ExpectedException(typeof(SyntaxError))]
-        public void TestImpossibleOperator()
+        public void VB_ImpossibleOperator()
         {
-            var actualResult = evVB.Eval("5-\"A\"");
+            var actualResult = ev.Eval("5-\"A\"");
 
-            Assert.IsInstanceOfType(actualResult, typeof(SyntaxError));
-            Assert.AreEqual((actualResult as SyntaxError).pos, 5);
+            Assert.IsInstanceOfType(actualResult, typeof(Core.SyntaxError));
+            Assert.AreEqual((actualResult as Core.SyntaxError).pos, 5);
         }
 
         [TestMethod]
-        public void TestUnary()
+        public void VB_Unary()
         {
-            TestVBFormula("-5 + 10", (-5 + 10));
-            TestVBFormula("5 * -5", (5 * -5));
-            TestVBFormula("3 - -5 * 4", 3 - -5 * 4);
-            TestVBFormula("10 - -5", (10 - -5));
-            TestVBFormula("1+-2*-3", (1 + -2 * -3));
-            TestVBFormula("1+-2*3", (1 + -2 * 3));
+            TestFormula("-5 + 10", (-5 + 10));
+            TestFormula("5 * -5", (5 * -5));
+            TestFormula("3 - -5 * 4", 3 - -5 * 4);
+            TestFormula("10 - -5", (10 - -5));
+            TestFormula("1+-2*-3", (1 + -2 * -3));
+            TestFormula("1+-2*3", (1 + -2 * 3));
         }
 
 
+        [TestMethod]
+        public void VB_CheckVariables()
+        {
+            TestFormula("A", 2);
+            TestFormula("B", 3);
+        }
+
+        [TestMethod]
+        public void VB_CheckVariablesOperations()
+        {
+            TestFormula("A+B", 5);
+            TestFormula("A-B", -1);
+            TestFormula("A*B", 6);
+        }
+
+        [TestMethod]
+        //[ExpectedException(typeof(Exception))]
+        public void VB_CheckChangingVariables()
+        {
+            ev.SetVariable("C", 10);
+            var parsed = ev.Parse("C*5");
+            //throw new NotImplementedException();
+            //parsed.ValueChanged += parsed_ValueChanged;
+            Assert.AreEqual(parsed.ObjectValue, 50);
+            ev.SetVariable("C", 5);
+            Assert.AreEqual(parsed.ObjectValue, 25);
+            //throw new NotImplementedException();
+            //parsed.ValueChanged -= parsed_ValueChanged;
+            ev.SetVariable("C", 10);
+            //Assert.AreEqual(parsed.ObjectValue, 99.99);
+        }
+        //Accounts accountInstance = new Accounts();
+        //int[] pascal = new int[] { 1, 8, 28, 56, 70, 56, 28, 8, 1 };
+
+        //public TestArraysAndObjects()
+        //{
+        //    InitEvaluator(evVB);
+        //    InitEvaluator(evCS);
+        //}
+
+        //private void VB_InitEvaluator(IEvaluator ev)
+        //{
+        //    ev.SetVariable("pascal", pascal);
+        //    ev.SetVariable("fibonacci", new int[] { 1, 1, 2, 3, 5, 8, 13, 21, 34 });
+        //    ev.SetVariable("mult", new int[,] { { 0, 0, 0, 0 }, { 0, 1, 2, 3 }, { 0, 2, 4, 6 }, { 0, 3, 6, 9 } });
+        //    ev.SetVariable("accounts", accountInstance);
+        //}
+
+        //public class Accounts
+        //{
+        //    public double Credit { get { return 150.00; } }
+        //    public double Vat { get { return 20.0; } }
+        //    public byte ByteValue { get { return 123; } }
+        //    public Single SingleValue { get { return 123; } }
+        //    public Decimal DecimalValue { get { return 123; } }
+        //    public readonly Int16 Int16Value = 123;
+        //    public double CreditWithVat()
+        //    {
+        //        return AddVat(Vat, Credit);
+        //    }
+
+        //    public static double AddVat(double vat, double value)
+        //    {
+        //        return value * ((100 + vat) / 100.0);
+        //    }
+        //}
+
+        //[TestMethod]
+        //public void VB_AccessArrayVariables()
+        //{
+        //    TestCSFormula("pascal", pascal);
+        //    TestCSFormula("pascal[0]", 1);
+        //    TestCSFormula("pascal[2]", 28);
+        //    TestCSFormula("pascal[2]*2", 56);
+        //    TestCSFormula("mult[1,0]", 0);
+        //    TestCSFormula("mult[1,2]", 2);
+        //    TestCSFormula("mult[2,3]", 6);
+        //    TestCSFormula("mult[3,3]", 9);
+
+        //    TestVBFormula("pascal(0)", 1);
+        //    TestVBFormula("pascal(2)", 28);
+        //    TestVBFormula("pascal(2)*2", 56);
+        //    TestVBFormula("mult(1,0)", 0);
+        //    TestVBFormula("mult(1,2)", 2);
+        //    TestVBFormula("mult(2,3)", 6);
+        //    TestVBFormula("mult(3,3)", 9);
+        //}
+
+        //[TestMethod]
+        //public void VB_AccessObjectMethodsAndFields()
+        //{
+        //    TestVbAndCsFormula("accounts.Credit", 150.00);
+        //    TestVbAndCsFormula("accounts.Vat", 20.00);
+        //    TestVbAndCsFormula("accounts.CreditWithVat", 180.0);
+        //    TestVbAndCsFormula("accounts.AddVat(20,100)", 120.0);
+
+        //    TestVbAndCsFormula("accounts.ByteValue", (byte)123);
+        //    TestVbAndCsFormula("accounts.SingleValue", (Single)123);
+        //    TestVbAndCsFormula("accounts.DecimalValue", (decimal)123);
+        //    TestVbAndCsFormula("accounts.Int16Value", (Int16)123);
+
+        //    TestVbAndCsFormula("accounts.ByteValue * 1.0", 123.0);
+        //    TestVbAndCsFormula("accounts.SingleValue  * 1.0", 123.0);
+        //    TestVbAndCsFormula("accounts.Int16Value * 1.0", 123.0);
+        //    //TestVbAndCsFormula("accounts.DecimalValue * 1.0", accountInstance.DecimalValue * 1.0);
+        //    //TestVbAndCsFormula("accounts.Sum(1,2,3,4)", (decimal)10.0);
+        //}
+
+        //[TestMethod]
+        //public void VB_NumberLiterals()
+        //{
+        //    TestVbAndCsFormula("1.5", 1.5);
+        //    TestVbAndCsFormula("0.5", 0.5);
+        //    TestVbAndCsFormula(".5", .5);
+        //    TestVbAndCsFormula("-.5", -.5);
+        //    TestVbAndCsFormula("-0.5", -0.5);
+        //}
+
+        //[TestMethod]
+        //public void VB_Priorities()
+        //{
+        //    TestVbAndCsFormula("-1.5*-2.5", -1.5 * -2.5);
+        //}
+
+        //[TestMethod]
+        //public void VB_Template()
+        //{
+        //    TestTemplate("<p>Hello</p>", "<p>Hello</p>");
+        //}
     }
 }

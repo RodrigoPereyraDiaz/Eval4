@@ -28,15 +28,15 @@ namespace Eval4.Demo
             switch (PanelLanguage)
             {
                 case PanelLanguage.vb:
-                    ev = new VB.VbEvaluator();
+                    ev = new VbEvaluator();
                     items.Add("1+2*3");
                     break;
                 case PanelLanguage.csharp:
-                    ev = new CSharp.CSharpEvaluator();
+                    ev = new CSharpEvaluator();
                     //label1.Text = "Formula evaluator similar to C#";
                     break;
                 case PanelLanguage.mathEval:
-                    ev = new Math.MathEvaluator();
+                    ev = new MathEvaluator();
                     //label1.Text = "Formula evaluator similar to Matlab";
                     break;
                 case PanelLanguage.experiments:

@@ -4,7 +4,6 @@ using System.Collections;
 using System.ComponentModel;
 using System.Windows.Forms;
 using System.Data;
-using Eval4;
 using Eval4.Core;
 
 namespace Eval4.Demo
@@ -16,7 +15,7 @@ namespace Eval4.Demo
     {
 
         // Required by the Windows Form Designer
-        private CSharp.CSharpEvaluator ev;
+        private CSharpEvaluator ev;
         private bool mInitializing;
         private Eval4.Core.IHasValue mFormula3;
 
@@ -77,7 +76,7 @@ namespace Eval4.Demo
         public Form1()
         {
             mInitializing = true;
-            ev = new Eval4.CSharp.CSharpEvaluator();
+            ev = new CSharpEvaluator();
             //ev.AddEnvironmentFunctions(this);
             //ev.AddEnvironmentFunctions(new EvalFunctions());
             ev.SetVariable("EvalFunctions", new EvalFunctions());

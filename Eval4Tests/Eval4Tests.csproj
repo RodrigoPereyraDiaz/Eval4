@@ -52,12 +52,10 @@
   </Choose>
   <ItemGroup>
     <Compile Include="BaseTest.cs" />
-    <Compile Include="VbAndCsTests.cs" />
+    <Compile Include="JavascriptTests.cs" />
+    <Compile Include="ExcelTests.cs" />
     <Compile Include="MathTests.cs" />
     <Compile Include="CSharpTests.cs" />
-    <Compile Include="TestEnvironmentFunctions.cs" />
-    <Compile Include="TestArraysAndObjects.cs" />
-    <Compile Include="TestsWithVariables.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="VbTests.cs" />
   </ItemGroup>

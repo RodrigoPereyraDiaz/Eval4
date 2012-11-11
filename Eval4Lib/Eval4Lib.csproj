@@ -37,17 +37,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MathEvaluator.cs" />
-    <Compile Include="Core\Token.cs" />
+    <Compile Include="Core\Enums.cs" />
     <Compile Include="CSharpEvaluator.cs" />
     <Compile Include="Core\Evaluator.cs" />
     <Compile Include="ExcelEvaluator.cs" />
     <Compile Include="JavascriptEvaluator.cs" />
-    <Compile Include="SyntaxError.cs" />
+    <Compile Include="Core\SyntaxError.cs" />
     <Compile Include="Core\Expr.cs" />
     <Compile Include="Core\Interfaces.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="VbEvaluator.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

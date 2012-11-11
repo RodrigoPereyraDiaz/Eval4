@@ -6,6 +6,8 @@ using System.Linq;
 
 namespace Eval4.Core
 {
+    // Expr is an implementation for IHasValue.
+    // in Evaluator we should not be using Expr but only IHasValue
     public abstract class Expr : IHasValue, IObserver
     {
         internal List<Subscription> mSubscribedBy = new List<Subscription>();
@@ -30,7 +32,7 @@ namespace Eval4.Core
             if (p0 != null)
             {
                 mDependencies.Add(p0);
-                if (p0.Expr != null) mSubscribedTo.Add(p0.Expr.Subscribe(this));
+                if (p0.Value != null) mSubscribedTo.Add(p0.Value.Subscribe(this));
             }
         }
 

@@ -4,13 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Eval4.Excel
+namespace Eval4
 {
-    public enum ExcelToken
-    {
-        None
-    }
-
     public class Range
     {
         private Cell c1;
@@ -256,8 +251,13 @@ namespace Eval4.Excel
             return null;
         }
     }
-    public class ExcelEvaluator : Evaluator<ExcelToken>
+
+    public class ExcelEvaluator : Evaluator<ExcelEvaluator.ExcelToken>
     {
+        public enum ExcelToken
+        {
+            None
+        }
 
         public ExcelEvaluator()
         {

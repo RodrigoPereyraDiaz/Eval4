@@ -3,16 +3,17 @@ using System.Collections.Generic;
 using System.Text;
 using Eval4.Core;
 
-namespace Eval4.CSharp
+namespace Eval4
 {
-    public enum CSharpCustomToken
+    
+    public class CSharpEvaluator : Evaluator<CSharpEvaluator.CSharpCustomToken>
     {
-        Coalesce,
-        None
-    }
-
-    public class CSharpEvaluator : Core.Evaluator<CSharpCustomToken>
-    {
+        public enum CSharpCustomToken
+        {
+            Coalesce,
+            None
+        }
+        
         protected internal override EvaluatorOptions Options
         {
             get

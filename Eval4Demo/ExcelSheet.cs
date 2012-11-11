@@ -8,7 +8,6 @@ using System.Text;
 using System.Windows.Forms;
 using Eval4.Core;
 using System.Diagnostics;
-using Eval4.Excel;
 
 namespace Eval4.Demo
 {

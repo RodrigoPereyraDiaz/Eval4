@@ -4,13 +4,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Eval4.Javascript
+namespace Eval4
 {
-    public enum JavascriptToken{
-    }
 
-    public class JavascriptEvaluator : Evaluator<JavascriptToken>
+    public class JavascriptEvaluator : Evaluator<JavascriptEvaluator.JavascriptToken>
     {
+        public enum JavascriptToken
+        {
+        }
+
         protected internal override EvaluatorOptions Options
         {
             get

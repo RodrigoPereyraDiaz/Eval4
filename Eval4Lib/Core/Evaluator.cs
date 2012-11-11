@@ -50,6 +50,8 @@ namespace Eval4.Core
 
         protected virtual void DeclareOperators(EvaluatorOptions option)
         {
+            // The cyclomatic complexity of this method is high
+            // I don't see why, I like it as it is.
             switch (option)
             {
                 case EvaluatorOptions.BooleanValues:
@@ -125,6 +127,8 @@ namespace Eval4.Core
 
                     if ((mOptions & EvaluatorOptions.IntegerValues) == 0)
                     {
+                        // if there is no support for integer we provide a lossy conversion.
+                        // this will allow calling the methods that require integers.
                         AddImplicitCast<double, int>((a) => { return (int)a; }, CastCompatibility.PossibleLoss);
                     }
                     break;
@@ -1450,7 +1454,7 @@ namespace Eval4.Core
             foreach (var d in expr.Dependencies)
             {
                 cpt++;
-                WriteDependencies(tw, d.Name, d.Expr, indent + "  |");
+                WriteDependencies(tw, d.Name, d.Value, indent + "  |");
             }
             if (cpt == 0)
             {
@@ -1597,17 +1601,6 @@ namespace Eval4.Core
         }
     }
 
-    public enum EvaluatorOptions
-    {
-        CaseSensitive = 1,
-        BooleanValues = 2,
-        IntegerValues = 4,
-        DoubleValues = 8,
-        DateTimeValues = 16,
-        StringValues = 32,
-        ObjectValues = 64
-    }
-
     internal class TypePair : IEquatable<TypePair>
     {
         public Type Actual;
@@ -1628,25 +1621,6 @@ namespace Eval4.Core
         }
     }
 
-
-    public enum CastCompatibility
-    {
-        Undefined,
-        NoLoss,
-        PossibleLoss,
-        SureLoss
-    }
-
-    public enum CompatibilityLevel
-    {
-        Identical = 5,
-        Assignable = 4,
-        Cast_NoLoss = 3,
-        Cast_PossibleLoss = 2,
-        Cast_SureLoss = 1,
-        Incompatible = 0
-    }
-
     class StaticFunctionsWrapper
     {
         public Type type;
@@ -1656,15 +1630,6 @@ namespace Eval4.Core
             // TODO: Complete member initialization
             this.type = type;
         }
-    }
-
-    [Flags()]
-    public enum EvalMemberType
-    {
-        Field = 1,
-        Method = 2,
-        Property = 4,
-        All = 7
     }
 
 }

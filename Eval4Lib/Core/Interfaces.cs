@@ -45,14 +45,17 @@ namespace Eval4.Core
 
     public class Dependency
     {
-        public String Name;
-        public IHasValue Expr;
+        private String mName;
+        private IHasValue mHasValue;
 
         public Dependency(string name, IHasValue value)
         {
-            this.Name = name;
-            this.Expr = value;
+            this.mName = name;
+            this.mHasValue = value;
         }
+
+        public String Name { get { return mName; } }
+        public IHasValue Value { get { return mHasValue; } }
 
         internal static Dependency[] Group(string groupname, IEnumerable<IHasValue> @params)
         {

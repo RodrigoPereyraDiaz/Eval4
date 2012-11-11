@@ -4,21 +4,21 @@ using System.Text;
 using Eval4.Core;
 using System.Linq;
 
-namespace Eval4.Math
+namespace Eval4
 {
-    public enum MathToken
+    
+    public class MathEvaluator : Evaluator<MathEvaluator.MathToken>
     {
-        Transpose,        // '
-        ElementWiseAdd,   // .+
-        ElementWiseSub,   // .-
-        ElementWiseMul,   // .*
-        ElementWiseDiv,   // ./
-        ElementWisePower, // .^
-
-    }
-
-    public class MathEvaluator : Core.Evaluator<MathToken>
-    {
+        public enum MathToken
+        {
+            Transpose,        // '
+            ElementWiseAdd,   // .+
+            ElementWiseSub,   // .-
+            ElementWiseMul,   // .*
+            ElementWiseDiv,   // ./
+            ElementWisePower  // .^
+        }
+        
         protected internal override EvaluatorOptions Options
         {
             get
@@ -37,18 +37,23 @@ namespace Eval4.Math
         {
             base.DeclareOperators();
             base.AddBinaryOperation<Matrix, Matrix, Matrix>(TokenType.OperatorPlus, (a, b) => a.ElementWiseAdd(b));
-
+            base.AddBinaryOperation<double, Matrix, Matrix>(TokenType.OperatorPlus, (a, b) => b.ScalarAdd(a));
+            base.AddBinaryOperation<Matrix, double, Matrix>(TokenType.OperatorPlus, (a, b) => a.ScalarAdd(b));
             base.AddBinaryOperation<Matrix, Matrix, Matrix>(TokenType.OperatorMinus, (a, b) => a.ElementWiseSubtract(b));
-
+            base.AddBinaryOperation<double, Matrix, Matrix>(TokenType.OperatorMinus, (a, b) => b.ScalarSubtract(a).ScalarNeg());
+            base.AddBinaryOperation<Matrix, double, Matrix>(TokenType.OperatorMinus, (a, b) => a.ScalarSubtract(b));
             base.AddBinaryOperation<Matrix, Matrix, Matrix>(TokenType.OperatorMultiply, (a, b) => a.Product(b));
-
             base.AddBinaryOperation<Matrix, double, Matrix>(TokenType.OperatorMultiply, (a, b) => a.ScalarMultiply(b));
             base.AddBinaryOperation<double, Matrix, Matrix>(TokenType.OperatorMultiply, (a, b) => b.ScalarMultiply(a));
-
+            base.AddBinaryOperation<Matrix, double, Matrix>(TokenType.OperatorMultiply, (a, b) => a.ScalarPower(b));
+            base.AddBinaryOperation<Matrix, double, Matrix>(TokenType.OperatorDivide, (a, b) => a.ScalarDivide(b));
+            base.AddBinaryOperation<Matrix, double, Matrix>(TokenType.OperatorPower, (a, b) => a.ScalarPower(b));
+            
             base.AddBinaryOperation<Matrix, Matrix, Matrix>(MathToken.ElementWiseAdd, (a, b) => a.ElementWiseAdd(b));
             base.AddBinaryOperation<Matrix, Matrix, Matrix>(MathToken.ElementWiseSub, (a, b) => a.ElementWiseSubtract(b));
             base.AddBinaryOperation<Matrix, Matrix, Matrix>(MathToken.ElementWiseMul, (a, b) => a.ElementWiseMultiply(b));
             base.AddBinaryOperation<Matrix, Matrix, Matrix>(MathToken.ElementWiseDiv, (a, b) => a.ElementWiseDivide(b));
+            base.AddBinaryOperation<Matrix, Matrix, Matrix>(MathToken.ElementWisePower, (a, b) => a.ElementWisePower(b));
         }
 
         public override bool UseParenthesisForArrays
@@ -97,7 +102,7 @@ namespace Eval4.Math
 
                 case '^':
                     NextChar();
-                    return new Token(TokenType.OperatorXor);
+                    return new Token(TokenType.OperatorPower);
 
                 case '|':
                     NextChar();

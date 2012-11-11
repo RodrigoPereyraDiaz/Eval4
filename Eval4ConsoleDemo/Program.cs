@@ -18,13 +18,13 @@ namespace Eval4.ConsoleDemo
         static void Main(string[] args)
         {
             SetLanguage("vb");
-            TestFormula("false xor false", "false");
+            TestFormula("false xor false", "False");
             
             SetLanguage("excel");
-            ((Excel.ExcelEvaluator)ev).SetCell("A1", "1");
-            ((Excel.ExcelEvaluator)ev).SetCell("A2", "2");
-            //((Excel.ExcelEvaluator)ev).SetCell("B1", "a");
-            //((Excel.ExcelEvaluator)ev).SetCell("B2", "b");
+            ((ExcelEvaluator)ev).SetCell("A1", "1");
+            ((ExcelEvaluator)ev).SetCell("A2", "2");
+            //((ExcelEvaluator)ev).SetCell("B1", "a");
+            //((ExcelEvaluator)ev).SetCell("B2", "b");
             ////TestFormula("A1", "1.000");
             TestFormula("SUM(A1:A2)", "3.000");
             //TestFormula("VLOOKUP(2,A1:B2,2,FALSE)", "b");
@@ -110,7 +110,7 @@ namespace Eval4.ConsoleDemo
             Write(ConsoleColor.White, CellNo);
             Write(ConsoleColor.Gray, ": ");
             WriteLine(ConsoleColor.White, formula);
-            ((Excel.ExcelEvaluator)ev).SetCell(CellNo, formula);
+            ((ExcelEvaluator)ev).SetCell(CellNo, formula);
         }
 
         private static void SetLanguage(string language)
@@ -119,19 +119,19 @@ namespace Eval4.ConsoleDemo
             switch (language.Trim().ToLower())
             {
                 case "vb":
-                    ev = new VB.VbEvaluator();
+                    ev = new VbEvaluator();
                     break;
                 case "excel":
-                    ev = new Eval4.Excel.ExcelEvaluator();
+                    ev = new ExcelEvaluator();
                     break;
                 case "cs":
-                    ev = new CSharp.CSharpEvaluator();
+                    ev = new CSharpEvaluator();
                     break;
                 case "javascript":
-                    ev = new Javascript.JavascriptEvaluator();
+                    ev = new JavascriptEvaluator();
                     break;
                 case "math":
-                    ev = new Math.MathEvaluator();
+                    ev = new MathEvaluator();
                     break;
                 default:
                     WriteLine(ConsoleColor.Red, "Unknown language " + language);

@@ -3,17 +3,16 @@ using System.Collections.Generic;
 using System.Text;
 using Eval4.Core;
 
-namespace Eval4.VB
-{
-
-    public enum VbTokenType
+namespace Eval4
+{    
+    public class VbEvaluator : Evaluator<VbEvaluator.VbTokenType>
     {
-        OperatorPercent,
-        IntegerDiv
-    }
-
-    public class VbEvaluator : Evaluator<VbTokenType>
-    {
+        public enum VbTokenType
+        {
+            OperatorPercent,
+            IntegerDiv
+        }
+        
         protected internal override EvaluatorOptions Options
         {
             get

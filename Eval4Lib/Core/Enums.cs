@@ -54,7 +54,47 @@ namespace Eval4.Core
         Custom,
         SyntaxError,
         SemiColon,
-        UnrecognisedCharacter
+        UnrecognisedCharacter,
+        OperatorPower
     }
 
+
+    public enum CastCompatibility
+    {
+        Undefined,
+        NoLoss,
+        PossibleLoss,
+        SureLoss
+    }
+
+    public enum CompatibilityLevel
+    {
+        Identical = 5,
+        Assignable = 4,
+        Cast_NoLoss = 3,
+        Cast_PossibleLoss = 2,
+        Cast_SureLoss = 1,
+        Incompatible = 0
+    }
+
+    [Flags()]
+    public enum EvalMemberType
+    {
+        Field = 1,
+        Method = 2,
+        Property = 4,
+        All = 7
+    }
+
+
+    public enum EvaluatorOptions
+    {
+        CaseSensitive = 1,
+        BooleanValues = 2,
+        IntegerValues = 4,
+        DoubleValues = 8,
+        DateTimeValues = 16,
+        StringValues = 32,
+        ObjectValues = 64
+    }
 }

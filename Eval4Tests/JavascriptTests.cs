@@ -4,63 +4,63 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Eval4.Tests
 {
     [TestClass]
-    public class CSharpTests : BaseTest<CSharpEvaluator>
+    public class JavascriptTests : BaseTest<JavascriptEvaluator>
     {
 
-        [TestMethod]
-        public void CSharp_Modulo()
-        {
-            TestFormula("23 % 10", 3);
-        }
+        //[TestMethod]
+        //public void JS_Modulo()
+        //{
+        //    TestFormula("23 % 10", 3);
+        //}
+
+        //[TestMethod]
+        //public void JS_BitwiseAnd()
+        //{
+        //    TestFormula("3 & 254", 2);
+        //}
 
         [TestMethod]
-        public void CSharp_BitwiseAnd()
-        {
-            TestFormula("3 & 254", 2);
-        }
-
-        [TestMethod]
-        public void CSharp_BooleanAnd()
+        public void JS_BooleanAnd()
         {
             TestFormula("false && true", false);
         }
 
         [TestMethod]
-        public void CSharp_EqOperator()
+        public void JS_EqOperator()
         {
             TestFormula("1 == 2", false);
         }
 
         [TestMethod]
-        public void CSharp_NEOperator()
+        public void JS_NEOperator()
         {
             TestFormula("1 != 2", true);
         }
 
         [TestMethod]
-        public void CSharp_NotOperator()
+        public void JS_NotOperator()
         {
             TestFormula("! true", false);
         }
 
-        [TestMethod]
-        public void CSharp_BitwiseOr()
-        {
-            TestFormula("1 | 255", 255);
-        }
+        //[TestMethod]
+        //public void JS_BitwiseOr()
+        //{
+        //    TestFormula("1 | 255", 255);
+        //}
 
         [TestMethod]
-        public void CSharp_BooleanOr()
+        public void JS_BooleanOr()
         {
             TestFormula("false || true", true);
         }
 
-        [TestMethod]
-        public void CSharp_If()
-        {
-            TestFormula("true ?  1:0", 1);
-            TestFormula("false ?  1:0", 0);
-        }
+        //[TestMethod]
+        //public void JS_If()
+        //{
+        //    TestFormula("true ?  1:0", 1);
+        //    TestFormula("false ?  1:0", 0);
+        //}
         //Accounts accountInstance = new Accounts();
         //int[] pascal = new int[] { 1, 8, 28, 56, 70, 56, 28, 8, 1 };
 
@@ -70,7 +70,7 @@ namespace Eval4.Tests
         //    InitEvaluator(evCS);
         //}
 
-        //private void CSharp_InitEvaluator(IEvaluator ev)
+        //private void JS_InitEvaluator(IEvaluator ev)
         //{
         //    ev.SetVariable("pascal", pascal);
         //    ev.SetVariable("fibonacci", new int[] { 1, 1, 2, 3, 5, 8, 13, 21, 34 });
@@ -98,7 +98,7 @@ namespace Eval4.Tests
         //}
 
         //[TestMethod]
-        //public void CSharp_AccessArrayVariables()
+        //public void JS_AccessArrayVariables()
         //{
         //    TestCSFormula("pascal", pascal);
         //    TestCSFormula("pascal[0]", 1);
@@ -119,7 +119,7 @@ namespace Eval4.Tests
         //}
 
         //[TestMethod]
-        //public void CSharp_AccessObjectMethodsAndFields()
+        //public void JS_AccessObjectMethodsAndFields()
         //{
         //    TestVbAndCsFormula("accounts.Credit", 150.00);
         //    TestVbAndCsFormula("accounts.Vat", 20.00);
@@ -138,7 +138,7 @@ namespace Eval4.Tests
         //    //TestVbAndCsFormula("accounts.Sum(1,2,3,4)", (decimal)10.0);
         //}
         //[TestMethod]
-        //public void CSharp_NumberLiterals()
+        //public void JS_NumberLiterals()
         //{
         //    TestVbAndCsFormula("1.5", 1.5);
         //    TestVbAndCsFormula("0.5", 0.5);
@@ -148,13 +148,13 @@ namespace Eval4.Tests
         //}
 
         //[TestMethod]
-        //public void CSharp_Priorities()
+        //public void JS_Priorities()
         //{
         //    TestVbAndCsFormula("-1.5*-2.5", -1.5 * -2.5);
         //}
 
         //[TestMethod]
-        //public void CSharp_Template()
+        //public void JS_Template()
         //{
         //    //   TestTemplate("<p>Hello</p>", "<p>Hello</p>");
         //}    }
@@ -168,7 +168,7 @@ namespace Eval4.Tests
 
 
         //[TestMethod]
-        //public void CSharp_Environment()
+        //public void JS_Environment()
         //{
         //    TestVBFormula("avg(2,3,5)", 10 / 3.0);
         //}
