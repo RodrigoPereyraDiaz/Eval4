@@ -20,16 +20,20 @@ namespace Eval4.ConsoleDemo
             SetLanguage("excel");
             ((Excel.ExcelEvaluator)ev).SetCell("A1", "1");
             ((Excel.ExcelEvaluator)ev).SetCell("A2", "2");
-            TestFormula("SUM(A1:B2)", "3.000");
-            RunTemplate("specs.txt");
+            //((Excel.ExcelEvaluator)ev).SetCell("B1", "a");
+            //((Excel.ExcelEvaluator)ev).SetCell("B2", "b");
+            ////TestFormula("A1", "1.000");
+            TestFormula("SUM(A1:A2)", "3.000");
+            //TestFormula("VLOOKUP(2,A1:B2,2,FALSE)", "b");
+            RunSpecs("Specs1.txt");
         }
 
-        static void RunTemplate(string templateFile)
+        static void RunSpecs(string specFile)
         {
             Console.BackgroundColor = ConsoleColor.Black;
             Console.ForegroundColor = ConsoleColor.Gray;
 
-            using (var sr = new StreamReader(templateFile))
+            using (var sr = new StreamReader(specFile))
             {
                 string line;
                 while ((line = sr.ReadLine()) != null)

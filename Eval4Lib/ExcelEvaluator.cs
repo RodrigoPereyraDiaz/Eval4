@@ -207,7 +207,7 @@ namespace Eval4.Excel
             return items.Where(a => !double.IsNaN(a)).Average();
         }
 
-        public static double VLookup(double lookup_value, Range table_array, int column_index, bool range_lookup)
+        public static Cell VLookup(double lookup_value, Range table_array, int column_index, bool range_lookup)
         {
             var ev = table_array.Ev;
             int foundRow = -1;
@@ -234,11 +234,11 @@ namespace Eval4.Excel
                     var val = c.ToDouble();
                     if (lookup_value < val)
                     {
-                        max = mid;
+                        max = mid - 1;
                     }
                     else if (lookup_value > val)
                     {
-                        min = mid;
+                        min = mid + 1;
                     }
                     else
                     {
@@ -250,11 +250,10 @@ namespace Eval4.Excel
             }
             if (foundRow >= 0)
             {
-                var c = ev.GetCell(table_array.ColMin + column_index, foundRow);
-                if (c != null) return c.ToDouble();
-
+                var c = ev.GetCell(table_array.ColMin + column_index - 1, foundRow);
+                return c;
             }
-            return double.NaN;
+            return null;
         }
     }
     public class ExcelEvaluator : Evaluator<ExcelToken>
@@ -291,10 +290,10 @@ namespace Eval4.Excel
         protected override void DeclareOperators()
         {
             base.DeclareOperators();
-            base.AddImplicitCast<Cell, double>((a) => a.ToDouble());
+            base.AddImplicitCast<Cell, double>((a) => a.ToDouble(), CastCompatibility.PossibleLoss);
 
             base.AddBinaryOperation<Cell, Cell, Range>(TokenType.OperatorColon, (c1, c2) => new Range(c1, c2));
-            base.AddImplicitCast<Range, double[]>((a) => a.ToArray());
+            base.AddImplicitCast<Range, double[]>((a) => a.ToArray(), CastCompatibility.PossibleLoss);
         }
 
         public override bool UseParenthesisForArrays
@@ -376,7 +375,7 @@ namespace Eval4.Excel
         public override Token CheckKeyword(string keyword)
         {
             {
-                switch (keyword.ToString())
+                switch (keyword.ToLower().ToString())
                 {
                     case "true":
                         return new Token(TokenType.ValueTrue);

@@ -232,7 +232,11 @@ namespace Eval4.Core
                 {
                     var sourceType = @params[i].ValueType;
                     var targetType = paramInfo[i].ParameterType;
-                    if (casts[i]!=null)
+                    if (casts[i] == null)
+                    {
+                        newParams.Add(@params[i]);
+                    }
+                    else
                     {
                         if (casts[i].GetType().IsArray)
                         {

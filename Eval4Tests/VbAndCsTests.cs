@@ -5,10 +5,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Eval4.Tests
 {
     [TestClass]
-    public class CommonTests : BaseTest
+    public class VbAndCsTests : BaseTest
     {
         [TestMethod]
-        public void TestDecimal()
+        public void TestNumberLiterals()
         {
             TestVbAndCsFormula("1.5", 1.5);
             TestVbAndCsFormula("0.5", 0.5);

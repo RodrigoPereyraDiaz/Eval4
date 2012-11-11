@@ -1,0 +1,117 @@
+﻿-------------------------------------------------------------------------------
+Language: VB
+-------------------------------------------------------------------------------
+Scenario: Simple addition
+Formula: 1 + 1
+ExpectedResult: 2
+
+Scenario: Addition with prioritary multiplication 
+Formula: 1 + 2 * 3
+ExpectedResult: 7
+
+Scenario: Division in VB return double values
+Formula: 5  / 2
+ExpectedResult: 2.500
+
+Scenario: VB has integer divisions
+Formula: 8 \ 3
+ExpectedResult: 2
+
+Scenario: VB uses parenthesis for arrays
+Formula: arr(0)
+ExpectedResult: 2
+Formula: arr(1)
+ExpectedResult: 4
+Formula: arr(4)
+ExpectedResult: IndexOutOfRangeException
+
+
+-------------------------------------------------------------------------------
+Language: CS
+-------------------------------------------------------------------------------
+Scenario: Simple addition
+Formula: 1 + 1
+ExpectedResult: 2
+
+Scenario: Addition with prioritary multiplication 
+Formula: 1 + 2 * 3
+ExpectedResult: 7
+
+Scenario: integer division in C# return integers
+Formula: 8 / 3
+ExpectedResult: 2
+
+Scenario: C# has no integer divisions
+Formula: 8 \ 3
+ExpectedResult: Eval4.SyntaxError
+
+Scenario: C# uses brackets for arrays
+Formula: arr[0]
+ExpectedResult: 2
+Formula: arr[1]
+ExpectedResult: 4
+Formula: arr[4]
+ExpectedResult: IndexOutOfRangeException
+
+-------------------------------------------------------------------------------
+Language: Excel
+-------------------------------------------------------------------------------
+Scenario: Setting Some Values
+Cell A1: 1
+Cell A2: 2
+Cell B1: a
+Cell B2: b
+
+Scenario: Read Cell
+Cell A3: =A1
+ExpectedValue A3: 1.000
+
+Scenario: Simple Addition
+Cell A4: =SUM(A1,A2)
+ExpectedValue A4: 3.000
+
+Scenario: Range Addition
+Cell A5: =SUM(A1:A2)
+ExpectedValue A5: 3.000
+
+Scenario: Average
+Cell A6: =AVERAGE(A1:A2)
+ExpectedValue A6: 1.500
+
+Scenario: VLookup
+Cell A7: =VLOOKUP(2,A1:B2,2,FALSE)
+ExpectedValue A7: b
+
+-------------------------------------------------------------------------------
+Language: Javascript
+-------------------------------------------------------------------------------
+Scenario: Simple addition (javascript only returns double)
+Formula: 1 + 1
+ExpectedResult: 2.000
+
+Scenario: Addition with prioritary multiplication 
+Formula: 1 + 2 * 3
+ExpectedResult: 7.000
+
+-------------------------------------------------------------------------------
+Language: Math
+-------------------------------------------------------------------------------
+Scenario: Simple matrix
+Formula: [1,2,3]
+ExpectedResult: [1,2,3]
+
+Scenario: matrix addition
+Formula: [1,2,3]+[2,3,4]
+ExpectedResult: [3,5,7]
+
+Scenario: Transposing
+Formula: [1,2,3;4,5,6]'
+ExpectedResult: [1,4;2,5;3,6]
+
+Scenario: multiplication
+Formula: [1,2,3]*[2;3;4]
+ExpectedResult: [20]
+
+Scenario: scalar multiplication
+Formula: 3*[2,3,4]
+ExpectedResult: [6,9,12]
