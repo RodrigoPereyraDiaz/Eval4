@@ -211,27 +211,27 @@ namespace Eval4.Core
 
         protected void AddUnaryOperation<P1, T>(TokenType tokenType, Func<P1, T> func)
         {
-            AddDeclaration(new Declaration(tokenType, default(CustomToken), func, typeof(P1), null, typeof(T)));
+            AddDeclaration(new Declaration(tokenType, default(CustomToken), func));
         }
 
         protected void AddBinaryOperation<P1, P2, T>(TokenType tokenType, Func<P1, P2, T> func)
         {
-            AddDeclaration(new Declaration(tokenType, default(CustomToken), func, typeof(P1), typeof(P2), typeof(T)));
+            AddDeclaration(new Declaration(tokenType, default(CustomToken), func));
         }
 
         protected void AddBinaryOperation<P1, P2, T>(CustomToken customToken, Func<P1, P2, T> func)
         {
-            AddDeclaration(new Declaration(TokenType.Custom, customToken, func, typeof(P1), typeof(P2), typeof(T)));
+            AddDeclaration(new Declaration(TokenType.Custom, customToken, func));
         }
 
         protected void AddImplicitCast<P1, T>(Func<P1, T> func, CastCompatibility compatibility)
         {
-            AddDeclaration(new Declaration(TokenType.ImplicitCast, default(CustomToken), func, typeof(P1), null, typeof(T), compatibility));
+            AddDeclaration(new Declaration(TokenType.ImplicitCast, default(CustomToken), func, compatibility));
         }
 
         protected void AddExplicitCast<P1, T>(Func<P1, T> func, CastCompatibility compatibility)
         {
-            AddDeclaration(new Declaration(TokenType.ExplicitCast, default(CustomToken), func, typeof(P1), null, typeof(T), compatibility));
+            AddDeclaration(new Declaration(TokenType.ExplicitCast, default(CustomToken), func, compatibility));
         }
 
         private static int CompareString(string a, string b)
@@ -299,16 +299,13 @@ namespace Eval4.Core
 
         public void AddEnvironmentFunctions(object o)
         {
-            if (o is Type)
+            if (o is Type || o is IHasValue)
             {
-                // fine
-            }
-            else if (o is IHasValue)
-            {
-                // fine
+                // fine this is what we expect
             }
             else
             {
+                // otherwise we need to wrap it to make it IHasValue;
                 var t = typeof(ConstantExpr<>).MakeGenericType(o.GetType());
                 o = Activator.CreateInstance(t, o);
             }
@@ -340,6 +337,10 @@ namespace Eval4.Core
                 dict[formula] = parsed;
                 if (dict.Count > 100) dict.Clear(); //  I know this is crude
             }
+            var sw = new System.IO.StringWriter();
+            WriteDependencies(sw, string.Format("Formula {0}", formula), parsed);
+            System.Diagnostics.Trace.WriteLine(sw.ToString());
+
             return parsed;
         }
 
@@ -385,9 +386,6 @@ namespace Eval4.Core
         public object Eval(string formula)
         {
             IHasValue parsed = InternalParse(formula);
-            var sw = new System.IO.StringWriter();
-            WriteDependencies(sw, "parsed", parsed);
-            System.Diagnostics.Trace.WriteLine(sw.ToString());
             return parsed.ObjectValue;
         }
 
@@ -538,7 +536,7 @@ namespace Eval4.Core
                     Declaration cast1;
                     if (CanCast(ValueRight.ValueType, decl.P1, out cast1))
                     {
-                        EmitDelegateExpr(ref ValueRight, decl.dlg);
+                        EmitDelegateExpr(ref ValueRight, decl.dlg, tt.ToString());
                         return ValueRight;
                     }
 
@@ -612,7 +610,7 @@ namespace Eval4.Core
                     }
                     else
                     {
-                        return NewSyntaxError(string.Format("Invalid date {0}, it should be #DD/MM/YYYY hh:mm:ss#", token.ValueString));
+                        return NewSyntaxError(string.Format("Invalid date {0}, it should be DD/MM/YYYY hh:mm:ss", token.ValueString));
                     }
 
                 case TokenType.OpenParenthesis:
@@ -664,14 +662,14 @@ namespace Eval4.Core
                 {
                     foreach (var decl in declarations)
                     {
-                        if (EmitDelegateExpr(ref valueLeft, valueRight, decl.dlg)) return;
+                        if (EmitDelegateExpr(ref valueLeft, valueRight, decl.dlg, tk.ToString())) return;
                     }
                 }
                 valueLeft = NewSyntaxError(string.Format("Cannot find operation {0} {1} {2}", valueLeft.ValueType, tt, valueRight.ValueType));
             }
         }
 
-        protected bool EmitDelegateExpr(ref IHasValue valueLeft, IHasValue valueRight, Delegate dlg)
+        protected bool EmitDelegateExpr(ref IHasValue valueLeft, IHasValue valueRight, Delegate dlg, string shortName)
         {
             Declaration cast1, cast2;
             var parameters = dlg.Method.GetParameters();
@@ -683,22 +681,22 @@ namespace Eval4.Core
                 if (cast1 != null)
                 {
                     var c1 = typeof(DelegateExpr<,>).MakeGenericType(cast1.P1, cast1.T);
-                    valueLeft = (IHasValue)Activator.CreateInstance(c1, valueLeft, cast1.dlg);
+                    valueLeft = (IHasValue)Activator.CreateInstance(c1, valueLeft, cast1.dlg, shortName);
                 }
                 if (cast2 != null)
                 {
                     var c2 = typeof(DelegateExpr<,>).MakeGenericType(cast2.P1, cast2.T);
-                    valueRight = (IHasValue)Activator.CreateInstance(c2, valueRight, cast2.dlg);
+                    valueRight = (IHasValue)Activator.CreateInstance(c2, valueRight, cast2.dlg, shortName);
                 }
 
                 var x = typeof(DelegateExpr<,,>).MakeGenericType(valueLeft.ValueType, valueRight.ValueType, dlg.Method.ReturnType);
-                valueLeft = (IHasValue)Activator.CreateInstance(x, valueLeft, valueRight, dlg);
+                valueLeft = (IHasValue)Activator.CreateInstance(x, valueLeft, valueRight, dlg, shortName);
                 return true;
             }
             return false;
         }
 
-        protected bool EmitDelegateExpr(ref IHasValue valueLeft, Delegate dlg)
+        protected bool EmitDelegateExpr(ref IHasValue valueLeft, Delegate dlg, string shortName)
         {
             Declaration cast1;
             var parameters = dlg.Method.GetParameters();
@@ -709,11 +707,11 @@ namespace Eval4.Core
                 if (cast1 != null)
                 {
                     var c1 = typeof(DelegateExpr<,>).MakeGenericType(cast1.P1, cast1.T);
-                    valueLeft = (IHasValue)Activator.CreateInstance(c1, valueLeft, cast1.dlg);
+                    valueLeft = (IHasValue)Activator.CreateInstance(c1, valueLeft, cast1.dlg, shortName);
                 }
 
                 var x = typeof(DelegateExpr<,>).MakeGenericType(valueLeft.ValueType, dlg.Method.ReturnType);
-                valueLeft = (IHasValue)Activator.CreateInstance(x, valueLeft, dlg);
+                valueLeft = (IHasValue)Activator.CreateInstance(x, valueLeft, dlg, shortName);
                 return true;
             }
             return false;
@@ -1134,7 +1132,8 @@ namespace Eval4.Core
                         return NewUnexpectedToken(mi.MemberType.ToString() + " members are not supported");
                 }
                 var t = typeof(CallMethodExpr<>).MakeGenericType(resultType);
-                return (IHasValue)Activator.CreateInstance(t, @base, mi, parameters, casts);
+                string shortName = "Call " + mi.MemberType + " " + funcName;
+                return (IHasValue)Activator.CreateInstance(t, @base, mi, parameters, casts, shortName);
             }
             //if (@base is IVariableBag && (parameters == null || parameters.Count == 0))
             //{
@@ -1371,7 +1370,8 @@ namespace Eval4.Core
                         if (GetMemberInfo(t, isStatic: true, isInstance: true, funcName: null, parameters: parameters, mi: out mi, resultType: out resultType, casts: out casts))
                         {
                             var t3 = typeof(CallMethodExpr<>).MakeGenericType(resultType);
-                            valueLeft = (IHasValue)Activator.CreateInstance(t3, this, valueLeft, mi, parameters, casts);
+                            string shortName = "Call " + mi.MemberType + "[]";
+                            valueLeft = (IHasValue)Activator.CreateInstance(t3, this, valueLeft, mi, parameters, casts, shortName);
                         }
                         else
                         {
@@ -1444,25 +1444,19 @@ namespace Eval4.Core
         public static void WriteDependencies(System.IO.TextWriter tw, string name, Eval4.Core.IHasValue expr, string indent = null)
         {
             if (indent == null) indent = string.Empty;
+            tw.Write("{0} {1} = ", indent, name);
             if (expr == null)
             {
-                tw.WriteLine("{0} {1} type {2} ({3})", indent, name, "null", "object");
+                tw.WriteLine("{0} ({1})", "null", "unknown");
                 return;
             }
-            else tw.WriteLine("{0} {1} type {2} ({3})", indent, name, expr.ShortName, expr.ValueType);
+            else tw.WriteLine("{0} ({1} {2})", expr.ObjectValue, expr.ValueType, expr.ShortName);
+            
             int cpt = 0;
             foreach (var d in expr.Dependencies)
             {
                 cpt++;
                 WriteDependencies(tw, d.Name, d.Value, indent + "  |");
-            }
-            if (cpt == 0)
-            {
-                tw.WriteLine("{0}  +--> {2}", indent, name, expr.ObjectValue);
-            }
-            else
-            {
-                tw.WriteLine("{0}  +--> {2} ({1})", indent, name, expr.ObjectValue);
             }
         }
 
@@ -1549,14 +1543,17 @@ namespace Eval4.Core
             internal Type T;
             internal CastCompatibility Compatibility;
 
-            public Declaration(TokenType tokenType, CustomToken customToken, Delegate func, System.Type type1, System.Type type2, System.Type resultType, CastCompatibility compatibility = CastCompatibility.Undefined)
+            public Declaration(TokenType tokenType, CustomToken customToken, Delegate func, CastCompatibility compatibility = CastCompatibility.Undefined)
             {
                 this.Type = tokenType;
                 this.CustomToken = customToken;
                 this.dlg = func;
-                this.P1 = type1;
-                this.P2 = type2;
-                this.T = resultType;
+                
+                var method = func.Method;
+                var parameters = method.GetParameters();
+                this.P1 = parameters[0].ParameterType;
+                this.P2 = parameters.Length < 2 ? null : parameters[1].ParameterType;
+                this.T = func.Method.ReturnType;
                 this.Compatibility = compatibility;
             }
 

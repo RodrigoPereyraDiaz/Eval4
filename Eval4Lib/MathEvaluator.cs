@@ -187,7 +187,7 @@ namespace Eval4
                     {
                         case MathToken.Transpose:
                             NextToken();
-                            if (EmitDelegateExpr(ref valueLeft, new Func<Matrix, Matrix>((a) => a.Transpose()))) return;
+                            if (EmitDelegateExpr(ref valueLeft, new Func<Matrix, Matrix>((a) => a.Transpose()),"'")) return;
                             break;
                         default:
                             base.ParseRight(tk, opPrecedence, Acc, ref valueLeft);

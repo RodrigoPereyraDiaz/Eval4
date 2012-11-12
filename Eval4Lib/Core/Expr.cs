@@ -181,8 +181,9 @@ namespace Eval4.Core
         private object[] mParamValues;
         private System.Type mResultSystemType;
         private IHasValue withEventsField_mResultValue;
+        private string mShortName;
 
-        public CallMethodExpr(IHasValue baseObject, MemberInfo method, List<IHasValue> @params, object[] casts)
+        public CallMethodExpr(IHasValue baseObject, MemberInfo method, List<IHasValue> @params, object[] casts, string shortName)
             : base(new Dependency("baseobject", baseObject), Dependency.Group("parameter", @params))
         {
             if (@params == null)
@@ -192,6 +193,7 @@ namespace Eval4.Core
             var newParams = new List<IHasValue>();
             mBaseObject = baseObject;
             mMethod = method;
+            mShortName = shortName;
 
             ParameterInfo[] paramInfo = null;
             if (method is PropertyInfo)
@@ -250,7 +252,7 @@ namespace Eval4.Core
                         else
                         {
                             var c3 = typeof(DelegateExpr<,>).MakeGenericType(sourceType, targetType);
-                            newParams.Add((IHasValue)Activator.CreateInstance(c3, @params[i], casts[i]));
+                            newParams.Add((IHasValue)Activator.CreateInstance(c3, @params[i], casts[i], @params[i].ShortName));
                         }
                     }
                 }
@@ -356,7 +358,7 @@ namespace Eval4.Core
 
         public override string ShortName
         {
-            get { return "CallMethod"; }
+            get { return mShortName; }
         }
     }
 
@@ -474,13 +476,15 @@ namespace Eval4.Core
     {
         private IHasValue<P1> mP1;
         private Func<P1, T> mDelegate;
+        private string mShortName;
 
-        public DelegateExpr(IHasValue<P1> p1, Func<P1, T> dlg)
+        public DelegateExpr(IHasValue<P1> p1, Func<P1, T> dlg, string shortName)
             : base(new Dependency("p1", p1))
         {
             System.Diagnostics.Debug.Assert(dlg != null);
             mP1 = p1;
             mDelegate = dlg;
+            mShortName = shortName;
         }
 
 
@@ -493,7 +497,7 @@ namespace Eval4.Core
 
         public override string ShortName
         {
-            get { return "DelegateExpr"; }
+            get { return mShortName; }
         }
 
     }
@@ -503,13 +507,15 @@ namespace Eval4.Core
         private IHasValue<P1> mP1;
         private IHasValue<P2> mP2;
         private Func<P1, P2, T> mDelegate;
+        private string mShortName;
 
-        public DelegateExpr(IHasValue<P1> p1, IHasValue<P2> p2, Func<P1, P2, T> dlg)
+        public DelegateExpr(IHasValue<P1> p1, IHasValue<P2> p2, Func<P1, P2, T> dlg, string shortName)
             : base(new Dependency("p1", p1), new Dependency("p2", p2))
         {
             mP1 = p1;
             mP2 = p2;
             mDelegate = dlg;
+            mShortName = shortName;
         }
 
 
@@ -520,7 +526,7 @@ namespace Eval4.Core
 
         public override string ShortName
         {
-            get { return "DelegateExpr"; }
+            get { return mShortName; }
         }
     }
 
@@ -548,7 +554,7 @@ namespace Eval4.Core
 
         public override string ShortName
         {
-            get { return "GetVariableFromBag"; }
+            get { return "GetVar " + mVariableName; }
         }
     }
 
