@@ -99,11 +99,13 @@ namespace Eval4.Core
 
         public override object ObjectValue
         {
+            [System.Diagnostics.DebuggerStepThrough()]
             get { return Value; }
         }
 
         public override Type ValueType
         {
+            [System.Diagnostics.DebuggerStepThrough()]
             get { return typeof(T); }
         }
     }
@@ -122,11 +124,12 @@ namespace Eval4.Core
 
         public override string ShortName
         {
-            get { return "Literal"; }
+            get { return "Constant"; }
         }
 
         public override T Value
         {
+            [System.Diagnostics.DebuggerStepThrough()]
             get { return mValue; }
         }
     }
@@ -353,6 +356,7 @@ namespace Eval4.Core
 
         public override T Value
         {
+            [System.Diagnostics.DebuggerStepThrough()]
             get { return mValueDelegate(); }
         }
 
@@ -490,6 +494,7 @@ namespace Eval4.Core
 
         public override T Value
         {
+            [System.Diagnostics.DebuggerStepThrough()]
             get { return mDelegate(mP1.Value); }
         }
 
@@ -518,9 +523,9 @@ namespace Eval4.Core
             mShortName = shortName;
         }
 
-
         public override T Value
         {
+            [System.Diagnostics.DebuggerStepThrough()]
             get { return mDelegate(mP1.Value, mP2.Value); }
         }
 
@@ -546,10 +551,8 @@ namespace Eval4.Core
 
         public override T Value
         {
-            get
-            {
-                return mVariable.Value;
-            }
+            [System.Diagnostics.DebuggerStepThrough()]
+            get { return mVariable.Value; }
         }
 
         public override string ShortName
@@ -572,6 +575,7 @@ namespace Eval4.Core
 
         public override T Value
         {
+            [System.Diagnostics.DebuggerStepThrough()]
             get { return mValue; }
         }
 

@@ -61,6 +61,18 @@ namespace Eval4.Tests
             TestFormula("true ?  1:0", 1);
             TestFormula("false ?  1:0", 0);
         }
+
+        [TestMethod]
+        public void CSharp_Numerics()
+        {
+            TestFormula("1", 1);
+            TestFormula("-1", -1);
+            TestFormula("1e0", 1e0);
+            TestFormula("1e1", 1e1);
+            TestFormula("1e-10", 1e-10);
+            TestFormula("1.2345e-2", 1.2345e-2);
+        }
+
         //Accounts accountInstance = new Accounts();
         //int[] pascal = new int[] { 1, 8, 28, 56, 70, 56, 28, 8, 1 };
 

@@ -17,16 +17,13 @@ namespace Eval4.ConsoleDemo
 
         static void Main(string[] args)
         {
-            SetLanguage("vb");
-            TestFormula("false xor false", "False");
+            //SetLanguage("vb");
+            //TestFormula("false xor false", "False");
             
             SetLanguage("excel");
             ((ExcelEvaluator)ev).SetCell("A1", "1");
             ((ExcelEvaluator)ev).SetCell("A2", "2");
-            //((ExcelEvaluator)ev).SetCell("B1", "a");
-            //((ExcelEvaluator)ev).SetCell("B2", "b");
-            ////TestFormula("A1", "1.000");
-            TestFormula("SUM(A1:A2)", "3.000");
+            TestFormula("1/A1", "1.000");
             //TestFormula("VLOOKUP(2,A1:B2,2,FALSE)", "b");
             RunSpecs("Specs1.txt");
         }

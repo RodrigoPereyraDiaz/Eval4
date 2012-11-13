@@ -185,6 +185,7 @@ namespace Eval4
             if (value is double) return (double)value;
             if (value is bool) return ((bool)value) ? 1 : 0;
             if (value is DateTime) return ((DateTime)value).Subtract(EPOCH).TotalDays;
+            if (value is Cell) return (value as Cell).ToDouble();
             return double.NaN;
         }
     }

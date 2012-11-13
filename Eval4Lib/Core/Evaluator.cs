@@ -25,6 +25,8 @@ namespace Eval4.Core
         public Token mCurToken;
         private EvaluatorOptions mOptions;
 
+        abstract internal protected EvaluatorOptions Options { get; }
+
         public Evaluator()
         {
             mEnvironmentFunctionsList = new List<object>();
@@ -295,8 +297,6 @@ namespace Eval4.Core
             }
         }
 
-        abstract internal protected EvaluatorOptions Options { get; }
-
         public void AddEnvironmentFunctions(object o)
         {
             if (o is Type || o is IHasValue)
@@ -337,10 +337,6 @@ namespace Eval4.Core
                 dict[formula] = parsed;
                 if (dict.Count > 100) dict.Clear(); //  I know this is crude
             }
-            var sw = new System.IO.StringWriter();
-            WriteDependencies(sw, string.Format("Formula {0}", formula), parsed);
-            System.Diagnostics.Trace.WriteLine(sw.ToString());
-
             return parsed;
         }
 
@@ -681,12 +677,12 @@ namespace Eval4.Core
                 if (cast1 != null)
                 {
                     var c1 = typeof(DelegateExpr<,>).MakeGenericType(cast1.P1, cast1.T);
-                    valueLeft = (IHasValue)Activator.CreateInstance(c1, valueLeft, cast1.dlg, shortName);
+                    valueLeft = (IHasValue)Activator.CreateInstance(c1, valueLeft, cast1.dlg, "castP1");
                 }
                 if (cast2 != null)
                 {
                     var c2 = typeof(DelegateExpr<,>).MakeGenericType(cast2.P1, cast2.T);
-                    valueRight = (IHasValue)Activator.CreateInstance(c2, valueRight, cast2.dlg, shortName);
+                    valueRight = (IHasValue)Activator.CreateInstance(c2, valueRight, cast2.dlg, "castP2");
                 }
 
                 var x = typeof(DelegateExpr<,,>).MakeGenericType(valueLeft.ValueType, valueRight.ValueType, dlg.Method.ReturnType);
@@ -707,7 +703,7 @@ namespace Eval4.Core
                 if (cast1 != null)
                 {
                     var c1 = typeof(DelegateExpr<,>).MakeGenericType(cast1.P1, cast1.T);
-                    valueLeft = (IHasValue)Activator.CreateInstance(c1, valueLeft, cast1.dlg, shortName);
+                    valueLeft = (IHasValue)Activator.CreateInstance(c1, valueLeft, cast1.dlg, "castP1");
                 }
 
                 var x = typeof(DelegateExpr<,>).MakeGenericType(valueLeft.ValueType, dlg.Method.ReturnType);
@@ -810,6 +806,7 @@ namespace Eval4.Core
         internal Token ParseNumber(bool afterDot = false)
         {
             var sb = new StringBuilder();
+            bool afterE = false;
             if (!afterDot)
             {
                 while (mCurChar >= '0' && mCurChar <= '9')
@@ -831,12 +828,24 @@ namespace Eval4.Core
                     sb.Append(mCurChar);
                     NextChar();
                 }
-                return new Token(TokenType.ValueDecimal, sb.ToString());
             }
-            else
+            if (mCurChar == 'E' || mCurChar == 'e')
             {
-                return new Token(TokenType.ValueInteger, sb.ToString());
+                afterE=true;
+                sb.Append(mCurChar);
+                NextChar();
+                if (mCurChar == '+' || mCurChar == '-')
+                {
+                    sb.Append(mCurChar);
+                    NextChar();
+                }
+                while (mCurChar >= '0' && mCurChar <= '9')
+                {
+                    sb.Append(mCurChar);
+                    NextChar();
+                }
             }
+            return new Token(afterDot || afterE ? TokenType.ValueDecimal : TokenType.ValueInteger, sb.ToString());
         }
 
         internal Token ParseIdentifierOrKeyword()
@@ -972,11 +981,16 @@ namespace Eval4.Core
             {
                 if (res == null)
                     res = new ConstantExpr<string>(string.Empty);
-                return res;
+                var sw = new System.IO.StringWriter();
+                WriteDependencies(sw, string.Format("Formula {0}", source), res);
+                System.Diagnostics.Trace.WriteLine(sw.ToString());
+                return res;                
             }
             else
             {
-                return NewUnexpectedToken();
+                var err = NewUnexpectedToken();
+                System.Diagnostics.Trace.WriteLine(string.Format("Formula {0}: {1}", source, err));
+                return err;
             }
         }
 
