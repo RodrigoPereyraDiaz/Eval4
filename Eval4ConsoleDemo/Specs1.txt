@@ -11,7 +11,7 @@ ExpectedResult: 7
 
 Scenario: Division in VB return double values
 Formula: 5  / 2
-ExpectedResult: 2.500
+ExpectedResult: 2.50
 
 Scenario: VB has integer divisions
 Formula: 8 \ 3
@@ -64,19 +64,19 @@ Cell B2: b
 
 Scenario: Read Cell
 Cell A3: =A1
-ExpectedValue A3: 1.000
+ExpectedValue A3: 1.00
 
 Scenario: Simple Addition
 Cell A4: =SUM(A1,A2)
-ExpectedValue A4: 3.000
+ExpectedValue A4: 3.00
 
 Scenario: Range Addition
 Cell A5: =SUM(A1:A2)
-ExpectedValue A5: 3.000
+ExpectedValue A5: 3.00
 
 Scenario: Average
 Cell A6: =AVERAGE(A1:A2)
-ExpectedValue A6: 1.500
+ExpectedValue A6: 1.50
 
 Scenario: VLookup
 Cell A7: =VLOOKUP(2,A1:B2,2,FALSE)
@@ -87,11 +87,11 @@ Language: Javascript
 -------------------------------------------------------------------------------
 Scenario: Simple addition (javascript only returns double)
 Formula: 1 + 1
-ExpectedResult: 2.000
+ExpectedResult: 2.00
 
 Scenario: Addition with prioritary multiplication 
 Formula: 1 + 2 * 3
-ExpectedResult: 7.000
+ExpectedResult: 7.00
 
 -------------------------------------------------------------------------------
 Language: Math

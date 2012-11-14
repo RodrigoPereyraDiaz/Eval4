@@ -23,19 +23,12 @@ namespace Eval4
         {
             get
             {
-                return EvaluatorOptions.BooleanValues
-                    //| EvaluatorOptions.CaseSensitive
-                    //| EvaluatorOptions.DateTimeValues
-                    | EvaluatorOptions.DoubleValues
-                    //| EvaluatorOptions.IntegerValues
-                    | EvaluatorOptions.ObjectValues
-                    | EvaluatorOptions.StringValues;
+                return EvaluatorOptions.None;
             }
         }
 
         protected override void DeclareOperators()
         {
-            base.DeclareOperators();
             base.AddBinaryOperation<Matrix, Matrix, Matrix>(TokenType.OperatorPlus, (a, b) => a.ElementWiseAdd(b));
             base.AddBinaryOperation<double, Matrix, Matrix>(TokenType.OperatorPlus, (a, b) => b.ScalarAdd(a));
             base.AddBinaryOperation<Matrix, double, Matrix>(TokenType.OperatorPlus, (a, b) => a.ScalarAdd(b));
@@ -397,7 +390,7 @@ namespace Eval4
                 {
                     if (c > 0) result.Append(","); // "\n"
                     var value = this._data[r][c];
-                    result.Append((value == null /*or undefined*/ ? "NaN" : value.ToString())); // "#,##0.000"
+                    result.Append((value == null /*or undefined*/ ? "NaN" : value.ToString())); // "#,##0.00"
                 }
             }
             result.Append("]");

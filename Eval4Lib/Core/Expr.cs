@@ -183,7 +183,6 @@ namespace Eval4.Core
 
         private object[] mParamValues;
         private System.Type mResultSystemType;
-        private IHasValue withEventsField_mResultValue;
         private string mShortName;
 
         public CallMethodExpr(IHasValue baseObject, MemberInfo method, List<IHasValue> @params, object[] casts, string shortName)
@@ -284,36 +283,6 @@ namespace Eval4.Core
             // for the events only
         }
 
-        void withEventsField_mBaseValue_ValueChanged(object sender, EventArgs e)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IHasValue mResultValue
-        {
-            get { return withEventsField_mResultValue; }
-            set
-            {
-                if (withEventsField_mResultValue != null)
-                {
-                    throw new NotImplementedException();
-                    //withEventsField_mResultValue.ValueChanged -= withEventsField_mResultValue_ValueChanged;
-                }
-                withEventsField_mResultValue = value;
-                if (withEventsField_mResultValue != null)
-                {
-                    throw new NotImplementedException();
-                    //withEventsField_mResultValue.ValueChanged += withEventsField_mResultValue_ValueChanged;
-                }
-            }
-            // just for some
-        }
-
-        void withEventsField_mResultValue_ValueChanged(object sender, EventArgs e)
-        {
-            throw new NotImplementedException();
-        }
-
         private T GetProperty()
         {
             Recalc();
@@ -327,13 +296,6 @@ namespace Eval4.Core
             object res = ((MethodInfo)mMethod).Invoke(mBaseValueObject, mParamValues);
             return (T)res;
         }
-
-        //private T GetField()
-        //{
-        //    Recalc();
-        //    object res = ((FieldInfo)mMethod).GetValue(mBaseValueObject);
-        //    return (T)res;
-        //}
 
         private void Recalc()
         {
@@ -351,8 +313,6 @@ namespace Eval4.Core
                 mBaseValueObject = mBaseObject;
             }
         }
-
-        //public event ValueChangedEventHandler ValueChanged;
 
         public override T Value
         {

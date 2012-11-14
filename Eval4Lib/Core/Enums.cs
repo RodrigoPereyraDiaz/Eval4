@@ -86,15 +86,10 @@ namespace Eval4.Core
         All = 7
     }
 
-
+    [Flags]
     public enum EvaluatorOptions
     {
-        CaseSensitive = 1,
-        BooleanValues = 2,
-        IntegerValues = 4,
-        DoubleValues = 8,
-        DateTimeValues = 16,
-        StringValues = 32,
-        ObjectValues = 64
+        None = 0,
+        CaseSensitive = 1
     }
 }

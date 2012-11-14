@@ -17,14 +17,16 @@ namespace Eval4
         {
             get
             {
-                return EvaluatorOptions.BooleanValues
-                    | EvaluatorOptions.CaseSensitive
-                    //| EvaluatorOptions.DateTimeValues
-                    | EvaluatorOptions.DoubleValues
-                    //| EvaluatorOptions.IntegerValues
-                    | EvaluatorOptions.ObjectValues
-                    | EvaluatorOptions.StringValues;
+                return EvaluatorOptions.CaseSensitive;
             }
+        }
+
+        protected override void DeclareOperators()
+        {
+            DeclareOperators(typeof(bool));
+            DeclareOperators(typeof(double));
+            DeclareOperators(typeof(string));
+            DeclareOperators(typeof(object));
         }
 
         public override bool UseParenthesisForArrays

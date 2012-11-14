@@ -54,7 +54,7 @@ namespace Eval4
         public ExcelEvaluator Ev { get; private set; }
         private string mFormula;
         private string mName;
-        private IHasValue mValue;
+        private IHasValue mParsed;
         public Exception Exception;
         public int Row { get; private set; }
         public int Col { get; private set; }
@@ -136,13 +136,13 @@ namespace Eval4
             {
                 mFormula = value;
                 Exception = null;
-                mValue = null;
+                mParsed = null;
                 var firstChar = string.IsNullOrEmpty(mFormula) ? '\0' : mFormula[0];
                 if ((firstChar >= '0' && firstChar <= '9') || firstChar == '.' || firstChar == '+' || firstChar == '-' || firstChar == '=')
                 {
                     try
                     {
-                        mValue = Ev.Parse((firstChar == '=' ? mFormula.Substring(1) : mFormula));
+                        mParsed = Ev.Parse((firstChar == '=' ? mFormula.Substring(1) : mFormula));
                     }
                     catch (Exception ex)
                     {
@@ -155,10 +155,19 @@ namespace Eval4
         public override string ToString()
         {
             if (Exception != null) return Exception.Message;
-            else if (mValue != null)
+            else if (mParsed != null)
             {
-                object val = mValue.ObjectValue;
+                object val;
+                try
+                {
+                    val = mParsed.ObjectValue;               
+                }
+                catch (Exception ex)
+                {
+                    val = ex;
+                }
                 if (val is double) return ((double)val).ToString("#,##0.00");
+                else if (val == this) return "#Circular reference";
                 else return val.ToString();
             }
             else
@@ -172,7 +181,7 @@ namespace Eval4
         {
             get
             {
-                if (mValue != null) return mValue.ObjectValue;
+                if (mParsed != null) return mParsed.ObjectValue;
                 else return mFormula;
             }
         }
@@ -269,12 +278,7 @@ namespace Eval4
         {
             get
             {
-                return EvaluatorOptions.BooleanValues
-                    //| EvaluatorOptions.CaseSensitive
-                    | EvaluatorOptions.DoubleValues
-                    //| EvaluatorOptions.IntegerValues
-                    | EvaluatorOptions.ObjectValues
-                    | EvaluatorOptions.StringValues;
+                return EvaluatorOptions.None;
             }
         }
 
@@ -290,11 +294,14 @@ namespace Eval4
 
         protected override void DeclareOperators()
         {
-            base.DeclareOperators();
+            DeclareOperators(typeof(double));
+            DeclareOperators(typeof(string));
             base.AddImplicitCast<Cell, double>((a) => a.ToDouble(), CastCompatibility.PossibleLoss);
 
             base.AddBinaryOperation<Cell, Cell, Range>(TokenType.OperatorColon, (c1, c2) => new Range(c1, c2));
             base.AddImplicitCast<Range, double[]>((a) => a.ToArray(), CastCompatibility.PossibleLoss);
+            DeclareOperators(typeof(object));
+            
         }
 
         public override bool UseParenthesisForArrays
@@ -511,10 +518,7 @@ namespace Eval4
 
         public override string ConvertToString(object value)
         {
-            if (value is Cell)
-            {
-                return ConvertToString(((Cell)value).ValueObject);
-            }
+            if (value is Cell) return (value as Cell).ToString();
             else return base.ConvertToString(value);
         }
         public void SetCell(string cellName, string formula)

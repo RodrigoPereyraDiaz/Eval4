@@ -6,6 +6,68 @@ namespace Eval4.Tests
     [TestClass]
     public class CSharpTests : BaseTest<CSharpEvaluator>
     {
+        public class TestContext
+        {
+            // fields
+            public byte @byte = 1;
+            public sbyte @sbyte = 2;
+            public short @short = 3;
+            public int @int = 4;
+            public uint @uint = 5;
+            public long @long = 6;
+            public ulong @ulong = 7;
+            public float @float = 8;
+            public double @double = 9;
+            public decimal @decimal = 10;
+        }
+
+
+        public CSharpTests()
+        {
+            ev.SetVariable("context", new TestContext());
+        }
+
+        [TestMethod]
+        public void CSharp_FieldTypes()
+        {
+            var context = new TestContext();
+            TestFormula("context.byte", context.@byte);
+            TestFormula("context.decimal", context.@decimal);
+            TestFormula("context.double", context.@double);
+            TestFormula("context.float", context.@float);
+            TestFormula("context.int", context.@int);
+            TestFormula("context.long", context.@long);
+            TestFormula("context.sbyte", context.@sbyte);
+            TestFormula("context.short", context.@short);
+            TestFormula("context.uint", context.@uint);
+            TestFormula("context.ulong", context.@ulong);
+        }
+
+        [TestMethod]
+        public void CSharp_FieldCalculation()
+        {
+            var context = new TestContext();
+            // those are returning int32 (like in C#)
+            TestFormula("context.byte * 2", context.@byte * 2);
+            TestFormula("context.sbyte * 2", context.@sbyte * 2);
+            TestFormula("context.short * 2", context.@short * 2);
+            TestFormula("context.int * 2", context.@int * 2);
+
+            // those are return double (like in C#)
+            TestFormula("context.double * 2", context.@double * 2);
+
+            // those types are not working like C# and revert return doubles
+            TestFormula("context.uint * 2", context.@uint * 2);
+            TestFormula("context.long * 2", context.@long * 2);
+            TestFormula("context.ulong * 2", context.@ulong * 2);
+            TestFormula("context.float * 2", context.@float * 2);
+
+            // decimal are not supported
+            TestFormula("context.decimal * 2", context.@decimal * 2);
+
+        }
+
+
 
         [TestMethod]
         public void CSharp_Modulo()
@@ -75,12 +137,6 @@ namespace Eval4.Tests
 
         //Accounts accountInstance = new Accounts();
         //int[] pascal = new int[] { 1, 8, 28, 56, 70, 56, 28, 8, 1 };
-
-        //public TestArraysAndObjects()
-        //{
-        //    InitEvaluator(evVB);
-        //    InitEvaluator(evCS);
-        //}
 
         //private void CSharp_InitEvaluator(IEvaluator ev)
         //{
