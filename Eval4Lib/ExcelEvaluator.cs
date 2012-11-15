@@ -521,6 +521,7 @@ namespace Eval4
             if (value is Cell) return (value as Cell).ToString();
             else return base.ConvertToString(value);
         }
+
         public void SetCell(string cellName, string formula)
         {
             int x, y;

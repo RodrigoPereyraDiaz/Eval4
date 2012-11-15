@@ -76,12 +76,14 @@ namespace Eval4.Tests
         public void Math_ElementWiseAdd()
         {
             TestFormula("[1,2,3]+[2,3,4]", new Matrix(new double[][] { new double[] { 3, 5, 7 } }));
+            TestFormula("[1;2;3].+[2;3;4]", new Matrix(new double[][] { new double[] { 3 }, new double[] { 5 }, new double[] { 7 } }));
         }
 
         [TestMethod]
         public void Math_ElementWiseSub()
         {
             TestFormula("[2;6;12]-[1;2;3]", new Matrix(new double[][] { new double[] { 1 }, new double[] { 4 }, new double[] { 9 } }));
+            TestFormula("[4,5,6].-[2,3,4]", new Matrix(new double[][] { new double[] { 2, 2, 2 } }));
         }
         
         [TestMethod]

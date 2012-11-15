@@ -90,7 +90,7 @@ namespace Eval4.Core
                 AddExplicitCast<ulong, int>((a) => { return (int)a; }, CastCompatibility.PossibleLoss);
                 AddExplicitCast<double, int>((a) => { return (int)a; }, CastCompatibility.PossibleLoss);
                 AddExplicitCast<float, int>((a) => { return (int)a; }, CastCompatibility.PossibleLoss);
-                AddExplicitCast<decimal, int>((a) => { return (int)a; }, CastCompatibility.PossibleLoss);               
+                AddExplicitCast<decimal, int>((a) => { return (int)a; }, CastCompatibility.PossibleLoss);
             }
             else if (type == typeof(double))
             {
@@ -200,6 +200,7 @@ namespace Eval4.Core
                 AddBinaryOperation<object, object, bool>(TokenType.OperatorEQ, (a, b) => { return Equal(a, b); });
                 AddBinaryOperation<object, object, bool>(TokenType.OperatorNE, (a, b) => { return !Equal(a, b); });
             }
+            else throw new NotImplementedException(string.Format("Type {0} is not supported.", type.Name));
         }
 
         protected void AddUnaryOperation<P1, T>(TokenType tokenType, Func<P1, T> func)

@@ -20,7 +20,8 @@ namespace Eval4.Tests
             TestFormula("3 - 2", 1);
             TestFormula("3 * 2", 6);
             TestFormula("3 / 2", 3 / 2.0);
-            TestFormula("1*2*3*4*5*6*7*8*9", 1 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9);
+            // we we're testing a bit of spacing here as well
+            TestFormula("1 * 2 *3 * 4 *5* 6*7*\t8*9", 1 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9);
         }
 
         [TestMethod]

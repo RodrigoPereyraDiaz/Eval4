@@ -29,8 +29,8 @@ namespace Eval4.ConsoleDemo
             //RunSpecs("Specs1.txt");
             
             SetLanguage("cs");
-            ev.SetVariable<uint>("a", 1);
-            TestFormula("a * 2","2.00");
+            //ev.SetVariable<uint>("a", 1);
+            TestFormula("259 & 7","3");
             
 
             Console.WriteLine("Completed");

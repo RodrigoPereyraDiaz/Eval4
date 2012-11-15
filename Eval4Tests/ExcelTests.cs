@@ -11,8 +11,11 @@ namespace Eval4.Tests
         {
             ev.SetCell("A1", "1");
             ev.SetCell("A2", "2");
+            ev.SetCell("A3", "3");
+
             ev.SetCell("B1", "a");
             ev.SetCell("B2", "b");
+            ev.SetCell("B3", "c");
         }
 
         [TestMethod]
@@ -44,8 +47,14 @@ namespace Eval4.Tests
         public void Excel_VLookup()
         {
             // vlookup return a cell
-            TestFormula("VLOOKUP(2,A1:B2,2,FALSE).valueObject", "b");
+            TestFormula("VLOOKUP(2,A1:B3,2,FALSE).valueObject", "b");
         }
 
+        [TestMethod]
+        public void Excel_VLookup_with_range_lookup()
+        {
+            // vlookup return a cell
+            TestFormula("VLOOKUP(2.2,A1:C3,2,TRUE).valueObject", "b");
+        }
     }
 }
