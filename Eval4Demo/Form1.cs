@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Windows.Forms;
 using System.Data;
 using Eval4.Core;
+using System.Diagnostics;
 
 namespace Eval4.Demo
 {
@@ -72,6 +73,8 @@ namespace Eval4.Demo
         internal System.Windows.Forms.Label lblResults3;
         private ExcelSheet excelSheet1;
         private IDisposable formula3subscription;
+        private Bitmap bm;
+        private byte[] rgbValues;
 
         public Form1()
         {
@@ -81,7 +84,6 @@ namespace Eval4.Demo
             //ev.AddEnvironmentFunctions(new EvalFunctions());
             ev.SetVariable("EvalFunctions", new EvalFunctions());
             // This call is required by the Windows Form Designer.
-
 
 
             // This call is required by the Windows Form Designer.
@@ -477,8 +479,8 @@ namespace Eval4.Demo
             // 
             // LogBox3
             // 
-            this.LogBox3.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this.LogBox3.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.LogBox3.Location = new System.Drawing.Point(8, 168);
             this.LogBox3.Multiline = true;
@@ -696,11 +698,12 @@ namespace Eval4.Demo
             }
             try
             {
-                Timer t = new Timer();
-                Bitmap bm = (Bitmap)PictureBox1.Image;
+                PictureBox1.Image = null;
+                PictureBox1.Refresh();
+                //Bitmap bm = (Bitmap)PictureBox1.Image;
                 if ((bm == null))
                 {
-                    bm = new Bitmap(256, 256);
+                    bm = new Bitmap(256, 256, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
                     PictureBox1.Image = bm;
                 }
                 double mult = (2
@@ -708,55 +711,45 @@ namespace Eval4.Demo
                 double r = 0;
                 double g = 0;
                 double b = 0;
-                for (int Xi = 0; (Xi <= 255); Xi++)
+                var bmpData = bm.LockBits(new Rectangle(0, 0, 256, 256), System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                IntPtr ptr = bmpData.Scan0;
+                // Get the address of the first line.
+                Stopwatch sw = Stopwatch.StartNew();
+
+                try
                 {
-                    X = ((Xi - 128)
-                        * mult);
-                    for (int Yi = 0; (Yi <= 255); Yi++)
+                    int bytes = Math.Abs(bmpData.Stride) * bm.Height;
+                    if (rgbValues == null)
                     {
-                        Y = ((Yi - 128)
-                            * mult);
-
-                        r = Convert.ToDouble(lCodeR.ObjectValue);
-                        g = Convert.ToDouble(lCodeG.ObjectValue);
-                        b = Convert.ToDouble(lCodeB.ObjectValue);
-
-                        if (((r < 0)
-                            || double.IsNaN(r)))
-                        {
-                            r = 0;
-                        }
-                        else if ((r > 1))
-                        {
-                            r = 1;
-                        }
-                        if (((g < 0)
-                            || double.IsNaN(g)))
-                        {
-                            g = 0;
-                        }
-                        else if ((g > 1))
-                        {
-                            g = 1;
-                        }
-                        if (((b < 0)
-                            || double.IsNaN(b)))
-                        {
-                            b = 0;
-                        }
-                        else if ((b > 1))
-                        {
-                            b = 1;
-                        }
-                        bm.SetPixel(Xi, Yi, Color.FromArgb((int)(r * 255), (int)(g * 255), (int)(b * 255)));
+                        rgbValues = new byte[bytes];
                     }
-                    if ((Xi & 7) == 7)
+
+                    int cpt = 0;
+
+                    for (int Xi = 0; Xi <= 255; Xi++)
                     {
-                        PictureBox1.Refresh();
+                        X = (Xi - 128) * mult;
+                        for (int Yi = 0; Yi <= 255; Yi++)
+                        {
+                            Y = (Yi - 128) * mult;
+
+                            rgbValues[cpt++] = ZeroTo255(lCodeR.ObjectValue);
+                            rgbValues[cpt++] = ZeroTo255(lCodeG.ObjectValue);
+                            rgbValues[cpt++] = ZeroTo255(lCodeB.ObjectValue);
+                        }
                     }
+
+                    // Copy the RGB values back to the bitmap
+                    System.Runtime.InteropServices.Marshal.Copy(rgbValues, 0, ptr, bytes);
+
+                }
+                finally
+                {
+                    bm.UnlockBits(bmpData);
+                    PictureBox1.Image = bm;
                 }
                 Label1.Text = ("196,608 evaluations run in "
-                    + (t.ms() + " ms"));
+                    + (sw.ElapsedMilliseconds + " ms"));
             }
             catch (Exception ex)
             {
@@ -764,11 +757,30 @@ namespace Eval4.Demo
             }
         }
 
+        private static byte ZeroTo255(double r)
+        {
+            if (((r <= 0)
+                || double.IsNaN(r)))
+            {
+                return 0;
+            }
+            else if ((r >= 1))
+            {
+                return 1;
+            }
+            return (byte)(r / 255.0);
+        }
+
         private void ComboBox1_SelectedIndexChanged(object sender, System.EventArgs e)
         {
             mInitializing = true;
             switch (ComboBox1.SelectedIndex)
             {
+                case 0:
+                    tbExpressionRed.Text = "X*15";
+                    tbExpressionGreen.Text = "Cos(X*Y*4900)";
+                    tbExpressionBlue.Text = "Y*15";
+                    break;
                 case 1:
                     tbExpressionRed.Text = "Mod(Round(4*X-Y*2),2)-X";
                     tbExpressionGreen.Text = "Mod(Abs(X+2*Y),0.75)*10+Y/5";
@@ -784,15 +796,7 @@ namespace Eval4.Demo
                     tbExpressionGreen.Text = "Cos(Y/2)/3";
                     tbExpressionBlue.Text = "Round(Sin(Sqrt(X*X*X+Y*Y)*10))";
                     break;
-                case 4:
-                    tbExpressionRed.Text = "X*15";
-                    tbExpressionGreen.Text = "Cos(X*Y*4900)";
-                    tbExpressionBlue.Text = "Y*15";
-                    break;
                 default:
-                    tbExpressionRed.Text = String.Empty;
-                    tbExpressionGreen.Text = String.Empty;
-                    tbExpressionBlue.Text = String.Empty;
                     break;
             }
             mInitializing = false;
