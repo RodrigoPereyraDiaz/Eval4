@@ -714,8 +714,7 @@ namespace Eval4.Demo
                 var bmpData = bm.LockBits(new Rectangle(0, 0, 256, 256), System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
                 IntPtr ptr = bmpData.Scan0;
                 // Get the address of the first line.
-                Stopwatch sw = Stopwatch.StartNew();
-
+                
                 try
                 {
                     int bytes = Math.Abs(bmpData.Stride) * bm.Height;
@@ -724,7 +723,8 @@ namespace Eval4.Demo
                         rgbValues = new byte[bytes];
                     }
 
-                    int cpt = 0;
+                    int rgbValuesIndex = 0;
+                    Stopwatch sw = Stopwatch.StartNew();
 
                     for (int Xi = 0; Xi <= 255; Xi++)
                     {
@@ -733,11 +733,13 @@ namespace Eval4.Demo
                         {
                             Y = (Yi - 128) * mult;
 
-                            rgbValues[cpt++] = ZeroTo255(lCodeR.ObjectValue);
-                            rgbValues[cpt++] = ZeroTo255(lCodeG.ObjectValue);
-                            rgbValues[cpt++] = ZeroTo255(lCodeB.ObjectValue);
+                            rgbValues[rgbValuesIndex++] = ZeroTo255(lCodeR.ObjectValue);
+                            rgbValues[rgbValuesIndex++] = ZeroTo255(lCodeG.ObjectValue);
+                            rgbValues[rgbValuesIndex++] = ZeroTo255(lCodeB.ObjectValue);
                         }
                     }
+
+                    Label1.Text = ("196,608 evaluations run in " + (sw.ElapsedMilliseconds + " ms"));
 
                     // Copy the RGB values back to the bitmap
                     System.Runtime.InteropServices.Marshal.Copy(rgbValues, 0, ptr, bytes);
@@ -748,8 +750,6 @@ namespace Eval4.Demo
                     bm.UnlockBits(bmpData);
                     PictureBox1.Image = bm;
                 }
-                Label1.Text = ("196,608 evaluations run in "
-                    + (sw.ElapsedMilliseconds + " ms"));
             }
             catch (Exception ex)
             {
@@ -757,18 +757,21 @@ namespace Eval4.Demo
             }
         }
 
-        private static byte ZeroTo255(double r)
+        private static byte ZeroTo255(object o)
         {
-            if (((r <= 0)
+            
+            double r = (double)o;
+
+            if (((r <= 0.0)
                 || double.IsNaN(r)))
             {
                 return 0;
             }
-            else if ((r >= 1))
+            else if ((r >= 1.0))
             {
-                return 1;
+                return 255;
             }
-            return (byte)(r / 255.0);
+            return (byte)(r * 255.0);
         }
 
         private void ComboBox1_SelectedIndexChanged(object sender, System.EventArgs e)
