@@ -15,7 +15,9 @@ namespace Eval4.Core
 
         //IHasValue<string> ParseTemplate(string template);
         //string EvalTemplate(string template);
-
+        void AddEnvironmentFunctions(object o);
+        void RemoveEnvironmentFunctions(object o);
+        
         string ConvertToString(object result);
     }
 

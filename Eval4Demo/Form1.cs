@@ -44,8 +44,8 @@ namespace Eval4.Demo
         internal System.Windows.Forms.Label Label4;
         internal System.Windows.Forms.CheckBox cbAuto;
 
-        public double X;
-        public double Y;
+        //public double X;
+        //public double Y;
 
         private System.Windows.Forms.TabPage tabDynamic;
         internal System.Windows.Forms.Button btnEvaluate3;
@@ -683,10 +683,14 @@ namespace Eval4.Demo
             Eval4.Core.IHasValue lCodeR = null;
             Eval4.Core.IHasValue lCodeG = null;
             Eval4.Core.IHasValue lCodeB = null;
+
+            ev.AddEnvironmentFunctions(new EvalFunctions());
+            var vX = ev.SetVariable("X", 0.0);
+            var vY = ev.SetVariable("Y", 0.0);
+            
             try
             {
-                ev.AddEnvironmentFunctions(this);
-                ev.AddEnvironmentFunctions(new EvalFunctions());
+
                 lCodeR = ev.Parse(tbExpressionRed.Text);
                 lCodeG = ev.Parse(tbExpressionGreen.Text);
                 lCodeB = ev.Parse(tbExpressionBlue.Text);
@@ -714,7 +718,7 @@ namespace Eval4.Demo
                 var bmpData = bm.LockBits(new Rectangle(0, 0, 256, 256), System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
                 IntPtr ptr = bmpData.Scan0;
                 // Get the address of the first line.
-                
+
                 try
                 {
                     int bytes = Math.Abs(bmpData.Stride) * bm.Height;
@@ -724,14 +728,14 @@ namespace Eval4.Demo
                     }
 
                     int rgbValuesIndex = 0;
-                    Stopwatch sw = Stopwatch.StartNew();
+                    Stopwatch sw = Stopwatch.StartNew();                    
 
                     for (int Xi = 0; Xi <= 255; Xi++)
                     {
-                        X = (Xi - 128) * mult;
+                        vX.SetValue((Xi - 128) * mult);
                         for (int Yi = 0; Yi <= 255; Yi++)
                         {
-                            Y = (Yi - 128) * mult;
+                            vY.SetValue((Yi - 128) * mult);
 
                             rgbValues[rgbValuesIndex++] = ZeroTo255(lCodeR.ObjectValue);
                             rgbValues[rgbValuesIndex++] = ZeroTo255(lCodeG.ObjectValue);
@@ -759,19 +763,22 @@ namespace Eval4.Demo
 
         private static byte ZeroTo255(object o)
         {
-            
-            double r = (double)o;
+            if (o is double)
+            {
+                double r = (double)o;
 
-            if (((r <= 0.0)
-                || double.IsNaN(r)))
-            {
-                return 0;
+                if (((r <= 0.0)
+                    || double.IsNaN(r)))
+                {
+                    return 0;
+                }
+                else if ((r >= 1.0))
+                {
+                    return 255;
+                }
+                return (byte)(r * 255.0);
             }
-            else if ((r >= 1.0))
-            {
-                return 255;
-            }
-            return (byte)(r * 255.0);
+            else return 0;
         }
 
         private void ComboBox1_SelectedIndexChanged(object sender, System.EventArgs e)

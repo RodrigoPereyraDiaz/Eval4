@@ -210,7 +210,7 @@ namespace Eval4.Demo
 
         public double Round(object value)
         {
-            return System.Math.Round((double)(value));
+            return System.Math.Round((double)value);
         }
 
         public string Chr(int c)

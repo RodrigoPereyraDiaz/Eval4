@@ -43,7 +43,9 @@ namespace Eval4.Demo
                     ev = null;
                     //label1.Text = "Formula evaluator similar to Excel";
                     break;
+            
             }
+            if (ev != null) ev.AddEnvironmentFunctions(new EvalFunctions());
             this.cbSamples.Items.AddRange(items.ToArray());
         }
 

@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Linq;
+using System.Reflection.Emit;
 
 namespace Eval4.Core
 {
+
     // Expr is an implementation for IHasValue.
     // in Evaluator we should not be using Expr but only IHasValue
     public abstract class Expr : IHasValue, IObserver
@@ -13,9 +15,11 @@ namespace Eval4.Core
         internal List<Subscription> mSubscribedBy = new List<Subscription>();
         internal List<Dependency> mDependencies = new List<Dependency>();
         internal List<IDisposable> mSubscribedTo = new List<IDisposable>();
+        protected bool mModified;
 
         public Expr(Dependency p0, params Dependency[] parameters)
         {
+            mModified = true;
             AddDependency(p0);
             if (parameters != null)
             {
@@ -27,7 +31,7 @@ namespace Eval4.Core
 
         }
 
-        private void AddDependency(Dependency p0)
+        protected void AddDependency(Dependency p0)
         {
             if (p0 != null)
             {
@@ -56,6 +60,7 @@ namespace Eval4.Core
 
         protected void RaiseValueChanged()
         {
+            mModified = true;
             foreach (var subscription in mSubscribedBy)
             {
                 subscription.mObserver.OnValueChanged();
@@ -90,7 +95,10 @@ namespace Eval4.Core
 
     public abstract class Expr<T> : Expr, IHasValue<T>
     {
+        private T mValue;
+
         public abstract T Value { get; }
+
 
         public Expr(Dependency p0, params Dependency[] parameters)
             : base(p0, parameters)
@@ -99,14 +107,27 @@ namespace Eval4.Core
 
         public override object ObjectValue
         {
-            [System.Diagnostics.DebuggerStepThrough()]
+            //[System.Diagnostics.DebuggerStepThrough()]
             get { return Value; }
         }
 
         public override Type ValueType
         {
-            [System.Diagnostics.DebuggerStepThrough()]
+            //[System.Diagnostics.DebuggerStepThrough()]
             get { return typeof(T); }
+        }
+
+        T IHasValue<T>.Value
+        {
+            get
+            {
+                //  if (mModified)
+                //  {
+                mModified = false;
+                mValue = this.Value;
+                //    }
+                return mValue;
+            }
         }
     }
 
@@ -129,7 +150,7 @@ namespace Eval4.Core
 
         public override T Value
         {
-            [System.Diagnostics.DebuggerStepThrough()]
+            //[System.Diagnostics.DebuggerStepThrough()]
             get { return mValue; }
         }
     }
@@ -175,11 +196,11 @@ namespace Eval4.Core
     public class CallMethodExpr<T> : Expr<T>
     {
         Func<T> mValueDelegate;
-        private object mBaseObject;
+        private IHasValue mBaseObject;
         private IHasValue withEventsField_mBaseValue;
         private object mBaseValueObject;
         private MemberInfo mMethod;
-        private IHasValue[] mParams;
+        private IHasValue[] mPreparedParams;
 
         private object[] mParamValues;
         private System.Type mResultSystemType;
@@ -192,7 +213,7 @@ namespace Eval4.Core
                 @params = new List<IHasValue>();
             //IHasValue[] newParams = @params.ToArray();
 
-            var newParams = new List<IHasValue>();
+            var preparedParams = new List<IHasValue>();
             mBaseObject = baseObject;
             mMethod = method;
             mShortName = shortName;
@@ -202,34 +223,17 @@ namespace Eval4.Core
             {
                 mResultSystemType = ((PropertyInfo)method).PropertyType;
                 paramInfo = ((PropertyInfo)method).GetIndexParameters();
-                mValueDelegate = GetProperty;
             }
             else if (method is MethodInfo)
             {
                 var mi = (MethodInfo)method;
                 mResultSystemType = mi.ReturnType;
                 paramInfo = mi.GetParameters();
-                mValueDelegate = GetMethod;
-                //var dlg = (Func<T>)Delegate.CreateDelegate(typeof(Func<T>), (MethodInfo)mi);
-                //mValueDelegate = dlg;
             }
             else if (method is FieldInfo)
             {
                 mResultSystemType = ((FieldInfo)method).FieldType;
                 paramInfo = new ParameterInfo[] { };
-                Expression expr = null;
-                if (baseObject != null)
-                {
-                    var expectedType = typeof(IHasValue<>).MakeGenericType(baseObject.ValueType);
-                    expr = Expression.MakeMemberAccess(Expression.Constant(baseObject), expectedType.GetProperty("Value"));
-                    expr = Expression.Field(expr, (FieldInfo)method);
-                }
-                else
-                {
-                    expr = Expression.Field(null, (FieldInfo)method);
-                }
-                var lambda = Expression.Lambda<Func<T>>(expr);
-                mValueDelegate = lambda.Compile();
             }
 
             for (int i = 0; i < @params.Count; i++)
@@ -240,47 +244,41 @@ namespace Eval4.Core
                     var targetType = paramInfo[i].ParameterType;
                     if (casts[i] == null)
                     {
-                        newParams.Add(@params[i]);
+                        preparedParams.Add(@params[i]);
                     }
                     else
                     {
                         if (casts[i].GetType().IsArray)
                         {
                             var c2 = typeof(ArrayBuilder<>).MakeGenericType(targetType.GetElementType());
-                            newParams.Add((IHasValue)Activator.CreateInstance(c2, new object[] { @params.Skip(i).ToArray(), casts[i] }));
+                            preparedParams.Add((IHasValue)Activator.CreateInstance(c2, new object[] { @params.Skip(i).ToArray(), casts[i] }));
                             // we have consumed all parameters
                             break;
                         }
                         else
                         {
                             var c3 = typeof(DelegateExpr<,>).MakeGenericType(sourceType, targetType);
-                            newParams.Add((IHasValue)Activator.CreateInstance(c3, @params[i], casts[i], @params[i].ShortName));
+                            preparedParams.Add((IHasValue)Activator.CreateInstance(c3, @params[i], casts[i], @params[i].ShortName));
                         }
                     }
                 }
             }
-            mParams = newParams.ToArray();
-            mParamValues = new object[mParams.Length];
-        }
 
-        public IHasValue mBaseValue
-        {
-            get { return withEventsField_mBaseValue; }
-            set
+            mPreparedParams = preparedParams.ToArray();
+            mParamValues = new object[mPreparedParams.Length];
+
+            if (method is PropertyInfo)
             {
-                if (withEventsField_mBaseValue != null)
-                {
-                    //throw new NotImplementedException();
-                    //withEventsField_mBaseValue.ValueChanged -= withEventsField_mBaseValue_ValueChanged;
-                }
-                withEventsField_mBaseValue = value;
-                if (withEventsField_mBaseValue != null)
-                {
-                    //throw new NotImplementedException();
-                    //withEventsField_mBaseValue.ValueChanged += withEventsField_mBaseValue_ValueChanged;
-                }
+                mValueDelegate = GetProperty;
             }
-            // for the events only
+            else if (method is MethodInfo)
+            {
+                mValueDelegate = MakeGetMethod(baseObject, (MethodInfo)method);
+            }
+            else if (method is FieldInfo)
+            {
+                MakeGetField(baseObject, method);
+            }
         }
 
         private T GetProperty()
@@ -297,26 +295,97 @@ namespace Eval4.Core
             return (T)res;
         }
 
-        private void Recalc()
+        private void MakeGetField(IHasValue baseObject, MemberInfo method)
         {
-            for (int i = 0; i <= mParams.Length - 1; i++)
+            Expression expr = null;
+            if (baseObject != null)
             {
-                mParamValues[i] = mParams[i].ObjectValue;
-            }
-            if (mBaseObject is IHasValue)
-            {
-                mBaseValue = (IHasValue)mBaseObject;
-                mBaseValueObject = mBaseValue.ObjectValue;
+                var expectedType = typeof(IHasValue<>).MakeGenericType(baseObject.ValueType);
+                expr = Expression.MakeMemberAccess(Expression.Constant(baseObject), expectedType.GetProperty("Value"));
+                expr = Expression.Field(expr, (FieldInfo)method);
             }
             else
             {
-                mBaseValueObject = mBaseObject;
+                expr = Expression.Field(null, (FieldInfo)method);
             }
+            var lambda = Expression.Lambda<Func<T>>(expr);
+            mValueDelegate = lambda.Compile();
+        }
+
+        public double aaaaaa()
+        {
+            return Math.Sin((double)mPreparedParams[0].ObjectValue);
+            /*
+              IL_0000:  ldarg.0
+              IL_0001:  ldfld      class Eval4.Core.IHasValue[] class Eval4.Core.CallMethodExpr`1<!T>::mPreparedParams
+              IL_0006:  ldc.i4.0
+              IL_0007:  ldelem.ref
+              IL_0008:  callvirt   instance object Eval4.Core.IHasValue::get_ObjectValue()
+              IL_000d:  unbox.any  [mscorlib]System.Double
+              IL_0012:  call       float64 [mscorlib]System.Math::Sin(float64)
+              IL_0017:  ret
+             */
+        }
+
+        private Func<T> MakeGetMethod(IHasValue baseObject, MethodInfo mi)
+        {
+            var paramTypes = (from p in mPreparedParams select p.ValueType).ToArray();
+            DynamicMethod meth = new DynamicMethod(
+                "DynamicGetMethod",
+                typeof(T),
+                new Type[] { this.GetType() },
+                this.GetType(),  // associate with a type
+                true);
+            ILGenerator il = meth.GetILGenerator();
+            FieldInfo fiPreparedParams = this.GetType().GetField("mPreparedParams", BindingFlags.Instance | BindingFlags.NonPublic);
+            MethodInfo miGetObjectValue = typeof(IHasValue).GetProperty("ObjectValue").GetGetMethod();
+            if (!mi.IsStatic)
+            {
+                FieldInfo fiBaseObject = this.GetType().GetField("mBaseObject", BindingFlags.Instance | BindingFlags.NonPublic);
+                il.Emit(OpCodes.Ldarg_0);         // this
+                il.Emit(OpCodes.Ldfld, fiBaseObject); // this.mParams
+                il.Emit(OpCodes.Callvirt, miGetObjectValue);
+            }
+            var methodParams = ((MethodInfo)mMethod).GetParameters();
+
+            for (int i = 0; i < mPreparedParams.Length; i++)
+            {
+                
+            
+                il.Emit(OpCodes.Ldarg_0);         // this
+                il.Emit(OpCodes.Ldfld, fiPreparedParams); // this.mParams
+                il.Emit(OpCodes.Ldc_I4, i);       // i
+                il.Emit(OpCodes.Ldelem_Ref);      // this.mParams[i]
+                il.Emit(OpCodes.Callvirt, miGetObjectValue);
+                var preparedType = mPreparedParams[i].ValueType;
+                if (preparedType == typeof(string))
+                {
+                    throw new NotImplementedException("check this");
+                }
+                if (preparedType.IsValueType && methodParams[i].ParameterType.IsValueType)
+                {
+                    il.Emit(OpCodes.Unbox_Any, preparedType);
+                }
+            }
+            il.Emit(OpCodes.Call, mi);
+            il.Emit(OpCodes.Ret);
+
+            Delegate dlg = meth.CreateDelegate(typeof(Func<T>), this);
+            return (Func<T>)dlg;
+        }
+
+        private void Recalc()
+        {
+            for (int i = 0; i <= mPreparedParams.Length - 1; i++)
+            {
+                mParamValues[i] = mPreparedParams[i].ObjectValue;
+            }
+            mBaseValueObject = mBaseObject.ObjectValue;
         }
 
         public override T Value
         {
-            [System.Diagnostics.DebuggerStepThrough()]
+            //[System.Diagnostics.DebuggerStepThrough()]
             get { return mValueDelegate(); }
         }
 
@@ -454,7 +523,7 @@ namespace Eval4.Core
 
         public override T Value
         {
-            [System.Diagnostics.DebuggerStepThrough()]
+            //[System.Diagnostics.DebuggerStepThrough()]
             get { return mDelegate(mP1.Value); }
         }
 
@@ -485,7 +554,7 @@ namespace Eval4.Core
 
         public override T Value
         {
-            [System.Diagnostics.DebuggerStepThrough()]
+            //[System.Diagnostics.DebuggerStepThrough()]
             get { return mDelegate(mP1.Value, mP2.Value); }
         }
 
@@ -507,11 +576,12 @@ namespace Eval4.Core
             mEvaluator = evaluator;
             mVariableName = variableName;
             mVariable = mEvaluator.GetVariable<T>(mVariableName);
+            AddDependency(new Dependency("Variable " + variableName, mVariable));
         }
 
         public override T Value
         {
-            [System.Diagnostics.DebuggerStepThrough()]
+            //[System.Diagnostics.DebuggerStepThrough()]
             get { return mVariable.Value; }
         }
 
@@ -535,7 +605,7 @@ namespace Eval4.Core
 
         public override T Value
         {
-            [System.Diagnostics.DebuggerStepThrough()]
+            //[System.Diagnostics.DebuggerStepThrough()]
             get { return mValue; }
         }
 

@@ -29,12 +29,31 @@ namespace Eval4.ConsoleDemo
             //RunSpecs("Specs1.txt");
             
             SetLanguage("cs");
-            //ev.SetVariable<uint>("a", 1);
-            TestFormula("259 & 7","3");
-            
+            //ev.AddEnvironmentFunctions(typeof(MyMath));
+            //TestFormula("Sin(1.57)", "1.00");
+            ev.AddEnvironmentFunctions(new MyMath());
+            TestFormula("Round(1.57)", "2.00");
 
             Console.WriteLine("Completed");
             Console.ReadKey();
+        }
+
+        private class MyMath
+        {
+            public static double Sin(double value)
+            {
+                return Math.Sin(value);
+            }
+
+            public static double Round(object value)
+            {
+                return Math.Round(Convert.ToDouble(value));
+            }
+
+            public double SinI(double v)
+            {
+                return System.Math.Sin(v);
+            }
         }
 
         static void RunSpecs(string specFile)

@@ -390,7 +390,7 @@ namespace Eval4.Core
         //}
 
 
-        public void SetVariable<T>(string variableName, T variableValue)
+        public Variable<T> SetVariable<T>(string variableName, T variableValue)
         {
             IVariable variable;
             if (mVariableBag.TryGetValue(variableName, out variable))
@@ -402,6 +402,7 @@ namespace Eval4.Core
                 variable = new Variable<T>(variableValue, variableName);
                 mVariableBag[variableName] = variable;
             }
+            return (Variable<T>)variable;
         }
 
         public void SetVariableFunctions(string variableName, Type type)
@@ -1066,8 +1067,16 @@ namespace Eval4.Core
                     IVariable variable;
                     if (mVariableBag.TryGetValue(funcName, out variable))
                     {
-                        var t = typeof(GetVariableFromBag<>).MakeGenericType(variable.ValueType);
-                        newExpr = (IHasValue)Activator.CreateInstance(t, this, funcName);
+                        IVariable var = null;
+                        if (mVariableBag.TryGetValue(funcName, out var))
+                        {
+                             newExpr = var;
+                        }
+                        else
+                        {
+                            var t = typeof(Variable<>).MakeGenericType(variable.ValueType);
+                            newExpr = (IHasValue)Activator.CreateInstance(t, null);
+                        }
                     }
                     else
                     {
