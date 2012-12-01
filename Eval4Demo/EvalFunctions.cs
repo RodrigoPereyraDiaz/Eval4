@@ -42,14 +42,6 @@ namespace Eval4.Demo
             }
         }
 
-        public object Value
-        {
-            get
-            {
-                return this;
-            }
-        }
-
         public double Sin(double v)
         {
             return System.Math.Sin(v);
@@ -191,7 +183,7 @@ namespace Eval4.Demo
             }
         }
 
-        public int Int(object value)
+        public int Int(double value)
         {
             return (int)(value);
         }
@@ -203,14 +195,9 @@ namespace Eval4.Demo
             return (int)(System.Math.Round(value, prec));
         }
 
-        public double Dec(object value)
+        public double Round(double value)
         {
-            return (double)(value);
-        }
-
-        public double Round(object value)
-        {
-            return System.Math.Round((double)value);
+            return System.Math.Round(value);
         }
 
         public string Chr(int c)

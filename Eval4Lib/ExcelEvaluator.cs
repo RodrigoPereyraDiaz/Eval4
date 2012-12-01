@@ -359,7 +359,7 @@ namespace Eval4
 
                 case '^':
                     NextChar();
-                    return new Token(TokenType.OperatorXor);
+                    return new Token(TokenType.OperatorPower);
 
                 case '|':
                     NextChar();
@@ -421,96 +421,59 @@ namespace Eval4
         protected override int GetPrecedence(Token token, bool unary)
         {
             var tt = token.Type;
-            //http://msdn.microsoft.com/en-us/library/aa691323(v=vs.71).aspx
             switch (tt)
             {
                 case TokenType.Dot:
                 case TokenType.OpenParenthesis:
                 case TokenType.OpenBracket:
-                case TokenType.New:
-
-                    // 	Primary	
-                    //x.y  f(x)  a[x]  x++  x--  new
-                    //typeof  checked  unchecked
-                    return 16;
+                    return 10;
 
                 case TokenType.OperatorColon:
-                    return 13;
+                    // :
+                    return 9;
 
                 case TokenType.OperatorPlus:
                 case TokenType.OperatorMinus:
-                    return (unary ? 15 : 12);
-
-                case TokenType.OperatorNot:
-                case TokenType.OperatorTilde:
                     // 	Unary	
-                    //+  -  !  ~  ++x  --x  (T)x
-                    return 14;
+                    // +  -
+                    return (unary ? 8 : 3);
+
+                case TokenType.Comma:
+                    // ,
+                    return 7;
+
+                case TokenType.OperatorModulo:
+                    //*  %
+                    return 6;
+
+                case TokenType.OperatorPower:
+                    // 	^
+                    return 5;
 
                 case TokenType.OperatorMultiply:
                 case TokenType.OperatorDivide:
-                case TokenType.OperatorModulo:
-                    // 	Multiplicative	
-                    //*  /  %
-                    return 13;
+                    // 	* /
+                    return 4;
+                //case TokenType.OperatorPlus:
+                //case TokenType.OperatorMinus:
+                //    // 	+ -
+                //    return 3;
 
-                //case TokenType.Operator_plus:
-                //case TokenType.Operator_minus:
-                // 	Additive	
-                //  +  -
-                //  return 12;
+                case TokenType.OperatorConcat:
+                    // 	&
+                    return 2;
 
-                case TokenType.ShiftLeft:
-                case TokenType.ShiftRight:
-                    // 	Shift	
-                    //<<  >>
-                    return 11;
 
                 case TokenType.OperatorLT:
                 case TokenType.OperatorLE:
                 case TokenType.OperatorGE:
                 case TokenType.OperatorGT:
-                    // 	Relational and type testing	
-                    //<  >  <=  >=  is  as
-                    return 10;
-
                 case TokenType.OperatorEQ:
                 case TokenType.OperatorNE:
-                    // 	Equality	
-                    //==  !=
-                    return 9;
+                    // 	Relational and type testing	
+                    //<  >  <=  >=  is  as
+                    return 1;
 
-                case TokenType.OperatorAnd:
-                    // 	Logical AND	
-                    //&
-                    return 8;
-
-                case TokenType.OperatorXor:
-                    // 	Logical XOR	
-                    //^
-                    return 7;
-
-                case TokenType.OperatorOr:
-                    // 	Logical OR	
-                    //|
-                    return 6;
-
-                case TokenType.OperatorAndAlso:
-                    // 	Conditional AND	
-                    //&&
-                    return 5;
-                case TokenType.OperatorOrElse:
-                    // 	Conditional OR	
-                    //||
-                    return 4;
-                case TokenType.OperatorIf:
-                    // 	Conditional	
-                    //?:
-                    return 3;
-                case TokenType.OperatorAssign:
-                    // 	Assignment	
-                    //=  *=  /=  %=  +=  -=  <<=  >>=  &=  ^=  |=
-                    return 2;
                 default:
                     return 0;
             }

@@ -32,7 +32,17 @@ namespace Eval4.ConsoleDemo
             //ev.AddEnvironmentFunctions(typeof(MyMath));
             //TestFormula("Sin(1.57)", "1.00");
             ev.AddEnvironmentFunctions(new MyMath());
-            TestFormula("Round(1.57)", "2.00");
+            ev.SetVariable<double>("x", 10.0);
+            TestFormula("x+1", "11.00");
+            TestFormula("x+2", "12.00");
+            TestFormula("x+3", "13.00");
+            TestFormula("x+4", "14.00");
+
+            ev.SetVariable("x", 20.0);
+            TestFormula("x+1", "21.00");
+            TestFormula("x+2", "22.00");
+            TestFormula("x+3", "23.00");
+            TestFormula("x+4", "24.00");
 
             Console.WriteLine("Completed");
             Console.ReadKey();

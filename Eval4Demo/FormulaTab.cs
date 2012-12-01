@@ -67,6 +67,19 @@ namespace Eval4.Demo
         {
             btnEvaluate_Click(sender, e);
         }
+
+        private void cbSamples_TextChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                var res = ev.Eval(cbSamples.Text);
+                label1.Text = ev.ConvertToString(res);
+            }
+            catch (Exception ex)
+            {
+                label1.Text = ex.Message;
+            }
+        }
     }
 
     public enum PanelLanguage

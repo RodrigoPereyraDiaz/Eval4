@@ -98,6 +98,7 @@ namespace Eval4.Core
                 AddBinaryOperation<double, double, double>(TokenType.OperatorMinus, (a, b) => { return a - b; });
                 AddBinaryOperation<double, double, double>(TokenType.OperatorMultiply, (a, b) => { return a * b; });
                 AddBinaryOperation<double, double, double>(TokenType.OperatorDivide, (a, b) => { return a / b; });
+                AddBinaryOperation<double, double, double>(TokenType.OperatorPower, (a, b) => { return Math.Pow(a, b); });
                 AddBinaryOperation<double, double, bool>(TokenType.OperatorEQ, (a, b) => { return a == b; });
                 AddBinaryOperation<double, double, bool>(TokenType.OperatorNE, (a, b) => { return a != b; });
                 AddBinaryOperation<double, double, bool>(TokenType.OperatorGE, (a, b) => { return a >= b; });
@@ -376,19 +377,6 @@ namespace Eval4.Core
             IHasValue parsed = InternalParse(formula);
             return parsed.ObjectValue;
         }
-
-        //public string EvalTemplate(string template)
-        //{
-        //    IHasValue parsed = ParseTemplate(template);
-        //    return parsed.ObjectValue.ToString();
-        //}
-
-        //public IHasValue<string> ParseTemplate(string template)
-        //{
-        //    IHasValue<string> parsed = (IHasValue<string>)InternalParse(template, sourceIsTextTemplate: true);
-        //    return parsed;
-        //}
-
 
         public Variable<T> SetVariable<T>(string variableName, T variableValue)
         {

@@ -31,6 +31,7 @@
             this.cbSamples = new System.Windows.Forms.ComboBox();
             this.btnEvaluate = new System.Windows.Forms.Button();
             this.TextBox2 = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // cbSamples
@@ -43,6 +44,7 @@
             this.cbSamples.TabIndex = 7;
             this.cbSamples.Text = "<enter an expression or select a sample>";
             this.cbSamples.SelectedIndexChanged += new System.EventHandler(this.cbSamples_SelectedIndexChanged);
+            this.cbSamples.TextChanged += new System.EventHandler(this.cbSamples_TextChanged);
             // 
             // btnEvaluate
             // 
@@ -59,17 +61,27 @@
             this.TextBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.TextBox2.Location = new System.Drawing.Point(3, 32);
+            this.TextBox2.Location = new System.Drawing.Point(3, 43);
             this.TextBox2.Multiline = true;
             this.TextBox2.Name = "TextBox2";
             this.TextBox2.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.TextBox2.Size = new System.Drawing.Size(408, 356);
+            this.TextBox2.Size = new System.Drawing.Size(408, 345);
             this.TextBox2.TabIndex = 5;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(3, 27);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(35, 13);
+            this.label1.TabIndex = 8;
+            this.label1.Text = "label1";
             // 
             // FormulaTab
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.cbSamples);
             this.Controls.Add(this.btnEvaluate);
             this.Controls.Add(this.TextBox2);
@@ -86,5 +98,6 @@
         internal System.Windows.Forms.ComboBox cbSamples;
         internal System.Windows.Forms.Button btnEvaluate;
         internal System.Windows.Forms.TextBox TextBox2;
+        private System.Windows.Forms.Label label1;
     }
 }

@@ -33,10 +33,13 @@ namespace Eval4.Core
 
         protected void AddDependency(Dependency p0)
         {
-            if (p0 != null)
+            if (p0 != null && !mDependencies.Contains(p0))
             {
                 mDependencies.Add(p0);
-                if (p0.Value != null) mSubscribedTo.Add(p0.Value.Subscribe(this));
+                if (p0.Value != null)
+                {
+                    mSubscribedTo.Add(p0.Value.Subscribe(this));
+                }
             }
         }
 
@@ -60,6 +63,7 @@ namespace Eval4.Core
 
         protected void RaiseValueChanged()
         {
+            if (mModified) return;
             mModified = true;
             foreach (var subscription in mSubscribedBy)
             {
@@ -86,9 +90,10 @@ namespace Eval4.Core
             mSource = source;
             mObserver = observer;
         }
+
         public void Dispose()
         {
-            mSource.mSubscribedTo.Remove(this);
+            mSource.mSubscribedBy.Remove(this);
         }
 
     }
@@ -121,11 +126,11 @@ namespace Eval4.Core
         {
             get
             {
-                //  if (mModified)
-                //  {
-                mModified = false;
-                mValue = this.Value;
-                //    }
+                if (mModified)
+                {
+                    mModified = false;
+                    mValue = this.Value;
+                }
                 return mValue;
             }
         }
@@ -269,15 +274,15 @@ namespace Eval4.Core
 
             if (method is PropertyInfo)
             {
-                mValueDelegate = GetProperty;
+                mValueDelegate = EmitGetMethod(baseObject,((PropertyInfo)method).GetGetMethod());
             }
             else if (method is MethodInfo)
             {
-                mValueDelegate = MakeGetMethod(baseObject, (MethodInfo)method);
+                mValueDelegate = EmitGetMethod(baseObject, (MethodInfo)method);
             }
             else if (method is FieldInfo)
             {
-                MakeGetField(baseObject, method);
+                EmitGetField(baseObject, method);
             }
         }
 
@@ -295,7 +300,7 @@ namespace Eval4.Core
             return (T)res;
         }
 
-        private void MakeGetField(IHasValue baseObject, MemberInfo method)
+        private void EmitGetField(IHasValue baseObject, MemberInfo method)
         {
             Expression expr = null;
             if (baseObject != null)
@@ -312,22 +317,7 @@ namespace Eval4.Core
             mValueDelegate = lambda.Compile();
         }
 
-        public double aaaaaa()
-        {
-            return Math.Sin((double)mPreparedParams[0].ObjectValue);
-            /*
-              IL_0000:  ldarg.0
-              IL_0001:  ldfld      class Eval4.Core.IHasValue[] class Eval4.Core.CallMethodExpr`1<!T>::mPreparedParams
-              IL_0006:  ldc.i4.0
-              IL_0007:  ldelem.ref
-              IL_0008:  callvirt   instance object Eval4.Core.IHasValue::get_ObjectValue()
-              IL_000d:  unbox.any  [mscorlib]System.Double
-              IL_0012:  call       float64 [mscorlib]System.Math::Sin(float64)
-              IL_0017:  ret
-             */
-        }
-
-        private Func<T> MakeGetMethod(IHasValue baseObject, MethodInfo mi)
+        private Func<T> EmitGetMethod(IHasValue baseObject, MethodInfo mi)
         {
             var paramTypes = (from p in mPreparedParams select p.ValueType).ToArray();
             DynamicMethod meth = new DynamicMethod(
@@ -350,8 +340,8 @@ namespace Eval4.Core
 
             for (int i = 0; i < mPreparedParams.Length; i++)
             {
-                
-            
+
+
                 il.Emit(OpCodes.Ldarg_0);         // this
                 il.Emit(OpCodes.Ldfld, fiPreparedParams); // this.mParams
                 il.Emit(OpCodes.Ldc_I4, i);       // i
