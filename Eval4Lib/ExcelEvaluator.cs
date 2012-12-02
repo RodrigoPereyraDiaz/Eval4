@@ -54,7 +54,7 @@ namespace Eval4
         public ExcelEvaluator Ev { get; private set; }
         private string mFormula;
         private string mName;
-        private IHasValue mParsed;
+        private IParsedExpr mParsed;
         public Exception Exception;
         public int Row { get; private set; }
         public int Col { get; private set; }

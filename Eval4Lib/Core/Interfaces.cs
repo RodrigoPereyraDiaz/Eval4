@@ -17,9 +17,16 @@ namespace Eval4.Core
         void RemoveEnvironmentFunctions(object o);
 
         string ConvertToString(object result);
+
+        IParsedExpr Parse(string formula, Action onValueChanged = null);
     }
 
-    public interface IHasValue
+    public interface IParsedExpr : IDisposable
+    {
+        object ObjectValue { get; }
+    }
+
+    public interface IHasValue : IDisposable
     {
         object ObjectValue { get; }
         ISubscription Subscribe(IObserver observer, string role);

@@ -18,7 +18,7 @@ namespace Eval4.Demo
         // Required by the Windows Form Designer
         private CSharpEvaluator ev;
         private bool mInitializing;
-        private Eval4.Core.IHasValue mFormula3;
+        private Eval4.Core.IParsedExpr mFormula3;
 
         // Note that these 3 variables are visible from within the evaluator 
         // without needing any assessor 
@@ -654,9 +654,9 @@ namespace Eval4.Demo
 
         private void btnEvaluate2_Click(object sender, System.EventArgs e)
         {
-            Eval4.Core.IHasValue lCodeR = null;
-            Eval4.Core.IHasValue lCodeG = null;
-            Eval4.Core.IHasValue lCodeB = null;
+            Eval4.Core.IParsedExpr lCodeR = null;
+            Eval4.Core.IParsedExpr lCodeG = null;
+            Eval4.Core.IParsedExpr lCodeB = null;
 
             ev.AddEnvironmentFunctions(new EvalFunctions());
             var vX = ev.SetVariable("X", 0.0);
@@ -739,18 +739,8 @@ namespace Eval4.Demo
         {
             if (o is double)
             {
-                double r = (double)o;
-
-                if (((r <= 0.0)
-                    || double.IsNaN(r)))
-                {
-                    return 0;
-                }
-                else if ((r >= 1.0))
-                {
-                    return 255;
-                }
-                return (byte)(r * 255.0);
+                double r = ((double)o);
+                return (byte)(r * 256.0);
             }
             else return 0;
         }
@@ -797,14 +787,12 @@ namespace Eval4.Demo
                 // throw new NotImplementedException();
                 // if (FormulaHandler != null) mFormula3.ValueChanged -= FormulaHandler;
                 if (formula3subscription != null) formula3subscription.Dispose();
-                mFormula3 = ev.Parse(tbExpression3.Text);
-
-                formula3subscription = mFormula3.Subscribe("Formula: " + tbExpression3.Text, () =>
+                using (mFormula3 = ev.Parse(tbExpression3.Text))
                 {
                     string v = ev.ConvertToString(mFormula3.ObjectValue);
                     lblResults3.Text = v;
                     LogBox3.AppendText(System.DateTime.Now.ToLongTimeString() + ": " + v + "\r\n");
-                });
+                }
 
 
                 //FormulaHandler = new Eval4.Core.ValueChangedEventHandler(mFormula3_ValueChanged);

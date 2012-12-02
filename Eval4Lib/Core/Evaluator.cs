@@ -317,20 +317,32 @@ namespace Eval4.Core
             }
         }
 
-        public IHasValue Parse(string formula, bool stringTemplate = false)
+        private IHasValue InternalParse(string source, bool sourceIsTextTemplate = false)
         {
-            if (formula == null)
-                formula = string.Empty;
-
-            IHasValue parsed;
-            var dict = (stringTemplate ? mTemplates : mExpressions);
-            if (!dict.TryGetValue(formula, out parsed))
+            mString = source;
+            mLen = source.Length;
+            mPos = 0;
+            // start the machine
+            NextChar();
+            NextToken();
+            IHasValue res;
+            if (sourceIsTextTemplate) res = ParseTemplate();
+            else res = ParseExpr(null, -1);
+            if (mCurToken.Type == TokenType.Eof)
             {
-                parsed = InternalParse(formula, stringTemplate);
-                dict[formula] = parsed;
-                if (dict.Count > 100) dict.Clear(); //  I know this is crude
+                if (res == null)
+                    res = new ConstantExpr<string>(string.Empty);
+                var sw = new System.IO.StringWriter();
+                WriteDependencies(sw, string.Format("Formula {0}", source), res);
+                System.Diagnostics.Trace.WriteLine(sw.ToString());
+                return res;
             }
-            return parsed;
+            else
+            {
+                var err = NewUnexpectedToken();
+                System.Diagnostics.Trace.WriteLine(string.Format("Formula {0}: {1}", source, err));
+                return err;
+            }
         }
 
         public virtual string ConvertToString(object value)
@@ -374,8 +386,10 @@ namespace Eval4.Core
 
         public object Eval(string formula)
         {
-            IHasValue parsed = InternalParse(formula);
-            return parsed.ObjectValue;
+            using (IHasValue parsed = InternalParse(formula))
+            {
+                return parsed.ObjectValue;
+            }
         }
 
         public Variable<T> SetVariable<T>(string variableName, T variableValue)
@@ -947,34 +961,6 @@ namespace Eval4.Core
             }
         }
 
-        private IHasValue InternalParse(string source, bool sourceIsTextTemplate = false)
-        {
-            mString = source;
-            mLen = source.Length;
-            mPos = 0;
-            // start the machine
-            NextChar();
-            NextToken();
-            IHasValue res;
-            if (sourceIsTextTemplate) res = ParseTemplate();
-            else res = ParseExpr(null, -1);
-            if (mCurToken.Type == TokenType.Eof)
-            {
-                if (res == null)
-                    res = new ConstantExpr<string>(string.Empty);
-                var sw = new System.IO.StringWriter();
-                WriteDependencies(sw, string.Format("Formula {0}", source), res);
-                System.Diagnostics.Trace.WriteLine(sw.ToString());
-                return res;
-            }
-            else
-            {
-                var err = NewUnexpectedToken();
-                System.Diagnostics.Trace.WriteLine(string.Format("Formula {0}: {1}", source, err));
-                return err;
-            }
-        }
-
         private IHasValue ParseTemplate()
         {
             var token = ParseString(false);
@@ -1479,8 +1465,6 @@ namespace Eval4.Core
         //    return this.Parse(formula);
         //}
 
-
-
         void IEvaluator.SetVariable<T>(string variableName, T variableValue)
         {
             this.SetVariable(variableName, variableValue);
@@ -1605,7 +1589,56 @@ namespace Eval4.Core
                 return '\0';
             }
         }
+
+        public IParsedExpr Parse(string formula, Action onValueChanged = null)
+        {
+            //hasValue.Subscribe(
+            if (formula == null)
+                formula = string.Empty;
+
+            IHasValue parsed;
+            if (!mExpressions.TryGetValue(formula, out parsed))
+            {
+                parsed = InternalParse(formula, false);
+                mExpressions[formula] = parsed;
+                if (mExpressions.Count > 100) mExpressions.Clear(); //  I know this is crude
+            }
+            return new ParsedExpr(formula, parsed, onValueChanged);
+        }
+
+        private class ParsedExpr : IParsedExpr, IObserver
+        {
+            private string formula;
+            private IHasValue parsed;
+            private Action onValueChanged;
+
+            public ParsedExpr(string formula, IHasValue parsed, Action onValueChanged)
+            {
+                this.formula = formula;
+                this.parsed = parsed;
+                this.onValueChanged = onValueChanged;
+
+                parsed.Subscribe(this, "formula: " + formula);
+            }
+
+            public void Dispose()
+            {
+
+            }
+
+            public object ObjectValue
+            {
+                get { return parsed.ObjectValue; }
+            }
+
+            void IObserver.OnValueChanged(IHasValue value)
+            {
+                if (onValueChanged != null) onValueChanged();
+            }
+
+        }
     }
+
 
     internal class TypePair : IEquatable<TypePair>
     {

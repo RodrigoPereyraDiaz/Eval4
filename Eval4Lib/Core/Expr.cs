@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Linq;
 using System.Reflection.Emit;
+using System.Text;
 
 namespace Eval4.Core
 {
@@ -15,6 +16,7 @@ namespace Eval4.Core
         internal List<ISubscription> mSubscribedBy = new List<ISubscription>();
         internal List<ISubscription> mSubscribedTo = new List<ISubscription>();
         protected bool mModified;
+        private bool mDisposed;
 
         public Expr()
         {
@@ -88,6 +90,10 @@ namespace Eval4.Core
             public void Dispose()
             {
                 mSource.mSubscribedBy.Remove(this);
+                if (mSource.mSubscribedBy.Count == 0)
+                {
+                    mSource.Dispose();
+                }
             }
 
             public string Name
@@ -106,6 +112,35 @@ namespace Eval4.Core
             }
         }
 
+        public void Dispose()
+        {
+            if (!mDisposed)
+            {
+                mDisposed = true;
+                foreach (var x in mSubscribedTo)
+                {
+                    x.Dispose();
+                }
+                mSubscribedTo.Clear();
+            }
+        }
+
+        public override string ToString()
+        {
+            var result=new StringBuilder();
+            if (this.mModified) result.Append("* ");
+            result.Append(this.ShortName);
+            result.Append("(");
+            bool first = true;
+            foreach (var c in mSubscribedTo)
+            {
+                if (first) first = false;
+                else result.Append(", ");
+                result.Append(c.Source.ToString());
+            }
+            result.Append(")");
+            return result.ToString();
+        }
     }
 
     
@@ -118,7 +153,14 @@ namespace Eval4.Core
         public override object ObjectValue
         {
             //[System.Diagnostics.DebuggerStepThrough()]
-            get { return Value; }
+            get {
+                if (mModified)
+                {
+                    mModified = false;
+                    mValue = this.Value;
+                }
+                return mValue;
+            }
         }
 
         public override Type ValueType
@@ -139,6 +181,7 @@ namespace Eval4.Core
                 return mValue;
             }
         }
+
     }
 
     internal class ConstantExpr<T> : Expr<T>
@@ -229,7 +272,6 @@ namespace Eval4.Core
 
             if (@params == null)
                 @params = new List<IHasValue>();
-            //IHasValue[] newParams = @params.ToArray();
 
             var preparedParams = new List<IHasValue>();
             mBaseObject = baseObject;
