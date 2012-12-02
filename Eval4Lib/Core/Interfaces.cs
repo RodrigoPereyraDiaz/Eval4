@@ -10,29 +10,34 @@ namespace Eval4.Core
 
         Variable<T> GetVariable<T>(string variableName);
 
-        IHasValue Parse(string formula);
+        //IHasValue Parse(string formula);
         object Eval(string formula);
 
-        //IHasValue<string> ParseTemplate(string template);
-        //string EvalTemplate(string template);
         void AddEnvironmentFunctions(object o);
         void RemoveEnvironmentFunctions(object o);
-        
+
         string ConvertToString(object result);
     }
 
     public interface IHasValue
     {
         object ObjectValue { get; }
-        IDisposable Subscribe(IObserver observer);
+        ISubscription Subscribe(IObserver observer, string role);
         Type ValueType { get; }
         string ShortName { get; }
-        IEnumerable<Dependency> Dependencies { get; }
+        IEnumerable<ISubscription> Subscriptions { get; }
     }
 
     public interface IHasValue<T> : IHasValue
     {
         T Value { get; }
+    }
+
+    public interface ISubscription : IDisposable
+    {
+        string Name { get; }
+        IHasValue Source { get; }
+        IObserver Observer { get; }
     }
 
     public interface IVariable : IHasValue
@@ -42,35 +47,14 @@ namespace Eval4.Core
 
     public interface IObserver
     {
-        void OnValueChanged();
-    }
-
-    public class Dependency
-    {
-        private String mName;
-        private IHasValue mHasValue;
-
-        public Dependency(string name, IHasValue value)
-        {
-            this.mName = name;
-            this.mHasValue = value;
-        }
-
-        public String Name { get { return mName; } }
-        public IHasValue Value { get { return mHasValue; } }
-
-        internal static Dependency[] Group(string groupname, IEnumerable<IHasValue> @params)
-        {
-            if (@params == null) return new Dependency[] { };
-            return @params.Select((p, n) => new Dependency(groupname + (n + 1), p)).ToArray();
-        }
+        void OnValueChanged(IHasValue value);
     }
 
     public static class IHasValueExtensionMethods
     {
-        public static IDisposable Subscribe(this IHasValue source, Action action)
+        public static IDisposable Subscribe(this IHasValue source, string role,Action action)
         {
-            return source.Subscribe(new SimpleObserver(source, action));
+            return source.Subscribe(new SimpleObserver(source, action), role);
         }
 
         public class SimpleObserver : IObserver
@@ -84,7 +68,7 @@ namespace Eval4.Core
                 mAction = action;
             }
 
-            public void OnValueChanged()
+            public void OnValueChanged(IHasValue value)
             {
                 mAction();
             }

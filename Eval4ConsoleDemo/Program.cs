@@ -210,8 +210,8 @@ namespace Eval4.ConsoleDemo
             Write(ConsoleColor.Gray, formula);
             try
             {
-                var parsed = ev.Parse(formula);
-                ev.SetVariable(variableName, parsed);
+                //var parsed = ev.Parse(formula);
+                //ev.SetVariable(variableName, parsed);
                 WriteLine(ConsoleColor.Green, formula);
             }
             catch (Exception ex)

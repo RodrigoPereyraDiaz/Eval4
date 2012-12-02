@@ -279,7 +279,7 @@ namespace Eval4
                         return 13;
                     }
                     else return 1;
-                    break;
+                    
                 case TokenType.OperatorMultiply:
                 case TokenType.OperatorDivide:
                     //Multiplication and floating-point division (*, /)

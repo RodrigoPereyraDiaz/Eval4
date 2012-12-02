@@ -6,7 +6,7 @@ using System.Text;
 namespace Eval4.Core
 {
 
-    public abstract class Evaluator<CustomToken> : IEvaluator // where CustomToken : IEquatable<CustomToken>
+    public abstract class Evaluator<CustomToken> : IEvaluator 
     {
         internal List<object> mEnvironmentFunctionsList;
         public bool RaiseVariableNotFoundException;
@@ -1456,10 +1456,10 @@ namespace Eval4.Core
             else tw.WriteLine("{0} ({1} {2})", expr.ObjectValue, expr.ValueType, expr.ShortName);
 
             int cpt = 0;
-            foreach (var d in expr.Dependencies)
+            foreach (var d in expr.Subscriptions)
             {
                 cpt++;
-                WriteDependencies(tw, d.Name, d.Value, indent + "  |");
+                WriteDependencies(tw, d.Name, d.Source, indent + "  |");
             }
         }
 
@@ -1474,10 +1474,10 @@ namespace Eval4.Core
         }
 
 
-        IHasValue IEvaluator.Parse(string formula)
-        {
-            return this.Parse(formula);
-        }
+        //IHasValue IEvaluator.Parse(string formula)
+        //{
+        //    return this.Parse(formula);
+        //}
 
 
 

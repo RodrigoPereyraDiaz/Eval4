@@ -686,9 +686,9 @@ namespace Eval4.Demo
                 }
                 double mult = (2
                     * (System.Math.PI / 256));
-                double r = 0;
-                double g = 0;
-                double b = 0;
+                //double r = 0;
+                //double g = 0;
+                //double b = 0;
                 var bmpData = bm.LockBits(new Rectangle(0, 0, 256, 256), System.Drawing.Imaging.ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
                 IntPtr ptr = bmpData.Scan0;
                 // Get the address of the first line.
@@ -799,7 +799,7 @@ namespace Eval4.Demo
                 if (formula3subscription != null) formula3subscription.Dispose();
                 mFormula3 = ev.Parse(tbExpression3.Text);
 
-                formula3subscription = mFormula3.Subscribe(() =>
+                formula3subscription = mFormula3.Subscribe("Formula: " + tbExpression3.Text, () =>
                 {
                     string v = ev.ConvertToString(mFormula3.ObjectValue);
                     lblResults3.Text = v;

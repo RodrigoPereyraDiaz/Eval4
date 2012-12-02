@@ -59,7 +59,7 @@ Public Class Skin
     Public Shared Function GetImage(ByVal imagename As String) As Drawing.Image
         If mFirstInitDone = False Then FirstInit()
         Try
-            Dim bitmap As Drawing.Image = bitmap.FromFile(imagename)
+            Dim bitmap As Drawing.Image = Drawing.Bitmap.FromFile(imagename)
             Return bitmap
         Catch ex As Exception
             ' ignore errors

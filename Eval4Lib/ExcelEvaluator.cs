@@ -8,8 +8,8 @@ namespace Eval4
 {
     public class Range
     {
-        private Cell c1;
-        private Cell c2;
+        //private Cell c1;
+        //private Cell c2;
 
         int colMin, colMax;
         int rowMin, rowMax;
@@ -218,13 +218,22 @@ namespace Eval4
             int foundRow = -1;
             if (range_lookup)
             {
-                for (int r = table_array.RowMin; r < table_array.RowMax; r++)
+                for (int r = table_array.RowMin; r <= table_array.RowMax; r++)
                 {
                     var c = ev.GetCell(table_array.ColMin, r);
-                    if (c != null && c.ToDouble() == lookup_value)
+                    
+                    if (c != null)
                     {
-                        foundRow = r;
-                        break;
+                        if (c.ToDouble() > lookup_value)
+                        {
+                            foundRow = r - 1;
+                            break;
+                        }
+                        else if (c.ToDouble() == lookup_value)
+                        {
+                            foundRow = r;
+                            break;
+                        }
                     }
                 }
             }
@@ -436,32 +445,28 @@ namespace Eval4
                 case TokenType.OperatorMinus:
                     // 	Unary	
                     // +  -
-                    return (unary ? 8 : 3);
-
-                case TokenType.Comma:
-                    // ,
-                    return 7;
+                    return (unary ? 8 : 4);
 
                 case TokenType.OperatorModulo:
                     //*  %
-                    return 6;
+                    return 7;
 
                 case TokenType.OperatorPower:
                     // 	^
-                    return 5;
+                    return 6;
 
                 case TokenType.OperatorMultiply:
                 case TokenType.OperatorDivide:
                     // 	* /
-                    return 4;
+                    return 5;
                 //case TokenType.OperatorPlus:
                 //case TokenType.OperatorMinus:
                 //    // 	+ -
-                //    return 3;
+                //    return 4;
 
                 case TokenType.OperatorConcat:
                     // 	&
-                    return 2;
+                    return 3;
 
 
                 case TokenType.OperatorLT:
@@ -472,6 +477,10 @@ namespace Eval4
                 case TokenType.OperatorNE:
                     // 	Relational and type testing	
                     //<  >  <=  >=  is  as
+                    return 2;
+
+                case TokenType.Comma:
+                    // ,  (the documentation put the comma pretty high but I caon't figure out why it should be
                     return 1;
 
                 default:

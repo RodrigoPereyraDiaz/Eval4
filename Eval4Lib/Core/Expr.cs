@@ -12,43 +12,38 @@ namespace Eval4.Core
     // in Evaluator we should not be using Expr but only IHasValue
     public abstract class Expr : IHasValue, IObserver
     {
-        internal List<Subscription> mSubscribedBy = new List<Subscription>();
-        internal List<Dependency> mDependencies = new List<Dependency>();
-        internal List<IDisposable> mSubscribedTo = new List<IDisposable>();
+        internal List<ISubscription> mSubscribedBy = new List<ISubscription>();
+        internal List<ISubscription> mSubscribedTo = new List<ISubscription>();
         protected bool mModified;
 
-        public Expr(Dependency p0, params Dependency[] parameters)
+        public Expr()
         {
             mModified = true;
-            AddDependency(p0);
-            if (parameters != null)
-            {
-                foreach (Dependency p1 in parameters)
-                {
-                    AddDependency(p1);
-                }
-            }
-
         }
 
-        protected void AddDependency(Dependency p0)
+        protected void Subscribe(string name, IEnumerable<IHasValue> list)
         {
-            if (p0 != null && !mDependencies.Contains(p0))
+            if (list == null) return;
+            int cpt = 0;
+            foreach (var p0 in list)
             {
-                mDependencies.Add(p0);
-                if (p0.Value != null)
-                {
-                    mSubscribedTo.Add(p0.Value.Subscribe(this));
-                }
+                p0.Subscribe(this, name + (++cpt).ToString());
             }
         }
 
         public abstract object ObjectValue { get; }
 
-        public IDisposable Subscribe(IObserver observer)
+        public ISubscription Subscribe(IObserver observer, string role)
         {
             var result = new Subscription(this, observer);
+            //mDependencies.Add(new Dependency(role,
             mSubscribedBy.Add(result);
+
+            var expr = observer as Expr;
+            if (expr != null)
+            {
+                expr.mSubscribedTo.Add(result);
+            }
             return result;
         }
 
@@ -56,7 +51,7 @@ namespace Eval4.Core
 
         public abstract string ShortName { get; }
 
-        void IObserver.OnValueChanged()
+        void IObserver.OnValueChanged(IHasValue value)
         {
             RaiseValueChanged();
         }
@@ -67,48 +62,58 @@ namespace Eval4.Core
             mModified = true;
             foreach (var subscription in mSubscribedBy)
             {
-                subscription.mObserver.OnValueChanged();
+                subscription.Observer.OnValueChanged(this);
             }
         }
 
-        public IEnumerable<Dependency> Dependencies
+        public IEnumerable<ISubscription> Subscriptions
         {
             get
             {
-                return this.mDependencies.ToArray();
+                return mSubscribedTo.ToArray();
             }
         }
-    }
 
-    public class Subscription : IDisposable
-    {
-        internal Expr mSource;
-        internal IObserver mObserver;
-
-        public Subscription(Expr source, IObserver observer)
+        private class Subscription : ISubscription
         {
-            mSource = source;
-            mObserver = observer;
+            internal Expr mSource;
+            internal IObserver mObserver;
+
+            public Subscription(Expr source, IObserver observer)
+            {
+                mSource = source;
+                mObserver = observer;
+            }
+
+            public void Dispose()
+            {
+                mSource.mSubscribedBy.Remove(this);
+            }
+
+            public string Name
+            {
+                get { return string.Empty; }
+            }
+
+            public IHasValue Source
+            {
+                get { return mSource; }
+            }
+
+            public IObserver Observer
+            {
+                get { return mObserver; }
+            }
         }
 
-        public void Dispose()
-        {
-            mSource.mSubscribedBy.Remove(this);
-        }
-
     }
 
+    
     public abstract class Expr<T> : Expr, IHasValue<T>
     {
         private T mValue;
 
         public abstract T Value { get; }
-
-
-        public Expr(Dependency p0, params Dependency[] parameters)
-            : base(p0, parameters)
-        {
-        }
 
         public override object ObjectValue
         {
@@ -141,7 +146,6 @@ namespace Eval4.Core
         private T mValue;
 
         public ConstantExpr(T value)
-            : base(null)
         {
             mValue = value;
         }
@@ -167,11 +171,19 @@ namespace Eval4.Core
         private T[] mResult;
 
         public ArrayBuilder(IHasValue[] entries, object[] casts)
-            : base(null, Dependency.Group("entries", entries))
         {
             mEntries = entries;
             mCasts = casts.Cast<Delegate>().ToArray();
             mResult = new T[entries.Length];
+
+            for (int i = 0; i < entries.Length; i++)
+            {
+                if (casts[i] != null)
+                {
+
+                }
+                else entries[i].Subscribe(this, "#" + i);
+            }
         }
 
         public override T[] Value
@@ -202,7 +214,6 @@ namespace Eval4.Core
     {
         Func<T> mValueDelegate;
         private IHasValue mBaseObject;
-        private IHasValue withEventsField_mBaseValue;
         private object mBaseValueObject;
         private MemberInfo mMethod;
         private IHasValue[] mPreparedParams;
@@ -212,8 +223,10 @@ namespace Eval4.Core
         private string mShortName;
 
         public CallMethodExpr(IHasValue baseObject, MemberInfo method, List<IHasValue> @params, object[] casts, string shortName)
-            : base(new Dependency("baseobject", baseObject), Dependency.Group("parameter", @params))
         {
+            if (baseObject != null) baseObject.Subscribe(this, "baseObject");
+            base.Subscribe("parameter", @params);
+
             if (@params == null)
                 @params = new List<IHasValue>();
             //IHasValue[] newParams = @params.ToArray();
@@ -274,7 +287,7 @@ namespace Eval4.Core
 
             if (method is PropertyInfo)
             {
-                mValueDelegate = EmitGetMethod(baseObject,((PropertyInfo)method).GetGetMethod());
+                mValueDelegate = EmitGetMethod(baseObject, ((PropertyInfo)method).GetGetMethod());
             }
             else if (method is MethodInfo)
             {
@@ -336,7 +349,7 @@ namespace Eval4.Core
                 il.Emit(OpCodes.Ldfld, fiBaseObject); // this.mParams
                 il.Emit(OpCodes.Callvirt, miGetObjectValue);
             }
-            var methodParams = ((MethodInfo)mMethod).GetParameters();
+            var methodParams = mi.GetParameters();
 
             for (int i = 0; i < mPreparedParams.Length; i++)
             {
@@ -414,8 +427,10 @@ namespace Eval4.Core
         }
 
         public GetArrayEntryExpr(IHasValue array, List<IHasValue> @params)
-            : base(new Dependency("Array", array), Dependency.Group("index", @params))
+            : base()
         {
+            array.Subscribe(this, "Array");
+            base.Subscribe("index", @params);
             IHasValue[] newParams = @params.ToArray();
             int[] newValues = new int[@params.Count];
 
@@ -467,11 +482,13 @@ namespace Eval4.Core
         private IHasValue elseExpr;
 
         public OperatorIfExpr(IHasValue ifExpr, IHasValue thenExpr, IHasValue elseExpr)
-            : base(new Dependency("if", ifExpr), new Dependency("then", thenExpr), new Dependency("else", elseExpr))
         {
             this.ifExpr = ifExpr;
+            if (ifExpr != null) ifExpr.Subscribe(this, "if");
             this.thenExpr = thenExpr;
+            if (thenExpr != null) thenExpr.Subscribe(this, "then");
             this.elseExpr = elseExpr;
+            if (elseExpr != null) elseExpr.Subscribe(this, "else");
             mSystemType = thenExpr.ValueType;
         }
 
@@ -502,10 +519,10 @@ namespace Eval4.Core
         private string mShortName;
 
         public DelegateExpr(IHasValue<P1> p1, Func<P1, T> dlg, string shortName)
-            : base(new Dependency("p1", p1))
         {
-            System.Diagnostics.Debug.Assert(dlg != null);
             mP1 = p1;
+            if (p1 != null) p1.Subscribe(this, "p1");
+            System.Diagnostics.Debug.Assert(dlg != null);
             mDelegate = dlg;
             mShortName = shortName;
         }
@@ -534,10 +551,11 @@ namespace Eval4.Core
         private string mShortName;
 
         public DelegateExpr(IHasValue<P1> p1, IHasValue<P2> p2, Func<P1, P2, T> dlg, string shortName)
-            : base(new Dependency("p1", p1), new Dependency("p2", p2))
         {
             mP1 = p1;
+            if (p1 != null) p1.Subscribe(this, "p1");
             mP2 = p2;
+            if (p2 != null) p2.Subscribe(this, "p2");
             mDelegate = dlg;
             mShortName = shortName;
         }
@@ -561,12 +579,11 @@ namespace Eval4.Core
         private Variable<T> mVariable;
 
         public GetVariableFromBag(IEvaluator evaluator, string variableName)
-            : base(null)
         {
             mEvaluator = evaluator;
             mVariableName = variableName;
             mVariable = mEvaluator.GetVariable<T>(mVariableName);
-            AddDependency(new Dependency("Variable " + variableName, mVariable));
+            if (mVariable != null) mVariable.Subscribe(this, "Variable " + variableName);
         }
 
         public override T Value
@@ -587,7 +604,6 @@ namespace Eval4.Core
         private string mVariableName;
 
         public Variable(T variableValue, string variableName)
-            : base(null)
         {
             mValue = variableValue;
             mVariableName = variableName;

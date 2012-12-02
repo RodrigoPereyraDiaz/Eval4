@@ -389,8 +389,8 @@ namespace Eval4
                 for (var c = 0; c < this._columnCount; c++)
                 {
                     if (c > 0) result.Append(","); // "\n"
-                    var value = this._data[r][c];
-                    result.Append((value == null /*or undefined*/ ? "NaN" : value.ToString())); // "#,##0.00"
+                    double value = this._data[r][c];
+                    result.Append(double.IsNaN(value) ? "NaN" : value.ToString()); // "#,##0.00"
                 }
             }
             result.Append("]");

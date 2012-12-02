@@ -16,7 +16,7 @@ namespace Eval4
             ev = new T();
         }
 
-        public void TestFormula<T>(string formula, T expectedResult)
+        public void TestFormula<K>(string formula, K expectedResult)
         {
             var actualResult = ev.Eval(formula);
             Assert.AreEqual(expectedResult, actualResult, formula);
