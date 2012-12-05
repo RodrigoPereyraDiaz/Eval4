@@ -112,8 +112,20 @@
     <Compile Include="AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="BitmapFormula.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BitmapFormula.Designer.cs">
+      <DependentUpon>BitmapFormula.cs</DependentUpon>
+    </Compile>
     <Compile Include="CellsViewer.cs">
       <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DynamicFormulas.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DynamicFormulas.Designer.cs">
+      <DependentUpon>DynamicFormulas.cs</DependentUpon>
     </Compile>
     <Compile Include="EvalFunctions.cs">
       <SubType>Code</SubType>
@@ -140,6 +152,12 @@
       <SubType>Code</SubType>
     </Compile>
     <Content Include="App.ico" />
+    <EmbeddedResource Include="BitmapFormula.resx">
+      <DependentUpon>BitmapFormula.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DynamicFormulas.resx">
+      <DependentUpon>DynamicFormulas.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormulaTab.resx">
       <DependentUpon>FormulaTab.cs</DependentUpon>
     </EmbeddedResource>

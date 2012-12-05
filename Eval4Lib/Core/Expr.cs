@@ -16,8 +16,8 @@ namespace Eval4.Core
         internal List<ISubscription> mSubscribedBy = new List<ISubscription>();
         internal List<ISubscription> mSubscribedTo = new List<ISubscription>();
         protected bool mModified;
-        private bool mDisposed;
-
+        internal bool mDisposed;
+        
         public Expr()
         {
             mModified = true;
@@ -37,6 +37,12 @@ namespace Eval4.Core
 
         public ISubscription Subscribe(IObserver observer, string role)
         {
+            if (mDisposed)
+            {
+                mDisposed = false;
+                
+            }
+            
             var result = new Subscription(this, observer);
             //mDependencies.Add(new Dependency(role,
             mSubscribedBy.Add(result);
@@ -78,21 +84,21 @@ namespace Eval4.Core
 
         private class Subscription : ISubscription
         {
-            internal Expr mSource;
+            internal Expr mSourceExpr;
             internal IObserver mObserver;
 
             public Subscription(Expr source, IObserver observer)
             {
-                mSource = source;
+                mSourceExpr = source;
                 mObserver = observer;
             }
 
             public void Dispose()
             {
-                mSource.mSubscribedBy.Remove(this);
-                if (mSource.mSubscribedBy.Count == 0)
+                mSourceExpr.mSubscribedBy.Remove(this);
+                if (mSourceExpr.mSubscribedBy.Count == 0)
                 {
-                    mSource.Dispose();
+                    mSourceExpr.Dispose();
                 }
             }
 
@@ -103,7 +109,7 @@ namespace Eval4.Core
 
             public IHasValue Source
             {
-                get { return mSource; }
+                get { return mSourceExpr; }
             }
 
             public IObserver Observer
@@ -121,7 +127,7 @@ namespace Eval4.Core
                 {
                     x.Dispose();
                 }
-                mSubscribedTo.Clear();
+                //mSubscribedTo.Clear();
             }
         }
 
@@ -141,6 +147,22 @@ namespace Eval4.Core
             result.Append(")");
             return result.ToString();
         }
+
+        internal void Recycle()
+        {
+            if (!mDisposed) return;
+            mModified = true;
+            mDisposed = false;
+            foreach (var m in mSubscribedTo)
+            {
+                var sourceAsExpr = m.Source as Expr;
+                if (sourceAsExpr != null)
+                {
+                    sourceAsExpr.mSubscribedBy.Add(m);
+                    ((Expr)m.Source).Recycle();
+                }
+            }
+        }
     }
 
     
@@ -150,7 +172,7 @@ namespace Eval4.Core
 
         public abstract T Value { get; }
 
-        public override object ObjectValue
+        public sealed override object ObjectValue
         {
             //[System.Diagnostics.DebuggerStepThrough()]
             get {

@@ -27,32 +27,28 @@ namespace Eval4.ConsoleDemo
             //TestFormula("A1", "1.00");
             //TestFormula("VLOOKUP(2,A1:B2,2,FALSE)", "b");
             //RunSpecs("Specs1.txt");
-            
+
             SetLanguage("cs");
             //ev.AddEnvironmentFunctions(typeof(MyMath));
             //TestFormula("Sin(1.57)", "1.00");
-            ev.AddEnvironmentFunctions(new MyMath());
-            ev.SetVariable<double>("x", 10.0);
-            //TestFormula("x+1", "11.00");
-            //TestFormula("x+2", "12.00");
-            //TestFormula("x+3", "13.00");
-            //TestFormula("x+4", "14.00");
+            //ev.AddEnvironmentFunctions(new MyMath());
+            //ev.SetVariable<double>("x", 10.0);
 
-            //ev.SetVariable("x", 20.0);
-            //TestFormula("x+1", "21.00");
-            //TestFormula("x+2", "22.00");
-            //TestFormula("x+3", "23.00");
-            //TestFormula("x+4", "24.00");
-            using (var q = ev.Parse("Sin(x)/2.4"))
-            {
-                var res = q.ObjectValue;
-                Console.WriteLine(res);
-                ev.SetVariable("x", 11.0);
-                res = q.ObjectValue;
-                Console.WriteLine(res);
-                
-            }
-            Console.WriteLine("Completed");
+            //using (var q = ev.Parse("x*2"))
+            //{
+            //    Console.WriteLine(q.ObjectValue);
+            //    ev.SetVariable("x", 11.0);
+            //    Console.WriteLine(q.ObjectValue);
+            //}
+            //ev.SetVariable("x", 10.0);
+            //using (var q = ev.Parse("x*2"))
+            //{
+            //    Console.WriteLine(q.ObjectValue);
+            //    ev.SetVariable("x", 11.0);
+            //    Console.WriteLine(q.ObjectValue);
+
+            //}
+            //Console.WriteLine("Completed");
             Console.ReadKey();
         }
 

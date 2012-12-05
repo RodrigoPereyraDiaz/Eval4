@@ -1611,19 +1611,21 @@ namespace Eval4.Core
             private string formula;
             private IHasValue parsed;
             private Action onValueChanged;
+            private ISubscription subscription;
 
             public ParsedExpr(string formula, IHasValue parsed, Action onValueChanged)
             {
                 this.formula = formula;
                 this.parsed = parsed;
                 this.onValueChanged = onValueChanged;
-
-                parsed.Subscribe(this, "formula: " + formula);
+                var expr = parsed as Expr;
+                if (expr != null) expr.Recycle();
+                subscription = parsed.Subscribe(this, "formula: " + formula);
             }
 
             public void Dispose()
             {
-
+                subscription.Dispose();
             }
 
             public object ObjectValue
