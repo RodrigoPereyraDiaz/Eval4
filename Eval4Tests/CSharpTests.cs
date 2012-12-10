@@ -35,7 +35,7 @@ namespace Eval4.Tests
 
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("C#")]
         public void CSharp_FieldTypes()
         {
             var context = new TestContext();
@@ -51,7 +51,7 @@ namespace Eval4.Tests
             TestFormula("context.ulong", context.@ulong);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("C#")]
         public void CSharp_FieldCalculation()
         {
             var context = new TestContext();
@@ -78,62 +78,62 @@ namespace Eval4.Tests
 
 
 
-        [TestMethod]
+        [TestMethod, TestCategory("C#")]
         public void CSharp_Modulo()
         {
             TestFormula("23 % 10", 3);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("C#")]
         public void CSharp_BitwiseAnd()
         {
             TestFormula("3 & 254", 2);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("C#")]
         public void CSharp_BooleanAnd()
         {
             TestFormula("false && true", false);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("C#")]
         public void CSharp_EqOperator()
         {
             TestFormula("1 == 2", false);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("C#")]
         public void CSharp_NEOperator()
         {
             TestFormula("1 != 2", true);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("C#")]
         public void CSharp_NotOperator()
         {
             TestFormula("! true", false);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("C#")]
         public void CSharp_BitwiseOr()
         {
             TestFormula("1 | 255", 255);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("C#")]
         public void CSharp_BooleanOr()
         {
             TestFormula("false || true", true);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("C#")]
         public void CSharp_If()
         {
             TestFormula("true ?  1:0", 1);
             TestFormula("false ?  1:0", 0);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("C#")]
         public void CSharp_Numerics()
         {
             TestFormula("1", 1);
@@ -144,7 +144,7 @@ namespace Eval4.Tests
             TestFormula("1.2345e-2", 1.2345e-2);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("C#")]
         public void CSharp_AccessArrayVariables()
         {
             TestFormula("fibonacci[0]", 1);
@@ -160,7 +160,7 @@ namespace Eval4.Tests
 
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("C#")]
         public void CSharp_NumberLiterals()
         {
             TestFormula("1.5", 1.5);
@@ -170,13 +170,13 @@ namespace Eval4.Tests
             TestFormula("-0.5", -0.5);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("C#")]
         public void CSharp_Priorities()
         {
             TestFormula("-1.5*-2.5", -1.5 * -2.5);
         }
 
-        //[TestMethod]
+        //[TestMethod, TestCategory("C#")]
         //public void CSharp_Template()
         //{
         //    //   TestTemplate("<p>Hello</p>", "<p>Hello</p>");
@@ -190,7 +190,7 @@ namespace Eval4.Tests
         //}
 
 
-        //[TestMethod]
+        //[TestMethod, TestCategory("C#")]
         //public void CSharp_Environment()
         //{
         //    TestVBFormula("avg(2,3,5)", 10 / 3.0);

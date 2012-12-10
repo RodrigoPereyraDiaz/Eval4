@@ -18,39 +18,39 @@ namespace Eval4.Tests
             ev.SetCell("B3", "c");
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Excel")]
         public void Excel_ReadCell()
         {
             // A1 return a cell for now.
             TestFormula("A1.valueObject", 1.0);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Excel")]
         public void Excel_SimpleAddition()
         {
             TestFormula("SUM(A1,A2)", 3.0);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Excel")]
         public void Excel_RangeAddition()
         {
             TestFormula("SUM(A1:A2)", 3.0);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Excel")]
         public void Excel_Average()
         {
             TestFormula("AVERAGE(A1:A2)", 1.5);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Excel")]
         public void Excel_VLookup()
         {
             // vlookup return a cell
             TestFormula("VLOOKUP(2,A1:B3,2,FALSE).valueObject", "b");
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Excel")]
         public void Excel_VLookup_with_range_lookup()
         {
             // vlookup return a cell

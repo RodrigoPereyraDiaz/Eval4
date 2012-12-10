@@ -10,7 +10,7 @@ namespace Eval4.Tests
     [TestClass]
     public class TestLifeCycle
     {
-        [TestMethod]
+        [TestMethod, TestCategory("Life Cycle")]
         public void CompleteTest()
         {
             var ev = new CSharpEvaluator();

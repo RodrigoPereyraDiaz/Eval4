@@ -35,7 +35,6 @@ namespace Eval4
         protected override void DeclareOperators()
         {
             DeclareOperators(typeof(bool));
-            DeclareOperators(typeof(int));
             DeclareOperators(typeof(double));
                         
             base.AddBinaryOperation<Matrix, Matrix, Matrix>(TokenType.OperatorPlus, (a, b) => a.ElementWiseAdd(b));

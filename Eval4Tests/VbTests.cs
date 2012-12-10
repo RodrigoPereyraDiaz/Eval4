@@ -24,14 +24,14 @@ namespace Eval4.Tests
             TestFormula("1 * 2 *3 * 4 *5* 6*7*\t8*9", 1 * 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("VB")]
         public void VB_Percent()
         {
             TestFormula("200 + 5%", 210.0);
             TestFormula("200 - 5%", 190.0);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("VB")]
         public void VB_And()
         {
             TestFormula("false and false", false);
@@ -40,7 +40,7 @@ namespace Eval4.Tests
             TestFormula("true and true", true);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("VB")]
         public void VB_Or()
         {
             TestFormula("false or false", false);
@@ -49,7 +49,7 @@ namespace Eval4.Tests
             TestFormula("true or true", true);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("VB")]
         public void VB_Not()
         {
             TestFormula("not false", true);
@@ -58,14 +58,14 @@ namespace Eval4.Tests
             TestFormula("false or not false", true);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("VB")]
         public void VB_If()
         {
             TestFormula("if(false,1,0)", 0);
             TestFormula("if(true,1,0)", 1);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("VB")]
         public void VB_Xor()
         {
             TestFormula("false xor false", false);
@@ -76,13 +76,13 @@ namespace Eval4.Tests
 
         static DateTime christmas = new DateTime(2012, 12, 25);
 
-        [TestMethod]
+        [TestMethod, TestCategory("VB")]
         public void VB_Date()
         {
             TestFormula("#2012/12/25#", christmas);
         }
 
-        //[TestMethod]
+        //[TestMethod, TestCategory("VB")]
         //public void VB_DateArithmetic()
         //{
         //    TestFormula("#2012/12/25# + 1", christmas.AddDays(1));
@@ -90,19 +90,19 @@ namespace Eval4.Tests
         //    TestFormula("#2012/12/25# - 1", christmas.AddDays(-1));
         //}
 
-        //[TestMethod]
+        //[TestMethod, TestCategory("VB")]
         //public void VB_TimeSpan()
         //{
         //    TestFormula("#2012/12/25# - #2013/01/01#", new TimeSpan(-7, 0, 0, 0));
         //}
 
-        [TestMethod]
+        [TestMethod, TestCategory("VB")]
         public void VB_StringConcat()
         {
             TestFormula("\"ABC\" + \"DEF\"", "ABCDEF");
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("VB")]
         public void VB_NumericEquality()
         {
             TestFormula("5=5", true);
@@ -122,7 +122,7 @@ namespace Eval4.Tests
             TestFormula("5<>5", false);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("VB")]
         public void VB_WordStrings()
         {
             TestFormula("\"A\"", "A");
@@ -130,7 +130,7 @@ namespace Eval4.Tests
             TestFormula("“A”", "A");
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("VB")]
         public void VB_StringEquality()
         {
             TestFormula("\"A\"=\"A\"", true);
@@ -147,7 +147,7 @@ namespace Eval4.Tests
             TestFormula("\"A\"<>\"A\"", false);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("VB")]
         //[ExpectedException(typeof(SyntaxError))]
         public void VB_ImpossibleOperator()
         {
@@ -157,7 +157,7 @@ namespace Eval4.Tests
             Assert.AreEqual((actualResult as Core.SyntaxError).pos, 5);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("VB")]
         public void VB_Unary()
         {
             TestFormula("-5 + 10", (-5 + 10));
@@ -169,14 +169,14 @@ namespace Eval4.Tests
         }
 
 
-        [TestMethod]
+        [TestMethod, TestCategory("VB")]
         public void VB_CheckVariables()
         {
             TestFormula("A", 2);
             TestFormula("B", 3);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("VB")]
         public void VB_CheckVariablesOperations()
         {
             TestFormula("A+B", 5);
@@ -184,7 +184,7 @@ namespace Eval4.Tests
             TestFormula("A*B", 6);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("VB")]
         //[ExpectedException(typeof(Exception))]
         public void VB_CheckChangingVariables()
         {
@@ -236,7 +236,7 @@ namespace Eval4.Tests
         //    }
         //}
 
-        //[TestMethod]
+        //[TestMethod, TestCategory("VB")]
         //public void VB_AccessArrayVariables()
         //{
         //    TestCSFormula("pascal", pascal);
@@ -257,7 +257,7 @@ namespace Eval4.Tests
         //    TestVBFormula("mult(3,3)", 9);
         //}
 
-        //[TestMethod]
+        //[TestMethod, TestCategory("VB")]
         //public void VB_AccessObjectMethodsAndFields()
         //{
         //    TestVbAndCsFormula("accounts.Credit", 150.00);
@@ -277,7 +277,7 @@ namespace Eval4.Tests
         //    //TestVbAndCsFormula("accounts.Sum(1,2,3,4)", (decimal)10.0);
         //}
 
-        //[TestMethod]
+        //[TestMethod, TestCategory("VB")]
         //public void VB_NumberLiterals()
         //{
         //    TestVbAndCsFormula("1.5", 1.5);
@@ -287,13 +287,13 @@ namespace Eval4.Tests
         //    TestVbAndCsFormula("-0.5", -0.5);
         //}
 
-        //[TestMethod]
+        //[TestMethod, TestCategory("VB")]
         //public void VB_Priorities()
         //{
         //    TestVbAndCsFormula("-1.5*-2.5", -1.5 * -2.5);
         //}
 
-        //[TestMethod]
+        //[TestMethod, TestCategory("VB")]
         //public void VB_Template()
         //{
         //    TestTemplate("<p>Hello</p>", "<p>Hello</p>");

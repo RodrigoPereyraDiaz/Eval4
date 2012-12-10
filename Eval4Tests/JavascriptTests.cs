@@ -7,55 +7,55 @@ namespace Eval4.Tests
     public class JavascriptTests : BaseTest<JavascriptEvaluator>
     {
 
-        //[TestMethod]
+        //[TestMethod, TestCategory("Javascript")]
         //public void JS_Modulo()
         //{
         //    TestFormula("23 % 10", 3);
         //}
 
-        //[TestMethod]
+        //[TestMethod, TestCategory("Javascript")]
         //public void JS_BitwiseAnd()
         //{
         //    TestFormula("3 & 254", 2);
         //}
 
-        [TestMethod]
+        [TestMethod, TestCategory("Javascript")]
         public void JS_BooleanAnd()
         {
             TestFormula("false && true", false);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Javascript")]
         public void JS_EqOperator()
         {
             TestFormula("1 == 2", false);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Javascript")]
         public void JS_NEOperator()
         {
             TestFormula("1 != 2", true);
         }
 
-        [TestMethod]
+        [TestMethod, TestCategory("Javascript")]
         public void JS_NotOperator()
         {
             TestFormula("! true", false);
         }
 
-        //[TestMethod]
+        //[TestMethod, TestCategory("Javascript")]
         //public void JS_BitwiseOr()
         //{
         //    TestFormula("1 | 255", 255);
         //}
 
-        [TestMethod]
+        [TestMethod, TestCategory("Javascript")]
         public void JS_BooleanOr()
         {
             TestFormula("false || true", true);
         }
 
-        //[TestMethod]
+        //[TestMethod, TestCategory("Javascript")]
         //public void JS_If()
         //{
         //    TestFormula("true ?  1:0", 1);
@@ -97,7 +97,7 @@ namespace Eval4.Tests
         //    }
         //}
 
-        //[TestMethod]
+        //[TestMethod, TestCategory("Javascript")]
         //public void JS_AccessArrayVariables()
         //{
         //    TestCSFormula("pascal", pascal);
@@ -118,7 +118,7 @@ namespace Eval4.Tests
         //    TestVBFormula("mult(3,3)", 9);
         //}
 
-        //[TestMethod]
+        //[TestMethod, TestCategory("Javascript")]
         //public void JS_AccessObjectMethodsAndFields()
         //{
         //    TestVbAndCsFormula("accounts.Credit", 150.00);
@@ -137,7 +137,7 @@ namespace Eval4.Tests
         //    //TestVbAndCsFormula("accounts.DecimalValue * 1.0", accountInstance.DecimalValue * 1.0);
         //    //TestVbAndCsFormula("accounts.Sum(1,2,3,4)", (decimal)10.0);
         //}
-        //[TestMethod]
+        //[TestMethod, TestCategory("Javascript")]
         //public void JS_NumberLiterals()
         //{
         //    TestVbAndCsFormula("1.5", 1.5);
@@ -147,13 +147,13 @@ namespace Eval4.Tests
         //    TestVbAndCsFormula("-0.5", -0.5);
         //}
 
-        //[TestMethod]
+        //[TestMethod, TestCategory("Javascript")]
         //public void JS_Priorities()
         //{
         //    TestVbAndCsFormula("-1.5*-2.5", -1.5 * -2.5);
         //}
 
-        //[TestMethod]
+        //[TestMethod, TestCategory("Javascript")]
         //public void JS_Template()
         //{
         //    //   TestTemplate("<p>Hello</p>", "<p>Hello</p>");
@@ -167,7 +167,7 @@ namespace Eval4.Tests
         //}
 
 
-        //[TestMethod]
+        //[TestMethod, TestCategory("Javascript")]
         //public void JS_Environment()
         //{
         //    TestVBFormula("avg(2,3,5)", 10 / 3.0);
