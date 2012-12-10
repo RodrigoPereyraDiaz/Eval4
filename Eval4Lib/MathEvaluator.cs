@@ -9,6 +9,11 @@ namespace Eval4
     
     public class MathEvaluator : Evaluator<MathEvaluator.MathToken>
     {
+
+        public MathEvaluator()
+        {
+        }
+
         public enum MathToken
         {
             Transpose,        // '
@@ -29,6 +34,10 @@ namespace Eval4
 
         protected override void DeclareOperators()
         {
+            DeclareOperators(typeof(bool));
+            DeclareOperators(typeof(int));
+            DeclareOperators(typeof(double));
+                        
             base.AddBinaryOperation<Matrix, Matrix, Matrix>(TokenType.OperatorPlus, (a, b) => a.ElementWiseAdd(b));
             base.AddBinaryOperation<double, Matrix, Matrix>(TokenType.OperatorPlus, (a, b) => b.ScalarAdd(a));
             base.AddBinaryOperation<Matrix, double, Matrix>(TokenType.OperatorPlus, (a, b) => a.ScalarAdd(b));
@@ -47,6 +56,9 @@ namespace Eval4
             base.AddBinaryOperation<Matrix, Matrix, Matrix>(MathToken.ElementWiseMul, (a, b) => a.ElementWiseMultiply(b));
             base.AddBinaryOperation<Matrix, Matrix, Matrix>(MathToken.ElementWiseDiv, (a, b) => a.ElementWiseDivide(b));
             base.AddBinaryOperation<Matrix, Matrix, Matrix>(MathToken.ElementWisePower, (a, b) => a.ElementWisePower(b));
+
+            DeclareOperators(typeof(string));
+            DeclareOperators(typeof(object));
         }
 
         public override bool UseParenthesisForArrays
