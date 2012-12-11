@@ -153,6 +153,7 @@ namespace Eval4.Demo
                 InvalidateCells(previousCell);
                 InvalidateCells(curCell);
                 Cell c = mCells[curCell.X, curCell.Y];
+                label1.Text = c.Name;
 
                 mOriginalText = c.Formula;
                 textBox1.Text = mOriginalText;
@@ -297,6 +298,8 @@ namespace Eval4.Demo
             var c = mCells[curCell.X, curCell.Y];
             c.Formula = textBox1.Text;
             InvalidateCell(curCell.X, curCell.Y);
+            var syntaxError = c.ValueObject as SyntaxError;
+            errorProvider1.SetError(textBox1, syntaxError == null ? null : syntaxError.message);
         }
 
         private void textBox1_Enter(object sender, EventArgs e)

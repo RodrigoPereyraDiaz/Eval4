@@ -28,10 +28,13 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.cbSamples = new System.Windows.Forms.ComboBox();
             this.btnEvaluate = new System.Windows.Forms.Button();
             this.TextBox2 = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.errorProvider1 = new System.Windows.Forms.ErrorProvider(this.components);
+            ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).BeginInit();
             this.SuspendLayout();
             // 
             // cbSamples
@@ -77,6 +80,10 @@
             this.label1.TabIndex = 8;
             this.label1.Text = "label1";
             // 
+            // errorProvider1
+            // 
+            this.errorProvider1.ContainerControl = this;
+            // 
             // FormulaTab
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -88,6 +95,7 @@
             this.Name = "FormulaTab";
             this.Size = new System.Drawing.Size(417, 394);
             this.Load += new System.EventHandler(this.EvaluatorPanel_Load);
+            ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -99,5 +107,6 @@
         internal System.Windows.Forms.Button btnEvaluate;
         internal System.Windows.Forms.TextBox TextBox2;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.ErrorProvider errorProvider1;
     }
 }

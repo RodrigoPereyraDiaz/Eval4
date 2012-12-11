@@ -24,6 +24,8 @@ namespace Eval4.Core
     public interface IParsedExpr : IDisposable
     {
         object ObjectValue { get; }
+
+        string Error { get; }
     }
 
     public interface IHasValue : IDisposable

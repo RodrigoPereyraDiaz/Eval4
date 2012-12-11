@@ -33,10 +33,7 @@ namespace Eval4.Demo
         private void tbExpressionRed_TextChanged(object sender, EventArgs e)
         {
             if (mInitializing) return;
-            if (cbAuto.Checked)
-            {
-                btnEvaluate2_Click(sender, e);
-            }
+            btnEvaluate2_Click(sender, e);
         }
 
         private void btnEvaluate2_Click(object sender, EventArgs e)
@@ -44,20 +41,24 @@ namespace Eval4.Demo
             Eval4.Core.IParsedExpr lCodeR = null;
             Eval4.Core.IParsedExpr lCodeG = null;
             Eval4.Core.IParsedExpr lCodeB = null;
-
+            ev.AddEnvironmentFunctions(typeof(Math));
             ev.AddEnvironmentFunctions(new EvalFunctions());
             var vX = ev.SetVariable("X", 0.0);
             var vY = ev.SetVariable("Y", 0.0);
+            var vZ = ev.SetVariable("Z", ((double)trackBar1.Value) / trackBar1.Maximum);
             BitmapData bmpData = null;
 
             try
             {
                 lCodeR = ev.Parse(tbExpressionRed.Text);
+                errorProvider1.SetError(tbExpressionRed, lCodeR.Error);
                 lCodeG = ev.Parse(tbExpressionGreen.Text);
+                errorProvider1.SetError(tbExpressionGreen, lCodeG.Error);
                 lCodeB = ev.Parse(tbExpressionBlue.Text);
-
+                errorProvider1.SetError(tbExpressionBlue, lCodeB.Error);
+                
                 PictureBox1.Image = null;
-                PictureBox1.Refresh();
+                //PictureBox1.Refresh();
                 //Bitmap bm = (Bitmap)PictureBox1.Image;
                 if ((bm == null))
                 {
@@ -114,6 +115,10 @@ namespace Eval4.Demo
                 if (lCodeG != null) lCodeG.Dispose();
                 if (lCodeB != null) lCodeB.Dispose();
                 PictureBox1.Image = bm;
+                using (var gr = PictureBox1.CreateGraphics())
+                {
+                    gr.DrawImageUnscaled(bm, 0, 0);
+                }
             }
         }
 
@@ -162,19 +167,26 @@ namespace Eval4.Demo
             btnEvaluate2_Click(sender, e);
         }
 
-        private void cbAuto_CheckedChanged(object sender, EventArgs e)
-        {
-            if (mInitializing) return;
-            if (cbAuto.Checked)
-            {
-                btnEvaluate2_Click(sender, e);
-            }
-        }
-
         private void BitmapFormula_Load(object sender, EventArgs e)
         {
             btnEvaluate2_Click(null, null);
             ComboBox1.SelectedIndex = 0;
+        }
+
+        private void trackBar1_ValueChanged(object sender, EventArgs e)
+        {
+            if (mInitializing) return;
+            btnEvaluate2_Click(null, null);
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            timer1.Enabled = checkBox1.Checked;
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            btnEvaluate2_Click(null, null);
         }
     }
 }

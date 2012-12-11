@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.cbAuto = new System.Windows.Forms.CheckBox();
+            this.components = new System.ComponentModel.Container();
             this.Label1 = new System.Windows.Forms.Label();
             this.PictureBox1 = new System.Windows.Forms.PictureBox();
             this.tbExpressionRed = new System.Windows.Forms.TextBox();
@@ -39,23 +39,19 @@
             this.Label3 = new System.Windows.Forms.Label();
             this.tbExpressionBlue = new System.Windows.Forms.TextBox();
             this.Label4 = new System.Windows.Forms.Label();
+            this.errorProvider1 = new System.Windows.Forms.ErrorProvider(this.components);
+            this.trackBar1 = new System.Windows.Forms.TrackBar();
+            this.label5 = new System.Windows.Forms.Label();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.PictureBox1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).BeginInit();
             this.SuspendLayout();
-            // 
-            // cbAuto
-            // 
-            this.cbAuto.Checked = true;
-            this.cbAuto.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbAuto.Location = new System.Drawing.Point(339, 59);
-            this.cbAuto.Name = "cbAuto";
-            this.cbAuto.Size = new System.Drawing.Size(64, 24);
-            this.cbAuto.TabIndex = 21;
-            this.cbAuto.Text = "Auto";
-            this.cbAuto.CheckedChanged += new System.EventHandler(this.cbAuto_CheckedChanged);
             // 
             // Label1
             // 
-            this.Label1.Location = new System.Drawing.Point(14, 101);
+            this.Label1.Location = new System.Drawing.Point(9, 145);
             this.Label1.Name = "Label1";
             this.Label1.Size = new System.Drawing.Size(408, 16);
             this.Label1.TabIndex = 17;
@@ -63,7 +59,7 @@
             // 
             // PictureBox1
             // 
-            this.PictureBox1.Location = new System.Drawing.Point(75, 161);
+            this.PictureBox1.Location = new System.Drawing.Point(51, 164);
             this.PictureBox1.Name = "PictureBox1";
             this.PictureBox1.Size = new System.Drawing.Size(256, 256);
             this.PictureBox1.TabIndex = 16;
@@ -73,7 +69,7 @@
             // 
             this.tbExpressionRed.Location = new System.Drawing.Point(51, 27);
             this.tbExpressionRed.Name = "tbExpressionRed";
-            this.tbExpressionRed.Size = new System.Drawing.Size(280, 20);
+            this.tbExpressionRed.Size = new System.Drawing.Size(272, 20);
             this.tbExpressionRed.TabIndex = 11;
             this.tbExpressionRed.Text = "X*15";
             this.tbExpressionRed.TextChanged += new System.EventHandler(this.tbExpressionRed_TextChanged);
@@ -105,7 +101,7 @@
             // 
             this.tbExpressionGreen.Location = new System.Drawing.Point(51, 51);
             this.tbExpressionGreen.Name = "tbExpressionGreen";
-            this.tbExpressionGreen.Size = new System.Drawing.Size(280, 20);
+            this.tbExpressionGreen.Size = new System.Drawing.Size(272, 20);
             this.tbExpressionGreen.TabIndex = 12;
             this.tbExpressionGreen.Text = "Cos(X*Y*4900)";
             this.tbExpressionGreen.TextChanged += new System.EventHandler(this.tbExpressionRed_TextChanged);
@@ -132,7 +128,7 @@
             // 
             this.tbExpressionBlue.Location = new System.Drawing.Point(51, 75);
             this.tbExpressionBlue.Name = "tbExpressionBlue";
-            this.tbExpressionBlue.Size = new System.Drawing.Size(280, 20);
+            this.tbExpressionBlue.Size = new System.Drawing.Size(272, 20);
             this.tbExpressionBlue.TabIndex = 13;
             this.tbExpressionBlue.Text = "Y*15";
             this.tbExpressionBlue.TextChanged += new System.EventHandler(this.tbExpressionRed_TextChanged);
@@ -146,11 +142,53 @@
             this.Label4.Text = "Blue";
             this.Label4.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
+            // errorProvider1
+            // 
+            this.errorProvider1.ContainerControl = this;
+            // 
+            // trackBar1
+            // 
+            this.trackBar1.LargeChange = 50;
+            this.trackBar1.Location = new System.Drawing.Point(51, 101);
+            this.trackBar1.Maximum = 1000;
+            this.trackBar1.Name = "trackBar1";
+            this.trackBar1.Size = new System.Drawing.Size(272, 45);
+            this.trackBar1.TabIndex = 22;
+            this.trackBar1.TickFrequency = 50;
+            this.trackBar1.ValueChanged += new System.EventHandler(this.trackBar1_ValueChanged);
+            // 
+            // label5
+            // 
+            this.label5.Location = new System.Drawing.Point(3, 101);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(40, 16);
+            this.label5.TabIndex = 23;
+            this.label5.Text = "Z";
+            this.label5.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Location = new System.Drawing.Point(339, 56);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(80, 17);
+            this.checkBox1.TabIndex = 24;
+            this.checkBox1.Text = "checkBox1";
+            this.checkBox1.UseVisualStyleBackColor = true;
+            this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
+            // 
+            // timer1
+            // 
+            this.timer1.Interval = 40;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            // 
             // BitmapFormula
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.cbAuto);
+            this.Controls.Add(this.checkBox1);
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.trackBar1);
             this.Controls.Add(this.Label1);
             this.Controls.Add(this.PictureBox1);
             this.Controls.Add(this.tbExpressionRed);
@@ -162,9 +200,11 @@
             this.Controls.Add(this.tbExpressionBlue);
             this.Controls.Add(this.Label4);
             this.Name = "BitmapFormula";
-            this.Size = new System.Drawing.Size(417, 429);
+            this.Size = new System.Drawing.Size(417, 426);
             this.Load += new System.EventHandler(this.BitmapFormula_Load);
             ((System.ComponentModel.ISupportInitialize)(this.PictureBox1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -172,7 +212,6 @@
 
         #endregion
 
-        internal System.Windows.Forms.CheckBox cbAuto;
         internal System.Windows.Forms.Label Label1;
         internal System.Windows.Forms.PictureBox PictureBox1;
         internal System.Windows.Forms.TextBox tbExpressionRed;
@@ -183,5 +222,10 @@
         internal System.Windows.Forms.Label Label3;
         internal System.Windows.Forms.TextBox tbExpressionBlue;
         internal System.Windows.Forms.Label Label4;
+        private System.Windows.Forms.ErrorProvider errorProvider1;
+        internal System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TrackBar trackBar1;
+        private System.Windows.Forms.CheckBox checkBox1;
+        private System.Windows.Forms.Timer timer1;
     }
 }

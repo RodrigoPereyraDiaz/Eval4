@@ -197,6 +197,14 @@ namespace Eval4
             if (value is Cell) return (value as Cell).ToDouble();
             return double.NaN;
         }
+
+        public string Name
+        {
+            get
+            {
+                return mName;
+            }
+        }
     }
 
 

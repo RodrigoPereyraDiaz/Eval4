@@ -1638,6 +1638,18 @@ namespace Eval4.Core
                 if (onValueChanged != null) onValueChanged();
             }
 
+            public string Error
+            {
+                get
+                {
+                    var value = parsed.ObjectValue;
+                    if (value is SyntaxError)
+                    {
+                        return (value as SyntaxError).message;
+                    }
+                    else return null;
+                }
+            }
         }
     }
 
