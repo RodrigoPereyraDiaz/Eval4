@@ -46,7 +46,7 @@
     <Compile Include="Core\Evaluator.cs" />
     <Compile Include="ExcelEvaluator.cs" />
     <Compile Include="JavascriptEvaluator.cs" />
-    <Compile Include="Core\SyntaxError.cs" />
+    <Compile Include="SyntaxError.cs" />
     <Compile Include="Core\Expr.cs" />
     <Compile Include="Core\Interfaces.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

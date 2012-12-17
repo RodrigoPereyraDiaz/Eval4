@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Eval4.Core
+namespace Eval4
 {
     public class SyntaxError 
     {

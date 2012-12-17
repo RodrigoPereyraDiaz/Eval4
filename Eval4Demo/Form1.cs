@@ -33,7 +33,6 @@ namespace Eval4.Demo
         private ExcelSheet excelSheet1;
         private BitmapFormula bitmapFormula1;
         private DynamicFormulas dynamicFormulas1;
-        private IDisposable formula3subscription;
 
         public Form1()
         {

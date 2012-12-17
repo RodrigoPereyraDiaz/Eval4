@@ -153,8 +153,8 @@ namespace Eval4.Tests
         {
             var actualResult = ev.Eval("5-\"A\"");
 
-            Assert.IsInstanceOfType(actualResult, typeof(Core.SyntaxError));
-            Assert.AreEqual((actualResult as Core.SyntaxError).pos, 5);
+            Assert.IsInstanceOfType(actualResult, typeof(SyntaxError));
+            Assert.AreEqual((actualResult as SyntaxError).pos, 5);
         }
 
         [TestMethod, TestCategory("VB")]
