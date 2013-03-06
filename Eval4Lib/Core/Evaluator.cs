@@ -30,13 +30,13 @@ namespace Eval4.Core
         public Evaluator()
         {
             mEnvironmentFunctionsList = new List<object>();
-            mVariableBag = new Dictionary<string, IVariable>((this.Options & EvaluatorOptions.CaseSensitive) != 0 ? StringComparer.InvariantCulture : StringComparer.InvariantCultureIgnoreCase);
+            mVariableBag = new Dictionary<string, IVariable>((Options & EvaluatorOptions.CaseSensitive) != 0 ? StringComparer.InvariantCulture : StringComparer.InvariantCultureIgnoreCase);
             var comparer = new CompleteTokenComparer();
             mUnaryDeclarations = new Dictionary<ICompleteTokenType, List<Declaration>>(comparer);
             mBinaryDeclarations = new Dictionary<ICompleteTokenType, List<Declaration>>(comparer);
             mImplicitCasts = new Dictionary<TypePair, Declaration>();
             mExplicitCasts = new Dictionary<TypePair, Declaration>();
-            mOptions = this.Options;
+            mOptions = Options;
             DeclareOperators();
         }
 
@@ -48,26 +48,26 @@ namespace Eval4.Core
             // I don't see why, I like it as it is.
             if (type == typeof(bool))
             {
-                AddBinaryOperation<bool, bool, bool>(TokenType.OperatorAnd, (a, b) => { return a & b; });
-                AddBinaryOperation<bool, bool, bool>(TokenType.OperatorOr, (a, b) => { return a | b; });
-                AddBinaryOperation<bool, bool, bool>(TokenType.OperatorXor, (a, b) => { return a ^ b; });
-                AddBinaryOperation<bool, bool, bool>(TokenType.OperatorAndAlso, (a, b) => { return a && b; });
-                AddBinaryOperation<bool, bool, bool>(TokenType.OperatorOrElse, (a, b) => { return a || b; });
-                AddBinaryOperation<bool, bool, bool>(TokenType.OperatorEQ, (a, b) => { return a == b; });
-                AddBinaryOperation<bool, bool, bool>(TokenType.OperatorNE, (a, b) => { return a != b; });
-                AddUnaryOperation<bool, bool>(TokenType.OperatorNot, (a) => { return !a; });
+                AddBinaryOperation<bool, bool, bool>(TokenType.OperatorAnd, (a, b) => a & b);
+                AddBinaryOperation<bool, bool, bool>(TokenType.OperatorOr, (a, b) => a | b);
+                AddBinaryOperation<bool, bool, bool>(TokenType.OperatorXor, (a, b) => a ^ b);
+                AddBinaryOperation<bool, bool, bool>(TokenType.OperatorAndAlso, (a, b) => a && b);
+                AddBinaryOperation<bool, bool, bool>(TokenType.OperatorOrElse, (a, b) => a || b);
+                AddBinaryOperation<bool, bool, bool>(TokenType.OperatorEQ, (a, b) => a == b);
+                AddBinaryOperation<bool, bool, bool>(TokenType.OperatorNE, (a, b) => a != b);
+                AddUnaryOperation<bool, bool>(TokenType.OperatorNot, a => !a);
 
-                AddExplicitCast<bool, int>((a) => { return (a ? 1 : 0); }, CastCompatibility.NoLoss);
+                AddExplicitCast<bool, int>(a => a ? 1 : 0, CastCompatibility.NoLoss);
             }
             else if (type == typeof(int))
             {
                 mIntegerSupport = true;
-                AddBinaryOperation<int, int, int>(TokenType.OperatorPlus, (a, b) => { return a + b; });
-                AddBinaryOperation<int, int, int>(TokenType.OperatorMinus, (a, b) => { return a - b; });
-                AddBinaryOperation<int, int, int>(TokenType.OperatorMultiply, (a, b) => { return a * b; });
-                AddBinaryOperation<int, int, int>(TokenType.OperatorDivide, (a, b) => { return a / b; });
-                AddBinaryOperation<int, int, int>(TokenType.OperatorModulo, (a, b) => { return a % b; });
-                AddBinaryOperation<int, int, int>(TokenType.OperatorAnd, (a, b) => { return a & b; });
+                AddBinaryOperation<int, int, int>(TokenType.OperatorPlus, (a, b) => a + b);
+                AddBinaryOperation<int, int, int>(TokenType.OperatorMinus, (a, b) => a - b);
+                AddBinaryOperation<int, int, int>(TokenType.OperatorMultiply, (a, b) => a * b);
+                AddBinaryOperation<int, int, int>(TokenType.OperatorDivide, (a, b) => a / b);
+                AddBinaryOperation<int, int, int>(TokenType.OperatorModulo, (a, b) => a % b);
+                AddBinaryOperation<int, int, int>(TokenType.OperatorAnd, (a, b) => a & b);
                 AddBinaryOperation<int, int, int>(TokenType.OperatorOr, (a, b) => { return a | b; });
                 AddBinaryOperation<int, int, int>(TokenType.OperatorXor, (a, b) => { return a ^ b; });
                 AddBinaryOperation<int, int, bool>(TokenType.OperatorEQ, (a, b) => { return a == b; });
@@ -77,9 +77,9 @@ namespace Eval4.Core
                 AddBinaryOperation<int, int, bool>(TokenType.OperatorLE, (a, b) => { return a <= b; });
                 AddBinaryOperation<int, int, bool>(TokenType.OperatorLT, (a, b) => { return a < b; });
 
-                AddUnaryOperation<int, int>(TokenType.OperatorNot, (a) => { return ~a; });
-                AddUnaryOperation<int, int>(TokenType.OperatorMinus, (a) => { return -a; });
-                AddUnaryOperation<int, int>(TokenType.OperatorPlus, (a) => { return a; });
+                AddUnaryOperation<int, int>(TokenType.OperatorNot, a => ~a);
+                AddUnaryOperation<int, int>(TokenType.OperatorMinus, a => -a);
+                AddUnaryOperation<int, int>(TokenType.OperatorPlus, a => a);
 
                 AddImplicitCast<byte, int>((a) => { return a; }, CastCompatibility.NoLoss);
                 AddImplicitCast<sbyte, int>((a) => { return a; }, CastCompatibility.NoLoss);
@@ -351,33 +351,26 @@ namespace Eval4.Core
             {
                 return (string)value;
             }
-            else if (value == null)
+            if (value == null)
             {
                 return "<null>";
             }
-            else if (value is DateTime)
+            if (value is DateTime)
             {
                 DateTime d = (DateTime)value;
-                if (d.TimeOfDay.TotalMilliseconds > 0)
-                {
-                    return d.ToString();
-                }
-                else
-                {
-                    return d.ToShortDateString();
-                }
+                return d.TimeOfDay.TotalMilliseconds > 0 ? d.ToString() : d.ToShortDateString();
             }
-            else if (value is decimal)
+            if (value is decimal)
             {
                 decimal d = (decimal)value;
                 return d.ToString("#,##0.00");
             }
-            else if (value is double)
+            if (value is double)
             {
                 double d = (double)value;
                 return d.ToString("#,##0.00");
             }
-            else if (value is object)
+            if (value is object)
             {
                 return value.ToString();
             }
@@ -464,15 +457,13 @@ namespace Eval4.Core
                         NextChar();
                         return new Token(TokenType.OperatorLE);
                     }
-                    else if (mCurChar == '>')
+                    if (mCurChar == '>')
                     {
                         NextChar();
                         return new Token(TokenType.OperatorNE);
                     }
-                    else
-                    {
-                        return new Token(TokenType.OperatorLT);
-                    }
+                    return new Token(TokenType.OperatorLT);
+                    
                 case '>':
                     NextChar();
                     if (mCurChar == '=')
@@ -480,10 +471,8 @@ namespace Eval4.Core
                         NextChar();
                         return new Token(TokenType.OperatorGE);
                     }
-                    else
-                    {
-                        return new Token(TokenType.OperatorGT);
-                    }
+                    return new Token(TokenType.OperatorGT);
+                    
                 case ',':
                     NextChar();
                     return new Token(TokenType.Comma);
@@ -504,14 +493,17 @@ namespace Eval4.Core
                     NextChar();
                     return new Token(TokenType.SemiColon);
                 default:
-                    if (mCurChar >= '0' && mCurChar <= '9') return ParseNumber();
-                    else if (IsIdentifierFirstLetter(mCurChar)) return ParseIdentifierOrKeyword();
+                    if (mCurChar >= '0' && mCurChar <= '9') 
+                        return ParseNumber();
+                    
+                    if (IsIdentifierFirstLetter(mCurChar)) 
+                        return ParseIdentifierOrKeyword();
                     break;
             }
             return new Token(TokenType.UnrecognisedCharacter, mCurChar.ToString());
         }
 
-        public virtual IHasValue ParseUnaryExpression(Token token, int precedence)
+        public virtual IHasValue ParseUnaryExpression(Token token)
         {
             IHasValue result = null;
             List<Declaration> declarations;
@@ -585,10 +577,7 @@ namespace Eval4.Core
                         NextToken();
                         return result;
                     }
-                    else
-                    {
-                        return NewSyntaxError(string.Format("Invalid number {0}", token.ValueString));
-                    }
+                    return NewSyntaxError(string.Format("Invalid number {0}", token.ValueString));                    
 
                 case TokenType.ValueDate:
                     DateTime dateTimeValue;
@@ -599,10 +588,7 @@ namespace Eval4.Core
                         NextToken();
                         return result;
                     }
-                    else
-                    {
-                        return NewSyntaxError(string.Format("Invalid date {0}, it should be DD/MM/YYYY hh:mm:ss", token.ValueString));
-                    }
+                    return NewSyntaxError(string.Format("Invalid date {0}, it should be DD/MM/YYYY hh:mm:ss", token.ValueString));                    
 
                 case TokenType.OpenParenthesis:
                     NextToken();
@@ -613,10 +599,7 @@ namespace Eval4.Core
                         NextToken();
                         return result;
                     }
-                    else
-                    {
-                        return NewUnexpectedToken("End parenthesis not found");
-                    }
+                    return NewUnexpectedToken("End parenthesis not found");                   
 
                 case TokenType.OperatorIf:
                     // first check functions
@@ -625,7 +608,8 @@ namespace Eval4.Core
                     NextToken();
                     bool brackets = false;
                     IHasValue error = null;
-                    if (!ParseParameters(ref brackets, ref parameters, ref error)) return error;
+                    if (!ParseParameters(ref brackets, ref parameters, ref error)) 
+                        return error;
                     var t = typeof(OperatorIfExpr<>).MakeGenericType(parameters[1].ValueType);
                     return (IHasValue)Activator.CreateInstance(t, parameters[0], parameters[1], parameters[2]);
             }
@@ -643,13 +627,13 @@ namespace Eval4.Core
             }
             else
             {
-                IHasValue valueRight;
                 NextToken();
-                valueRight = ParseExpr(valueLeft, opPrecedence);
+                IHasValue valueRight = ParseExpr(valueLeft, opPrecedence);
+                //ToDo: Variables 'leftType' and 'rightType' is never used
                 var leftType = valueLeft.ValueType;
                 var rightType = valueRight.ValueType;
                 List<Declaration> declarations;
-                if (this.mBinaryDeclarations.TryGetValue(tk, out declarations))
+                if (mBinaryDeclarations.TryGetValue(tk, out declarations))
                 {
                     foreach (var decl in declarations)
                     {
@@ -714,7 +698,7 @@ namespace Eval4.Core
             if (type2 == null) return false;
             if (type1 == type2 || type2.IsAssignableFrom(type1)) return true;
             Declaration decl;
-            if (mImplicitCasts.TryGetValue(new TypePair() { Actual = type1, Target = type2 }, out decl))
+            if (mImplicitCasts.TryGetValue(new TypePair { Actual = type1, Target = type2 }, out decl))
             {
                 cast = decl;
                 return true;
@@ -746,7 +730,7 @@ namespace Eval4.Core
             {
                 msg += ". " + ex.Message;
             }
-            return new ConstantExpr<SyntaxError>(new SyntaxError(msg, this.mString, this.mPos));
+            return new ConstantExpr<SyntaxError>(new SyntaxError(msg, mString, mPos));
         }
 
         internal IHasValue<SyntaxError> NewUnexpectedToken(string msg = null)
@@ -763,11 +747,8 @@ namespace Eval4.Core
             {
                 //if (mCurChar == '\0') throw NewParserException(msg + "Unexpected end of formula.");
                 return NewSyntaxError(msg + "Unexpected " + mCurToken.Type);
-            }
-            else
-            {
-                return NewSyntaxError(msg + "Unexpected " + mCurToken.Type + " \"" + mCurToken.ValueString + "\"");
-            }
+            }            
+            return NewSyntaxError(msg + "Unexpected " + mCurToken.Type + " \"" + mCurToken.ValueString + "\"");
         }
 
         public void NextToken()
@@ -891,23 +872,17 @@ namespace Eval4.Core
                     if (mCurChar == '[')
                     {
                         NextChar();
-                        System.Text.StringBuilder SaveValue = sb;
+                        StringBuilder SaveValue = sb;
                         int SaveStartPos = startpos;
-                        sb = new System.Text.StringBuilder();
-                        this.NextToken();
+                        sb = new StringBuilder();
+                        NextToken();
                         // restart the tokenizer for the subExpr
                         object subExpr = null;
                         try
                         {
                             // subExpr = mParseExpr(0, ePriority.none)
-                            if (subExpr == null)
-                            {
-                                sb.Append("<nothing>");
-                            }
-                            else
-                            {
-                                sb.Append(ConvertToString(subExpr));
-                            }
+                            //ToDo: Expresion 'subExpr == null' is always true
+                            sb.Append(subExpr == null ? "<nothing>" : ConvertToString(subExpr));
                         }
                         catch (Exception ex)
                         {
@@ -954,11 +929,8 @@ namespace Eval4.Core
                 NextToken();
                 return true;
             }
-            else
-            {
-                error = NewUnexpectedToken(msg);
-                return false;
-            }
+            error = NewUnexpectedToken(msg);
+            return false;
         }
 
         private IHasValue ParseTemplate()
@@ -969,8 +941,7 @@ namespace Eval4.Core
 
         internal IHasValue ParseExpr(IHasValue acc, int precedence)
         {
-            IHasValue valueLeft = null;
-            valueLeft = ParseUnaryExpression(mCurToken, precedence);
+            IHasValue valueLeft = ParseUnaryExpression(mCurToken);
             if (valueLeft == null)
             {
                 return NewUnexpectedToken("No Expression found");
@@ -997,16 +968,14 @@ namespace Eval4.Core
                     // ie 1+2+3-4 will be calculated ((1+2)+3)-4
                     return valueLeft;
                 }
-                else
-                {
-                    ParseRight(mCurToken, opPrecedence, acc, ref valueLeft);
-                }
+                ParseRight(mCurToken, opPrecedence, acc, ref valueLeft);
 
-                if (mCurToken.Type == TokenType.Eof || valueLeft.ValueType == typeof(SyntaxError)) return valueLeft;
+                if (mCurToken.Type == TokenType.Eof || valueLeft.ValueType == typeof(SyntaxError)) 
+                    return valueLeft;
 
                 if (mPos == startingPos)
                 {
-                    throw new InvalidProgramException(string.Format("{0} is not processing correctly.", this.GetType().Name));
+                    throw new InvalidProgramException(string.Format("{0} is not processing correctly.", GetType().Name));
                 }
             }
         }
@@ -1031,7 +1000,8 @@ namespace Eval4.Core
                     }
                     else
                     {
-                        if (!returnErrorIfNotFound) valueLeft = NewSyntaxError("Invalid Environment functions.");
+                        if (!returnErrorIfNotFound) 
+                            valueLeft = NewSyntaxError("Invalid Environment functions.");
                         return false;
                     }
                     if (newExpr != null) break;
@@ -1041,7 +1011,7 @@ namespace Eval4.Core
                     IVariable variable;
                     if (mVariableBag.TryGetValue(funcName, out variable))
                     {
-                        IVariable var = null;
+                        IVariable var;
                         if (mVariableBag.TryGetValue(funcName, out var))
                         {
                              newExpr = var;
@@ -1080,11 +1050,9 @@ namespace Eval4.Core
                 valueLeft = newExpr;
                 return true;
             }
-            else
-            {
-                if (returnErrorIfNotFound) valueLeft = NewSyntaxError("No Variable or public method '" + funcName + "' was not found.");
-                return false;
-            }
+            if (returnErrorIfNotFound) 
+                valueLeft = NewSyntaxError("No Variable or public method '" + funcName + "' was not found.");
+            return false;
         }
 
         protected virtual object LastChanceFindVariable(string funcName)
@@ -1094,7 +1062,7 @@ namespace Eval4.Core
 
         protected IHasValue GetMember(IHasValue @base, Type baseType, string funcName, List<IHasValue> parameters, EvalMemberType CallType)
         {
-            MemberInfo mi = null;
+            MemberInfo mi;
             Type resultType;
             object[] casts;
             if (GetMemberInfo(baseType, isStatic: true, isInstance: @base != null, funcName: funcName, parameters: parameters, mi: out mi, resultType: out resultType, casts: out casts))
@@ -1145,26 +1113,16 @@ namespace Eval4.Core
             {
                 bindingAttr = bindingAttr | BindingFlags.IgnoreCase;
             }
-            MemberInfo[] mis = null;
+            MemberInfo[] mis;
 
-            if (funcName == null)
-            {
-                mis = objType.GetDefaultMembers();
-            }
-            else
-            {
-                mis = objType.GetMember(funcName, bindingAttr);
-            }
-
+            mis = funcName == null ? objType.GetDefaultMembers() : objType.GetMember(funcName, bindingAttr);
 
             // There is a bit of cooking here...
             // lets find the most acceptable Member
-            int score = 0;
             int BestScore = 0;
             MemberInfo BestMember = null;
             object[] bestCasts = null;
             ParameterInfo[] plist = null;
-            int idx = 0;
 
             mi = null;
             for (int i = 0; i <= mis.Length - 1; i++)
@@ -1183,28 +1141,26 @@ namespace Eval4.Core
                 {
                     plist = null;
                 }
-                score = 10;
+                int score = 10;
                 // by default
-                idx = 0;
+                int idx = 0;
                 if (plist == null)
                     plist = new ParameterInfo[] { };
                 if (parameters == null)
                     parameters = new List<IHasValue>();
 
-                ParameterInfo pi = null;
                 var castList = new List<object>();
 
                 for (int index = 0; index < plist.Length; index++)
                 {
-                    pi = plist[index];
+                    ParameterInfo pi = plist[index];
                     if (idx < parameters.Count)
                     {
                         Delegate castDlg;
                         var thisScore = ParamCompatibility(parameters[idx], pi.ParameterType, out castDlg);
                         if (thisScore == CompatibilityLevel.Incompatible)
                         {
-                            if (pi.ParameterType.IsArray
-                            && index == plist.Length - 1)
+                            if (pi.ParameterType.IsArray && index == plist.Length - 1)
                             {
                                 var elementType = pi.ParameterType.GetElementType();
                                 thisScore = CompatibilityLevel.Assignable;
@@ -1263,7 +1219,7 @@ namespace Eval4.Core
 
             if (actualType == expectedType) return CompatibilityLevel.Identical;
             if (expectedType.IsAssignableFrom(actualType)) return CompatibilityLevel.Assignable;
-            if (mImplicitCasts.TryGetValue(new TypePair() { Actual = actualType, Target = expectedType }, out cast))
+            if (mImplicitCasts.TryGetValue(new TypePair { Actual = actualType, Target = expectedType }, out cast))
             {
                 castDlg = cast.dlg;
                 switch (cast.Compatibility)
@@ -1288,7 +1244,6 @@ namespace Eval4.Core
             string func = mCurToken.ValueString;
             NextToken();
             bool isBrackets = false;
-            Type resultType;
             if (!ParseParameters(ref isBrackets, ref parameters, ref valueLeft)) return;
             if ((parameters != null))
             {
@@ -1348,14 +1303,14 @@ namespace Eval4.Core
                         }
                         else
                         {
-                            valueLeft = NewSyntaxError("This array has " + t.GetArrayRank() + " dimensions");
-                            return;
+                            valueLeft = NewSyntaxError("This array has " + t.GetArrayRank() + " dimensions");                            
                         }
                     }
                     else
                     {
                         MemberInfo mi;
                         object[] casts;
+                        Type resultType;
                         if (GetMemberInfo(t, isStatic: true, isInstance: true, funcName: null, parameters: parameters, mi: out mi, resultType: out resultType, casts: out casts))
                         {
                             var t3 = typeof(CallMethodExpr<>).MakeGenericType(resultType);
@@ -1364,8 +1319,7 @@ namespace Eval4.Core
                         }
                         else
                         {
-                            valueLeft = NewSyntaxError("Parameters not supported here");
-                            return;
+                            valueLeft = NewSyntaxError("Parameters not supported here");                            
                         }
                     }
                 }
@@ -1381,11 +1335,9 @@ namespace Eval4.Core
 
         internal bool ParseParameters(ref bool brackets, ref List<IHasValue> parameters, ref IHasValue error)
         {
-            IHasValue valueleft = null;
             TokenType lClosing = default(TokenType);
 
-            if (mCurToken.Type == TokenType.OpenParenthesis
-                || (mCurToken.Type == TokenType.OpenBracket && !UseParenthesisForArrays))
+            if (mCurToken.Type == TokenType.OpenParenthesis || (mCurToken.Type == TokenType.OpenBracket && !UseParenthesisForArrays))
             {
                 switch (mCurToken.Type)
                 {
@@ -1407,7 +1359,7 @@ namespace Eval4.Core
                         NextToken();
                         return true;
                     }
-                    valueleft = ParseExpr(null, 1);
+                    IHasValue valueleft = ParseExpr(null, 1);
                     parameters.Add(valueleft);
 
                     if (mCurToken.Type == lClosing)
@@ -1416,7 +1368,7 @@ namespace Eval4.Core
                         NextToken();
                         return true;
                     }
-                    else if (mCurToken.Type == TokenType.Comma)
+                    if (mCurToken.Type == TokenType.Comma)
                     {
                         NextToken();
                     }
@@ -1430,7 +1382,7 @@ namespace Eval4.Core
             return true;
         }
 
-        public static void WriteDependencies(System.IO.TextWriter tw, string name, Eval4.Core.IHasValue expr, string indent = null)
+        public static void WriteDependencies(System.IO.TextWriter tw, string name, IHasValue expr, string indent = null)
         {
             if (indent == null) indent = string.Empty;
             tw.Write("{0} {1} = ", indent, name);
@@ -1439,7 +1391,7 @@ namespace Eval4.Core
                 tw.WriteLine("{0} ({1})", "null", "unknown");
                 return;
             }
-            else tw.WriteLine("{0} ({1} {2})", expr.ObjectValue, expr.ValueType, expr.ShortName);
+            tw.WriteLine("{0} ({1} {2})", expr.ObjectValue, expr.ValueType, expr.ShortName);
 
             int cpt = 0;
             foreach (var d in expr.Subscriptions)
@@ -1467,12 +1419,12 @@ namespace Eval4.Core
 
         void IEvaluator.SetVariable<T>(string variableName, T variableValue)
         {
-            this.SetVariable(variableName, variableValue);
+            SetVariable(variableName, variableValue);
         }
 
         object IEvaluator.Eval(string formula)
         {
-            return this.Eval(formula);
+            return Eval(formula);
         }
 
         //IHasValue<string> IEvaluator.ParseTemplate(string template)
@@ -1493,15 +1445,15 @@ namespace Eval4.Core
 
             public Token(TokenType tokenType, object value = null)
             {
-                this.Type = tokenType;
-                this.Value = value;
+                Type = tokenType;
+                Value = value;
             }
 
             public Token(CustomToken customType, object value = null)
             {
-                this.Type = TokenType.Custom;
-                this.CustomType = customType;
-                this.Value = value;
+                Type = TokenType.Custom;
+                CustomType = customType;
+                Value = value;
             }
 
             public String ValueString
@@ -1516,13 +1468,13 @@ namespace Eval4.Core
             }
 
 
-            TokenType ICompleteTokenType.TokenType { get { return this.Type; } }
+            TokenType ICompleteTokenType.TokenType { get { return Type; } }
             CustomToken ICompleteTokenType.CustomToken { get { return CustomType; } }
         }
 
         internal class Declaration : ICompleteTokenType
         {
-            internal TokenType Type;
+            internal TokenType Type;            
             internal CustomToken CustomToken;
             internal Delegate dlg;
             internal Type P1;
@@ -1532,19 +1484,19 @@ namespace Eval4.Core
 
             public Declaration(TokenType tokenType, CustomToken customToken, Delegate func, CastCompatibility compatibility = CastCompatibility.Undefined)
             {
-                this.Type = tokenType;
-                this.CustomToken = customToken;
-                this.dlg = func;
+                Type = tokenType;
+                CustomToken = customToken;
+                dlg = func;
 
                 var method = func.Method;
                 var parameters = method.GetParameters();
-                this.P1 = parameters[0].ParameterType;
-                this.P2 = parameters.Length < 2 ? null : parameters[1].ParameterType;
-                this.T = func.Method.ReturnType;
-                this.Compatibility = compatibility;
+                P1 = parameters[0].ParameterType;
+                P2 = parameters.Length < 2 ? null : parameters[1].ParameterType;
+                T = func.Method.ReturnType;
+                Compatibility = compatibility;
             }
 
-            TokenType ICompleteTokenType.TokenType { get { return this.Type; } }
+            TokenType ICompleteTokenType.TokenType { get { return Type; } }
             CustomToken ICompleteTokenType.CustomToken { get { return CustomToken; } }
 
 
@@ -1560,19 +1512,19 @@ namespace Eval4.Core
             CustomToken CustomToken { get; }
         }
 
+        // ToDo: Method can be made pravite
         public class CompleteTokenComparer : IEqualityComparer<ICompleteTokenType>
         {
             bool IEqualityComparer<ICompleteTokenType>.Equals(ICompleteTokenType x, ICompleteTokenType y)
             {
-                if (x.TokenType != y.TokenType) return false;
-                if (x.TokenType == TokenType.Custom) return x.CustomToken.Equals(y.CustomToken);
-                else return true;
+                if (x.TokenType != y.TokenType) 
+                    return false;
+                return x.TokenType != TokenType.Custom || x.CustomToken.Equals(y.CustomToken);
             }
 
             int IEqualityComparer<ICompleteTokenType>.GetHashCode(ICompleteTokenType obj)
             {
-                if (obj.TokenType == TokenType.Custom) return obj.CustomToken.GetHashCode();
-                else return obj.TokenType.GetHashCode();
+                return obj.TokenType == TokenType.Custom ? obj.CustomToken.GetHashCode() : obj.TokenType.GetHashCode();
             }
         }
 
@@ -1584,10 +1536,7 @@ namespace Eval4.Core
                 CleanUpCharacter(ref result);
                 return result;
             }
-            else
-            {
-                return '\0';
-            }
+            return '\0';
         }
 
         public IParsedExpr Parse(string formula, Action onValueChanged = null)
@@ -1608,6 +1557,7 @@ namespace Eval4.Core
 
         private class ParsedExpr : IParsedExpr, IObserver
         {
+            // ToDo: Field 'formula' is never used
             private string formula;
             private IHasValue parsed;
             private Action onValueChanged;
@@ -1643,11 +1593,7 @@ namespace Eval4.Core
                 get
                 {
                     var value = parsed.ObjectValue;
-                    if (value is SyntaxError)
-                    {
-                        return (value as SyntaxError).message;
-                    }
-                    else return null;
+                    return value is SyntaxError ? (value as SyntaxError).message : null;
                 }
             }
         }
@@ -1665,7 +1611,7 @@ namespace Eval4.Core
 
         public bool Equals(TypePair other)
         {
-            return other.Actual == this.Actual && other.Target == this.Target;
+            return other.Actual == Actual && other.Target == Target;
         }
 
         public override int GetHashCode()
