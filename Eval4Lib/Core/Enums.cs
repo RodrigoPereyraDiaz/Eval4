@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Eval4.Core
 {
@@ -77,7 +74,7 @@ namespace Eval4.Core
         Incompatible = 0
     }
 
-    [Flags()]
+    [Flags]
     public enum EvalMemberType
     {
         Field = 1,

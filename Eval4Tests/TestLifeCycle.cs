@@ -1,9 +1,4 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Eval4.Core;
 
 namespace Eval4.Tests
 {
@@ -14,7 +9,7 @@ namespace Eval4.Tests
         public void CompleteTest()
         {
             var ev = new CSharpEvaluator();
-            ev.SetVariable<double>("x", 10.0);
+            ev.SetVariable("x", 10.0);
 
             using (var q = ev.Parse("x*2"))
             {

@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Eval4.Tests
 {
@@ -30,8 +29,8 @@ namespace Eval4.Tests
         public CSharpTests()
         {
             ev.SetVariable("context", new TestContext());
-            ev.SetVariable("fibonacci", new int[] { 1, 1, 2, 3, 5, 8, 13, 21, 34 });
-            ev.SetVariable("mult", new int[,] { { 0, 0, 0, 0 }, { 0, 1, 2, 3 }, { 0, 2, 4, 6 }, { 0, 3, 6, 9 } });
+            ev.SetVariable("fibonacci", new[] { 1, 1, 2, 3, 5, 8, 13, 21, 34 });
+            ev.SetVariable("mult", new[,] { { 0, 0, 0, 0 }, { 0, 1, 2, 3 }, { 0, 2, 4, 6 }, { 0, 3, 6, 9 } });
 
         }
 
@@ -56,10 +55,10 @@ namespace Eval4.Tests
         {
             var context = new TestContext();
             // those are returning int32 (like in C#)
-            TestFormula("context.byte * 2", (int)context.@byte * 2);
-            TestFormula("context.sbyte * 2", (int)context.@sbyte * 2);
-            TestFormula("context.short * 2", (int)context.@short * 2);
-            TestFormula("context.int * 2", (int)context.@int * 2);
+            TestFormula("context.byte * 2", context.@byte * 2);
+            TestFormula("context.sbyte * 2", context.@sbyte * 2);
+            TestFormula("context.short * 2", context.@short * 2);
+            TestFormula("context.int * 2", context.@int * 2);
 
             TestFormula("context.double * 2", context.@double * 2);
 

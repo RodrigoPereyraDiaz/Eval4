@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Eval4
 {
@@ -11,10 +10,12 @@ namespace Eval4
         //private Cell c1;
         //private Cell c2;
 
+        // ToDo: Field can be made readonly
         int colMin, colMax;
         int rowMin, rowMax;
 
         public int ColMin { get { return colMin; } }
+        // ToDo: Property 'ColMax' is never used
         public int ColMax { get { return colMax; } }
         public int RowMin { get { return rowMin; } }
         public int RowMax { get { return rowMax; } }
@@ -53,20 +54,22 @@ namespace Eval4
     {
         public ExcelEvaluator Ev { get; private set; }
         private string mFormula;
-        private string mName;
         private IParsedExpr mParsed;
+
+        // ToDo: Field 'Exception' can be made private
         public Exception Exception;
+
         public int Row { get; private set; }
         public int Col { get; private set; }
 
         public Cell(ExcelEvaluator ev, int col, int row, string formula = null)
         {
-            this.Row = row;
-            this.Col = col;
-            this.Ev = ev;
-            mName = Cell.GetCellName(col, row);
-            ev.SetVariable(mName, this);
-            if (formula != null) this.Formula = formula;
+            Row = row;
+            Col = col;
+            Ev = ev;
+            Name = GetCellName(col, row);
+            ev.SetVariable(Name, this);
+            if (formula != null) Formula = formula;
         }
 
         public static string GetCellName(int col, int row)
@@ -101,14 +104,13 @@ namespace Eval4
                 y = row;
                 return true;
             }
-            else
-            {
-                x = 0;
-                y = 0;
-                return false;
-            }
+                        
+            x = 0;
+            y = 0;
+            return false;            
         }
 
+        // ToDo: Method can be made private
         public static string GetColName(int x)
         {
             string result = string.Empty;
@@ -126,6 +128,7 @@ namespace Eval4
             return result;
         }
 
+        // ToDo: Can be made private
         public string Formula
         {
             get
@@ -154,8 +157,10 @@ namespace Eval4
 
         public override string ToString()
         {
-            if (Exception != null) return Exception.Message;
-            else if (mParsed != null)
+            if (Exception != null) 
+                return Exception.Message;
+            
+            if (mParsed != null)
             {
                 object val;
                 try
@@ -166,27 +171,27 @@ namespace Eval4
                 {
                     val = ex;
                 }
-                if (val is double) return ((double)val).ToString("#,##0.00");
-                else if (val == this) return "#Circular reference";
-                else return val.ToString();
+                if (val is double) 
+                    return ((double)val).ToString("#,##0.00");
+
+                return val == this ? "#Circular reference" : val.ToString();
             }
-            else
-            {
-                if (mFormula != null && mFormula.StartsWith("'")) return mFormula.Substring(1);
-                else return mFormula;
-            }
+            
+            if (mFormula != null && mFormula.StartsWith("'")) 
+                return mFormula.Substring(1);
+            return mFormula;            
         }
 
+        // ToDo: Can be made private
         public object ValueObject
         {
             get
             {
-                if (mParsed != null) return mParsed.ObjectValue;
-                else return mFormula;
+                return mParsed != null ? mParsed.ObjectValue : mFormula;
             }
         }
 
-        static DateTime EPOCH = new DateTime(1900, 1, 1);
+        static readonly DateTime EPOCH = new DateTime(1900, 1, 1);
 
         internal double ToDouble()
         {
@@ -198,15 +203,8 @@ namespace Eval4
             return double.NaN;
         }
 
-        public string Name
-        {
-            get
-            {
-                return mName;
-            }
-        }
+        public string Name { get; private set; }
     }
-
 
     public static class ExcelFunctions
     {
@@ -229,19 +227,18 @@ namespace Eval4
                 for (int r = table_array.RowMin; r <= table_array.RowMax; r++)
                 {
                     var c = ev.GetCell(table_array.ColMin, r);
-                    
-                    if (c != null)
+
+                    if (c == null) 
+                        continue;
+                    if (c.ToDouble() > lookup_value)
                     {
-                        if (c.ToDouble() > lookup_value)
-                        {
-                            foundRow = r - 1;
-                            break;
-                        }
-                        else if (c.ToDouble() == lookup_value)
-                        {
-                            foundRow = r;
-                            break;
-                        }
+                        foundRow = r - 1;
+                        break;
+                    }
+                    if (c.ToDouble() == lookup_value)
+                    {
+                        foundRow = r;
+                        break;
                     }
                 }
             }
@@ -288,7 +285,7 @@ namespace Eval4
 
         public ExcelEvaluator()
         {
-            this.AddEnvironmentFunctions(typeof(ExcelFunctions));
+            AddEnvironmentFunctions(typeof(ExcelFunctions));
         }
 
         protected internal override EvaluatorOptions Options
@@ -302,21 +299,17 @@ namespace Eval4
         protected override object LastChanceFindVariable(string funcName)
         {
             int x, y;
-            if (Cell.GetCellPos(funcName, out x, out y))
-            {
-                return new Cell(this, x, y);
-            }
-            return null;
+            return Cell.GetCellPos(funcName, out x, out y) ? new Cell(this, x, y) : null;
         }
 
         protected override void DeclareOperators()
         {
             DeclareOperators(typeof(double));
             DeclareOperators(typeof(string));
-            base.AddImplicitCast<Cell, double>((a) => a.ToDouble(), CastCompatibility.PossibleLoss);
+            AddImplicitCast<Cell, double>(a => a.ToDouble(), CastCompatibility.PossibleLoss);
 
-            base.AddBinaryOperation<Cell, Cell, Range>(TokenType.OperatorColon, (c1, c2) => new Range(c1, c2));
-            base.AddImplicitCast<Range, double[]>((a) => a.ToArray(), CastCompatibility.PossibleLoss);
+            AddBinaryOperation<Cell, Cell, Range>(TokenType.OperatorColon, (c1, c2) => new Range(c1, c2));
+            AddImplicitCast<Range, double[]>(a => a.ToArray(), CastCompatibility.PossibleLoss);
             DeclareOperators(typeof(object));
             
         }
@@ -326,12 +319,12 @@ namespace Eval4
             get { return false; }
         }
 
-        public override IHasValue ParseUnaryExpression(Token token, int precedence)
+        public override IHasValue ParseUnaryExpression(Token token)
         {
             switch (token.Type)
             {
                 default:
-                    return base.ParseUnaryExpression(token, precedence);
+                    return base.ParseUnaryExpression(token);
             }
 
         }
@@ -400,7 +393,7 @@ namespace Eval4
         public override Token CheckKeyword(string keyword)
         {
             {
-                switch (keyword.ToLower().ToString())
+                switch (keyword.ToLower())
                 {
                     case "true":
                         return new Token(TokenType.ValueTrue);
@@ -498,25 +491,24 @@ namespace Eval4
 
         public override string ConvertToString(object value)
         {
-            if (value is Cell) return (value as Cell).ToString();
-            else return base.ConvertToString(value);
+            return value is Cell ? (value as Cell).ToString() : base.ConvertToString(value);
         }
 
         public void SetCell(string cellName, string formula)
         {
             int x, y;
-            if (Cell.GetCellPos(cellName, out x, out y))
-            {
-                var cell = new Cell(this, x, y, formula);
-                SetVariable<Cell>(cellName, cell);
-            }
-            else throw new Exception(string.Format("Invalid Cell \"{0}\"", cellName));
+            if (!Cell.GetCellPos(cellName, out x, out y))
+                throw new Exception(string.Format("Invalid Cell \"{0}\"", cellName));
+            
+            var cell = new Cell(this, x, y, formula);
+            SetVariable(cellName, cell);
+            
         }
 
         internal Cell GetCell(int x, int y)
         {
             string cellName = Cell.GetCellName(x, y);
-            IHasValue<Cell> var = base.GetVariable<Cell>(cellName);
+            IHasValue<Cell> var = GetVariable<Cell>(cellName);
             if (var == null) return null;
             return var.Value;
         }

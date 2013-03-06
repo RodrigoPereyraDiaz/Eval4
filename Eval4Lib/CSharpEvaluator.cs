@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Eval4.Core;
 
 namespace Eval4
@@ -28,8 +26,8 @@ namespace Eval4
             DeclareOperators(typeof(int));
             DeclareOperators(typeof(double));
             // as we did not implement decimal calculation we degrade decimal into double 
-            AddImplicitCast<decimal, double>((a) => { return (double)a; }, CastCompatibility.PossibleLoss);
-            AddImplicitCast<double, decimal>((a) => { return (decimal)a; }, CastCompatibility.PossibleLoss);
+            AddImplicitCast<decimal, double>(a => { return (double)a; }, CastCompatibility.PossibleLoss);
+            AddImplicitCast<double, decimal>(a => { return (decimal)a; }, CastCompatibility.PossibleLoss);
 
             DeclareOperators(typeof(string));
             DeclareOperators(typeof(object));
@@ -65,7 +63,7 @@ namespace Eval4
                         NextChar();
                         return new Token(CSharpCustomToken.Coalesce);
                     }
-                    else return new Token(TokenType.OperatorIf);
+                    return new Token(TokenType.OperatorIf);
 
                 case '=':
                     NextChar();
@@ -110,7 +108,7 @@ namespace Eval4
         public override Token CheckKeyword(string keyword)
         {
             {
-                switch (keyword.ToString())
+                switch (keyword)
                 {
                     case "true":
                         return new Token(TokenType.ValueTrue);

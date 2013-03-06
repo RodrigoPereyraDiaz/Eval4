@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 using Eval4.Core;
 
@@ -80,15 +79,12 @@ namespace Eval4
             {
                 return new Token(TokenType.SyntaxError, "Missing character # at the end of the date literal.");
             }
-            else
-            {
-                NextChar();
-                DateTime ignoreResult;
+            NextChar();
+            DateTime ignoreResult;
 
-                if (!DateTime.TryParse(sb.ToString(), out ignoreResult))
-                {
-                    return new Token(TokenType.SyntaxError, "Invalid date literal. Expcecting the format #yyyy/mm/dd#");
-                }
+            if (!DateTime.TryParse(sb.ToString(), out ignoreResult))
+            {
+                return new Token(TokenType.SyntaxError, "Invalid date literal. Expcecting the format #yyyy/mm/dd#");
             }
             return new Token(TokenType.ValueDate, sb.ToString());
         }
@@ -97,7 +93,7 @@ namespace Eval4
 
         public override Token CheckKeyword(string keyword)
         {
-            switch (keyword.ToString())
+            switch (keyword)
             {
                 case "and":
                     return new Token(TokenType.OperatorAnd);
@@ -233,7 +229,7 @@ namespace Eval4
                 case TokenType.OperatorDivide:
                     NextToken();
                     valueRight = ParseExpr(valueLeft, opPrecedence);
-                    if (EmitDelegateExpr(ref valueLeft, valueRight, new Func<double, double, double>((a, b) => a / (double)b),"/")) return;
+                    if (EmitDelegateExpr(ref valueLeft, valueRight, new Func<double, double, double>((a, b) => a / b),"/")) return;
                     break;
             }
             base.ParseRight(tk, opPrecedence, Acc, ref valueLeft);
@@ -278,7 +274,7 @@ namespace Eval4
                         // it allows formula like 10 + 5% 
                         return 13;
                     }
-                    else return 1;
+                    return 1;
                     
                 case TokenType.OperatorMultiply:
                 case TokenType.OperatorDivide:

@@ -1,8 +1,5 @@
 ﻿using Eval4.Core;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Eval4
 {
@@ -97,7 +94,7 @@ namespace Eval4
         public override Token CheckKeyword(string keyword)
         {
             {
-                switch (keyword.ToString())
+                switch (keyword)
                 {
                     case "true":
                         return new Token(TokenType.ValueTrue);

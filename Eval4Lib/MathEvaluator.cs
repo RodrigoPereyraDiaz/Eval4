@@ -37,24 +37,24 @@ namespace Eval4
             DeclareOperators(typeof(bool));
             DeclareOperators(typeof(double));
                         
-            base.AddBinaryOperation<Matrix, Matrix, Matrix>(TokenType.OperatorPlus, (a, b) => a.ElementWiseAdd(b));
-            base.AddBinaryOperation<double, Matrix, Matrix>(TokenType.OperatorPlus, (a, b) => b.ScalarAdd(a));
-            base.AddBinaryOperation<Matrix, double, Matrix>(TokenType.OperatorPlus, (a, b) => a.ScalarAdd(b));
-            base.AddBinaryOperation<Matrix, Matrix, Matrix>(TokenType.OperatorMinus, (a, b) => a.ElementWiseSubtract(b));
-            base.AddBinaryOperation<double, Matrix, Matrix>(TokenType.OperatorMinus, (a, b) => b.ScalarSubtract(a).ScalarNeg());
-            base.AddBinaryOperation<Matrix, double, Matrix>(TokenType.OperatorMinus, (a, b) => a.ScalarSubtract(b));
-            base.AddBinaryOperation<Matrix, Matrix, Matrix>(TokenType.OperatorMultiply, (a, b) => a.Product(b));
-            base.AddBinaryOperation<Matrix, double, Matrix>(TokenType.OperatorMultiply, (a, b) => a.ScalarMultiply(b));
-            base.AddBinaryOperation<double, Matrix, Matrix>(TokenType.OperatorMultiply, (a, b) => b.ScalarMultiply(a));
-            base.AddBinaryOperation<Matrix, double, Matrix>(TokenType.OperatorMultiply, (a, b) => a.ScalarPower(b));
-            base.AddBinaryOperation<Matrix, double, Matrix>(TokenType.OperatorDivide, (a, b) => a.ScalarDivide(b));
-            base.AddBinaryOperation<Matrix, double, Matrix>(TokenType.OperatorPower, (a, b) => a.ScalarPower(b));
+            AddBinaryOperation<Matrix, Matrix, Matrix>(TokenType.OperatorPlus, (a, b) => a.ElementWiseAdd(b));
+            AddBinaryOperation<double, Matrix, Matrix>(TokenType.OperatorPlus, (a, b) => b.ScalarAdd(a));
+            AddBinaryOperation<Matrix, double, Matrix>(TokenType.OperatorPlus, (a, b) => a.ScalarAdd(b));
+            AddBinaryOperation<Matrix, Matrix, Matrix>(TokenType.OperatorMinus, (a, b) => a.ElementWiseSubtract(b));
+            AddBinaryOperation<double, Matrix, Matrix>(TokenType.OperatorMinus, (a, b) => b.ScalarSubtract(a).ScalarNeg());
+            AddBinaryOperation<Matrix, double, Matrix>(TokenType.OperatorMinus, (a, b) => a.ScalarSubtract(b));
+            AddBinaryOperation<Matrix, Matrix, Matrix>(TokenType.OperatorMultiply, (a, b) => a.Product(b));
+            AddBinaryOperation<Matrix, double, Matrix>(TokenType.OperatorMultiply, (a, b) => a.ScalarMultiply(b));
+            AddBinaryOperation<double, Matrix, Matrix>(TokenType.OperatorMultiply, (a, b) => b.ScalarMultiply(a));
+            AddBinaryOperation<Matrix, double, Matrix>(TokenType.OperatorMultiply, (a, b) => a.ScalarPower(b));
+            AddBinaryOperation<Matrix, double, Matrix>(TokenType.OperatorDivide, (a, b) => a.ScalarDivide(b));
+            AddBinaryOperation<Matrix, double, Matrix>(TokenType.OperatorPower, (a, b) => a.ScalarPower(b));
             
-            base.AddBinaryOperation<Matrix, Matrix, Matrix>(MathToken.ElementWiseAdd, (a, b) => a.ElementWiseAdd(b));
-            base.AddBinaryOperation<Matrix, Matrix, Matrix>(MathToken.ElementWiseSub, (a, b) => a.ElementWiseSubtract(b));
-            base.AddBinaryOperation<Matrix, Matrix, Matrix>(MathToken.ElementWiseMul, (a, b) => a.ElementWiseMultiply(b));
-            base.AddBinaryOperation<Matrix, Matrix, Matrix>(MathToken.ElementWiseDiv, (a, b) => a.ElementWiseDivide(b));
-            base.AddBinaryOperation<Matrix, Matrix, Matrix>(MathToken.ElementWisePower, (a, b) => a.ElementWisePower(b));
+            AddBinaryOperation<Matrix, Matrix, Matrix>(MathToken.ElementWiseAdd, (a, b) => a.ElementWiseAdd(b));
+            AddBinaryOperation<Matrix, Matrix, Matrix>(MathToken.ElementWiseSub, (a, b) => a.ElementWiseSubtract(b));
+            AddBinaryOperation<Matrix, Matrix, Matrix>(MathToken.ElementWiseMul, (a, b) => a.ElementWiseMultiply(b));
+            AddBinaryOperation<Matrix, Matrix, Matrix>(MathToken.ElementWiseDiv, (a, b) => a.ElementWiseDivide(b));
+            AddBinaryOperation<Matrix, Matrix, Matrix>(MathToken.ElementWisePower, (a, b) => a.ElementWisePower(b));
 
             DeclareOperators(typeof(string));
             DeclareOperators(typeof(object));
@@ -155,7 +155,7 @@ namespace Eval4
         public override Token CheckKeyword(string keyword)
         {
             {
-                switch (keyword.ToString())
+                switch (keyword)
                 {
                     case "true":
                         return new Token(TokenType.ValueTrue);
@@ -191,7 +191,7 @@ namespace Eval4
                     {
                         case MathToken.Transpose:
                             NextToken();
-                            if (EmitDelegateExpr(ref valueLeft, new Func<Matrix, Matrix>((a) => a.Transpose()),"'")) return;
+                            if (EmitDelegateExpr(ref valueLeft, new Func<Matrix, Matrix>(a => a.Transpose()),"'")) return;
                             break;
                         default:
                             base.ParseRight(tk, opPrecedence, Acc, ref valueLeft);
@@ -350,8 +350,6 @@ namespace Eval4
         }
     }
 
-
-
     // Immutable matrix
     public class Matrix : IEquatable<Matrix>
     {
@@ -366,18 +364,21 @@ namespace Eval4
             {
                 throw new Exception("Invalid matrix size(" + rowCount + "," + columnCount + ")");
             }
-            this._rowCount = rowCount;
-            this._columnCount = columnCount;
-            this._data = new double[rowCount][];
-            for (var r = 0; r < rowCount; r++) this._data[r] = new double[columnCount];
+            _rowCount = rowCount;
+            _columnCount = columnCount;
+            _data = new double[rowCount][];
+            for (var r = 0; r < rowCount; r++)
+            {
+                _data[r] = new double[columnCount];
+            }            
         }
 
         public Matrix(IEnumerable<IEnumerable<double>> result)
         {
-            this._rowCount = result.Count();
-            this._columnCount = result.Max(l => l.Count());
+            _rowCount = result.Count();
+            _columnCount = result.Max(l => l.Count());
             int row = 0;
-            this._data = new double[_rowCount][];
+            _data = new double[_rowCount][];
             foreach (var l in result)
             {
                 int col = 0;
@@ -386,7 +387,7 @@ namespace Eval4
                 {
                     newCol[col++] = v;
                 }
-                this._data[row++] = newCol;
+                _data[row++] = newCol;
             }
         }
 
@@ -394,13 +395,13 @@ namespace Eval4
         {
             var result = new StringBuilder();
             result.Append("[");
-            for (var r = 0; r < this._rowCount; r++)
+            for (var r = 0; r < _rowCount; r++)
             {
                 if (r > 0) result.Append(";");
-                for (var c = 0; c < this._columnCount; c++)
+                for (var c = 0; c < _columnCount; c++)
                 {
                     if (c > 0) result.Append(","); // "\n"
-                    double value = this._data[r][c];
+                    double value = _data[r][c];
                     result.Append(double.IsNaN(value) ? "NaN" : value.ToString()); // "#,##0.00"
                 }
             }
@@ -470,30 +471,30 @@ namespace Eval4
 
         public int RowCount
         {
-            get { return this._rowCount; }
+            get { return _rowCount; }
         }
 
         public int ColumnCount
         {
-            get { return this._columnCount; }
+            get { return _columnCount; }
         }
 
         public double Value(int row, int column)
         {
-            return this._data[row][column];
+            return _data[row][column];
         }
 
         public Matrix ElementWiseOp(Matrix m2, Func<double, double, double> func)
         {
-            var rowCount = this.RowCount;
-            var columnCount = this.ColumnCount;
+            var rowCount = RowCount;
+            var columnCount = ColumnCount;
             if (m2.RowCount != rowCount || m2.ColumnCount != columnCount) throw new Exception("ElementWise operations requires same size matrices.");
             var m3 = new Matrix(rowCount, columnCount);
             for (var r = 0; r < rowCount; r++)
             {
                 for (var c = 0; c < columnCount; c++)
                 {
-                    m3._data[r][c] = func(this.Value(r, c), m2.Value(r, c));
+                    m3._data[r][c] = func(Value(r, c), m2.Value(r, c));
                 }
             }
             return m3;
@@ -501,39 +502,39 @@ namespace Eval4
 
         public Matrix ElementWiseAdd(Matrix m2)
         {
-            return this.ElementWiseOp(m2, (v1, v2) => v1 + v2);
+            return ElementWiseOp(m2, (v1, v2) => v1 + v2);
         }
 
         public Matrix ElementWiseSubtract(Matrix m2)
         {
-            return this.ElementWiseOp(m2, (v1, v2) => v1 - v2);
+            return ElementWiseOp(m2, (v1, v2) => v1 - v2);
         }
 
         public Matrix ElementWiseMultiply(Matrix m2)
         {
-            return this.ElementWiseOp(m2, (v1, v2) => v1 * v2);
+            return ElementWiseOp(m2, (v1, v2) => v1 * v2);
         }
 
         public Matrix ElementWiseDivide(Matrix m2)
         {
-            return this.ElementWiseOp(m2, (v1, v2) => v1 / v2);
+            return ElementWiseOp(m2, (v1, v2) => v1 / v2);
         }
 
         public Matrix ElementWisePower(Matrix m2)
         {
-            return this.ElementWiseOp(m2, (v1, v2) => System.Math.Pow(v1, v2));
+            return ElementWiseOp(m2, (v1, v2) => Math.Pow(v1, v2));
         }
 
         public Matrix ScalarOp(Func<double, double> func)
         {
-            var rowCount = this.RowCount;
-            var columnCount = this.ColumnCount;
+            var rowCount = RowCount;
+            var columnCount = ColumnCount;
             var m2 = new Matrix(rowCount, columnCount);
             for (var r = 0; r < rowCount; r++)
             {
                 for (var c = 0; c < columnCount; c++)
                 {
-                    m2._data[r][c] = func(this.Value(r, c));
+                    m2._data[r][c] = func(Value(r, c));
                 }
             }
             return m2;
@@ -541,45 +542,45 @@ namespace Eval4
 
         public Matrix ScalarAdd(double n)
         {
-            return this.ScalarOp((v1) => v1 + n);
+            return ScalarOp(v1 => v1 + n);
         }
 
         public Matrix ScalarSubtract(double n)
         {
-            return this.ScalarOp((v1) => v1 - n);
+            return ScalarOp(v1 => v1 - n);
         }
 
         public Matrix ScalarMultiply(double n)
         {
-            return this.ScalarOp((v1) => v1 * n);
+            return ScalarOp(v1 => v1 * n);
         }
 
         public Matrix ScalarDivide(double n)
         {
-            return this.ScalarOp((v1) => v1 / n);
+            return ScalarOp(v1 => v1 / n);
         }
 
         public Matrix ScalarPower(double n)
         {
-            return this.ScalarOp((v1) => System.Math.Pow(v1, n));
+            return ScalarOp(v1 => Math.Pow(v1, n));
         }
 
         public Matrix ScalarNeg()
         {
-            return this.ScalarOp((v1) => -v1);
+            return ScalarOp(v1 => -v1);
         }
 
         public Matrix ScalarInverse()
         {
-            return this.ScalarOp((v1) => 1 / v1);
+            return ScalarOp(v1 => 1 / v1);
         }
 
         public Matrix Product(Matrix m2)
         {
-            var rowCount = this.RowCount;
+            var rowCount = RowCount;
             var middle = m2.RowCount;
             var columnCount = m2.ColumnCount;
-            if (this.ColumnCount != m2.RowCount) throw new Exception("Matrix product function requires compatible matrices (matrice 1 is " + this.Size().ToString() + ", matrice 2 is " + m2.Size().ToString());
+            if (ColumnCount != m2.RowCount) throw new Exception("Matrix product function requires compatible matrices (matrice 1 is " + Size() + ", matrice 2 is " + m2.Size());
 
             var m3 = new Matrix(rowCount, columnCount);
             for (var r = 0; r < rowCount; r++)
@@ -589,7 +590,7 @@ namespace Eval4
                     var v = 0.0;
                     for (var m = 0; m < middle; m++)
                     {
-                        v += this.Value(r, m) * m2.Value(m, c);
+                        v += Value(r, m) * m2.Value(m, c);
                     }
                     m3._data[r][c] = v;
                 }
@@ -600,19 +601,19 @@ namespace Eval4
         public Matrix Size()
         {
             var result = new Matrix(1, 2);
-            result._data[0][0] = this._rowCount;
-            result._data[0][1] = this._columnCount;
+            result._data[0][0] = _rowCount;
+            result._data[0][1] = _columnCount;
             return result;
         }
 
         public Matrix Transpose()
         {
-            var result = new Matrix(/*rowCount:*/this._columnCount, /*columnCount:*/this._rowCount);
-            for (var r = 0; r < this._rowCount; r++)
+            var result = new Matrix(/*rowCount:*/_columnCount, /*columnCount:*/_rowCount);
+            for (var r = 0; r < _rowCount; r++)
             {
-                for (var c = 0; c < this._columnCount; c++)
+                for (var c = 0; c < _columnCount; c++)
                 {
-                    result._data[/*r is */ c][/* c is */ r] = this._data[r][c];
+                    result._data[/*r is */ c][/* c is */ r] = _data[r][c];
                 }
             }
             return result;
@@ -620,13 +621,13 @@ namespace Eval4
 
         public Matrix Sum()
         {
-            var result = new Matrix(1, this._columnCount);
-            for (var c = 0; c < this._columnCount; c++)
+            var result = new Matrix(1, _columnCount);
+            for (var c = 0; c < _columnCount; c++)
             {
                 var sum = 0.0;
-                for (var r = 0; r < this._rowCount; r++)
+                for (var r = 0; r < _rowCount; r++)
                 {
-                    sum += this._data[r][c];
+                    sum += _data[r][c];
                 }
                 result._data[0][c] = sum;
             }
@@ -636,16 +637,16 @@ namespace Eval4
         public double TotalSum()
         {
             double result;
-            if (this._rowCount > 1)
+            if (_rowCount > 1)
             {
-                result = this.Sum().TotalSum();
+                result = Sum().TotalSum();
             }
             else
             {
                 result = 0;
-                for (var c = 0; c < this._columnCount; c++)
+                for (var c = 0; c < _columnCount; c++)
                 {
-                    result += this._data[0][c];
+                    result += _data[0][c];
                 }
             }
             return result;
@@ -653,11 +654,11 @@ namespace Eval4
 
         public Matrix Std()
         {
-            var result = this.Variance();
-            for (var c = 0; c < this._columnCount; c++)
+            var result = Variance();
+            for (var c = 0; c < _columnCount; c++)
             {
                 // here we violate the imutability but it seems safe
-                result._data[0][c] = System.Math.Sqrt(result._data[0][c]);
+                result._data[0][c] = Math.Sqrt(result._data[0][c]);
             }
             return result;
         }
@@ -667,43 +668,46 @@ namespace Eval4
             // Matlab and Octave are not calculating the textbook variance 
             // but unbiaised variance where we divide by n - 1
             // we'll do the same
-            var result = new Matrix(1, this._columnCount);
-            var mean = this.Mean();
-            for (var c = 0; c < this._columnCount; c++)
+            var result = new Matrix(1, _columnCount);
+            var mean = Mean();
+            for (var c = 0; c < _columnCount; c++)
             {
                 var sqDiffSum = 0.0;
-                for (var r = 0; r < this._rowCount; r++)
+                for (var r = 0; r < _rowCount; r++)
                 {
-                    var diff = this._data[r][c] - mean._data[0][c];
+                    var diff = _data[r][c] - mean._data[0][c];
                     sqDiffSum += diff * diff;
                 }
                 // this is UNBIASED variance  -------------------vvvv
-                result._data[0][c] = sqDiffSum / (this._rowCount - 1);
+                result._data[0][c] = sqDiffSum / (_rowCount - 1);
             }
             return result;
         }
 
         public Matrix Mean()
         {
-            var result = this.Sum();
-            result = result.ScalarDivide(this._rowCount);
+            var result = Sum();
+            result = result.ScalarDivide(_rowCount);
             return result;
         }
 
         public Matrix TransformByColumnCount(int newColumnCount)
         {
-            var size = this._rowCount * this._columnCount;
+            var size = _rowCount * _columnCount;
             var newrowCount = size / newColumnCount;
-            if (newrowCount * newColumnCount != size) throw new Exception("Current size " + this.Size().ToString() + " cannot be transformed into " + newColumnCount + " columnCount.");
+            if (newrowCount * newColumnCount != size) 
+                throw new Exception("Current size " + Size() + " cannot be transformed into " + newColumnCount + " columnCount.");
+            
             var result = new Matrix(newrowCount, newColumnCount);
             int r2 = 0, c2 = 0;
+            
             for (var r = 0; r < result._rowCount; r++)
             {
                 for (var c = 0; c < result._columnCount; c++)
                 {
-                    result._data[r][c] = this._data[r2][c2];
+                    result._data[r][c] = _data[r2][c2];
                     c2++;
-                    if (c2 == this._columnCount)
+                    if (c2 == _columnCount)
                     {
                         c2 = 0;
                         r2++;
@@ -715,8 +719,8 @@ namespace Eval4
 
         public Matrix Portion(int rowFrom, int columnFrom, int rowCount = -1, int columnCount = -1)
         {
-            if (rowCount == -1) rowCount = this._rowCount - rowFrom;
-            if (columnCount == -1) columnCount = this._columnCount - columnCount;
+            if (rowCount == -1) rowCount = _rowCount - rowFrom;
+            if (columnCount == -1) columnCount = _columnCount - columnCount;
 
             var r2 = rowFrom;
             var result = new Matrix(rowCount, columnCount);
@@ -725,7 +729,7 @@ namespace Eval4
                 var c2 = columnFrom;
                 for (var c = 0; c < columnCount; c++)
                 {
-                    result._data[r][c] = this._data[r2][c2];
+                    result._data[r][c] = _data[r2][c2];
                     c2++;
                 }
                 r2++;
@@ -735,15 +739,15 @@ namespace Eval4
 
         public Matrix AppendRight(Matrix m2)
         {
-            if (m2._rowCount != this._rowCount) throw new Exception("Cannot append a " + m2.RowCount.ToString() + " high matrix to a " + this._rowCount.ToString() + " high matrix.");
+            if (m2._rowCount != _rowCount) throw new Exception("Cannot append a " + m2.RowCount.ToString() + " high matrix to a " + _rowCount.ToString() + " high matrix.");
 
-            var result = new Matrix(this._rowCount, this._columnCount + m2._columnCount);
-            for (var r = 0; r < this._rowCount; r++)
+            var result = new Matrix(_rowCount, _columnCount + m2._columnCount);
+            for (var r = 0; r < _rowCount; r++)
             {
-                var c = 0;
-                for (c = 0; c < this._columnCount; c++)
+                int c;
+                for (c = 0; c < _columnCount; c++)
                 {
-                    result._data[r][c] = this._data[r][c];
+                    result._data[r][c] = _data[r][c];
                 }
                 for (var c2 = 0; c2 < m2._columnCount; c2++)
                 {
@@ -756,15 +760,15 @@ namespace Eval4
 
         public Matrix AppendBottom(Matrix m2)
         {
-            if (m2._columnCount != this._columnCount) throw new Exception("Cannot append a " + m2.ColumnCount.ToString() + " high matrix to a " + this._columnCount.ToString() + " high matrix.");
+            if (m2._columnCount != _columnCount) throw new Exception("Cannot append a " + m2.ColumnCount.ToString() + " high matrix to a " + _columnCount.ToString() + " high matrix.");
 
-            var result = new Matrix(this._rowCount + m2._rowCount, this._columnCount);
+            var result = new Matrix(_rowCount + m2._rowCount, _columnCount);
             int r;
-            for (r = 0; r < this._rowCount; r++)
+            for (r = 0; r < _rowCount; r++)
             {
-                for (var c = 0; c < this._columnCount; c++)
+                for (var c = 0; c < _columnCount; c++)
                 {
-                    result._data[r][c] = this._data[r][c];
+                    result._data[r][c] = _data[r][c];
                 }
             }
             for (int r2 = 0; r2 < m2._rowCount; r++)
@@ -785,27 +789,23 @@ namespace Eval4
 
         public override bool Equals(object obj)
         {
-            if (obj is Matrix)
-            {
-                return (obj as Matrix).Equals(this);
-            }
-            else return false;
+            return obj is Matrix && (obj as Matrix).Equals(this);
         }
 
         public bool Equals(Matrix other)
         {
-            if (other._rowCount != this.RowCount ||
-                other._columnCount != this.ColumnCount) return false;
-            for (int r = 0; r < this._rowCount; r++)
+            if (other._rowCount != RowCount || other._columnCount != ColumnCount) 
+                return false;
+
+            for (int r = 0; r < _rowCount; r++)
             {
-                for (int c = 0; c < this._columnCount; c++)
+                for (int c = 0; c < _columnCount; c++)
                 {
-                    if (_data[r][c] != other._data[r][c]) return false;
+                    if (_data[r][c] != other._data[r][c]) 
+                        return false;
                 }
             }
             return true;
         }
     }
 }
-
-
