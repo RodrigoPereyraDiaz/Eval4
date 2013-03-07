@@ -57,6 +57,7 @@ Public Class tokenizer
         RaiseError(msg)
     End Sub
 
+    ' Function is never used
     Private Function IsOp() As Boolean
         Return mCurChar = "+"c _
         Or mCurChar = "-"c _
