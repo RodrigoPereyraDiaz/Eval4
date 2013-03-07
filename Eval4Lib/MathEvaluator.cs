@@ -771,6 +771,7 @@ namespace Eval4
                     result._data[r][c] = _data[r][c];
                 }
             }
+            // ToDo: variable 'r2' is never modified in 'for' loop.
             for (int r2 = 0; r2 < m2._rowCount; r++)
             {
                 for (var c = 0; c < m2._columnCount; c++)

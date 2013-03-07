@@ -198,7 +198,7 @@ namespace Eval4.Core
                 if (mModified)
                 {
                     mModified = false;
-                    mValue = this.Value;
+                    mValue = Value;
                 }
                 return mValue;
             }
@@ -284,13 +284,13 @@ namespace Eval4.Core
         private IHasValue[] mPreparedParams;
 
         private object[] mParamValues;
-        private System.Type mResultSystemType;
+        private Type mResultSystemType;
         private string mShortName;
 
         public CallMethodExpr(IHasValue baseObject, MemberInfo method, List<IHasValue> @params, object[] casts, string shortName)
         {
             if (baseObject != null) baseObject.Subscribe(this, "baseObject");
-            base.Subscribe("parameter", @params);
+            Subscribe("parameter", @params);
 
             if (@params == null)
                 @params = new List<IHasValue>();
@@ -337,11 +337,8 @@ namespace Eval4.Core
                             // we have consumed all parameters
                             break;
                         }
-                        else
-                        {
-                            var c3 = typeof(DelegateExpr<,>).MakeGenericType(sourceType, targetType);
-                            preparedParams.Add((IHasValue)Activator.CreateInstance(c3, @params[i], casts[i], @params[i].ShortName));
-                        }
+                        var c3 = typeof(DelegateExpr<,>).MakeGenericType(sourceType, targetType);
+                        preparedParams.Add((IHasValue)Activator.CreateInstance(c3, @params[i], casts[i], @params[i].ShortName));
                     }
                 }
             }
@@ -379,7 +376,7 @@ namespace Eval4.Core
 
         private void EmitGetField(IHasValue baseObject, MemberInfo method)
         {
-            Expression expr = null;
+            Expression expr;
             if (baseObject != null)
             {
                 var expectedType = typeof(IHasValue<>).MakeGenericType(baseObject.ValueType);
@@ -394,8 +391,10 @@ namespace Eval4.Core
             mValueDelegate = lambda.Compile();
         }
 
+        // ToDo: Parametr 'baseObject' is never used.
         private Func<T> EmitGetMethod(IHasValue baseObject, MethodInfo mi)
         {
+            // ToDo: variable 'paramTypes' is never used.
             var paramTypes = (from p in mPreparedParams select p.ValueType).ToArray();
             DynamicMethod meth = new DynamicMethod(
                 "DynamicGetMethod",
@@ -491,10 +490,9 @@ namespace Eval4.Core
         }
 
         public GetArrayEntryExpr(IHasValue array, List<IHasValue> @params)
-            : base()
         {
             array.Subscribe(this, "Array");
-            base.Subscribe("index", @params);
+            Subscribe("index", @params);
             IHasValue[] newParams = @params.ToArray();
             int[] newValues = new int[@params.Count];
 
@@ -508,15 +506,13 @@ namespace Eval4.Core
         {
             get
             {
-                object res = null;
                 Array arr = (Array)mArray.ObjectValue;
-
                 for (int i = 0; i <= mValues.Length - 1; i++)
                 {
                     mValues[i] = Convert.ToInt32(mParams[i].ObjectValue);
                 }
 
-                res = arr.GetValue(mValues);
+                object res = arr.GetValue(mValues);
                 return (T)res;
             }
         }
@@ -563,11 +559,10 @@ namespace Eval4.Core
         {
             get
             {
-                object result;
                 var test = Convert.ToBoolean(ifExpr.ObjectValue);
-                result = test ? thenExpr.ObjectValue : elseExpr.ObjectValue;
+                object result = test ? thenExpr.ObjectValue : elseExpr.ObjectValue;
 
-                if (result != null && result.GetType() != mSystemType) result = System.Convert.ChangeType(result, mSystemType);
+                if (result != null && result.GetType() != mSystemType) result = Convert.ChangeType(result, mSystemType);
                 return (T)result;
             }
         }

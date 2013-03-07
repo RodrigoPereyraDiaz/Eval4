@@ -26,8 +26,8 @@ namespace Eval4
             DeclareOperators(typeof(int));
             DeclareOperators(typeof(double));
             // as we did not implement decimal calculation we degrade decimal into double 
-            AddImplicitCast<decimal, double>(a => { return (double)a; }, CastCompatibility.PossibleLoss);
-            AddImplicitCast<double, decimal>(a => { return (decimal)a; }, CastCompatibility.PossibleLoss);
+            AddImplicitCast<decimal, double>(a => (double)a, CastCompatibility.PossibleLoss);
+            AddImplicitCast<double, decimal>(a => (decimal)a, CastCompatibility.PossibleLoss);
 
             DeclareOperators(typeof(string));
             DeclareOperators(typeof(object));
