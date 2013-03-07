@@ -134,8 +134,8 @@ namespace Eval4.Core
         public override string ToString()
         {
             var result=new StringBuilder();
-            if (this.mModified) result.Append("* ");
-            result.Append(this.ShortName);
+            if (mModified) result.Append("* ");
+            result.Append(ShortName);
             result.Append("(");
             bool first = true;
             foreach (var c in mSubscribedTo)
@@ -179,7 +179,7 @@ namespace Eval4.Core
                 if (mModified)
                 {
                     mModified = false;
-                    mValue = this.Value;
+                    mValue = Value;
                 }
                 return mValue;
             }
@@ -400,15 +400,15 @@ namespace Eval4.Core
             DynamicMethod meth = new DynamicMethod(
                 "DynamicGetMethod",
                 typeof(T),
-                new Type[] { this.GetType() },
-                this.GetType(),  // associate with a type
+                new Type[] { GetType() },
+                GetType(),  // associate with a type
                 true);
             ILGenerator il = meth.GetILGenerator();
-            FieldInfo fiPreparedParams = this.GetType().GetField("mPreparedParams", BindingFlags.Instance | BindingFlags.NonPublic);
+            FieldInfo fiPreparedParams = GetType().GetField("mPreparedParams", BindingFlags.Instance | BindingFlags.NonPublic);
             MethodInfo miGetObjectValue = typeof(IHasValue).GetProperty("ObjectValue").GetGetMethod();
             if (!mi.IsStatic)
             {
-                FieldInfo fiBaseObject = this.GetType().GetField("mBaseObject", BindingFlags.Instance | BindingFlags.NonPublic);
+                FieldInfo fiBaseObject = GetType().GetField("mBaseObject", BindingFlags.Instance | BindingFlags.NonPublic);
                 il.Emit(OpCodes.Ldarg_0);         // this
                 il.Emit(OpCodes.Ldfld, fiBaseObject); // this.mParams
                 il.Emit(OpCodes.Callvirt, miGetObjectValue);
@@ -513,7 +513,7 @@ namespace Eval4.Core
 
                 for (int i = 0; i <= mValues.Length - 1; i++)
                 {
-                    mValues[i] = System.Convert.ToInt32(mParams[i].ObjectValue);
+                    mValues[i] = Convert.ToInt32(mParams[i].ObjectValue);
                 }
 
                 res = arr.GetValue(mValues);
@@ -521,12 +521,12 @@ namespace Eval4.Core
             }
         }
 
-        public System.Type SystemType
+        public Type SystemType
         {
             get { return typeof(T); }
         }
 
-        private void mBaseVariable_ValueChanged(object sender, System.EventArgs e)
+        private void mBaseVariable_ValueChanged(object sender, EventArgs e)
         {
             throw new NotImplementedException();
             //if (ValueChanged != null) ValueChanged(sender, e);
@@ -548,11 +548,14 @@ namespace Eval4.Core
         public OperatorIfExpr(IHasValue ifExpr, IHasValue thenExpr, IHasValue elseExpr)
         {
             this.ifExpr = ifExpr;
-            if (ifExpr != null) ifExpr.Subscribe(this, "if");
+            if (ifExpr != null) 
+                ifExpr.Subscribe(this, "if");
             this.thenExpr = thenExpr;
-            if (thenExpr != null) thenExpr.Subscribe(this, "then");
+            if (thenExpr != null) 
+                thenExpr.Subscribe(this, "then");
             this.elseExpr = elseExpr;
-            if (elseExpr != null) elseExpr.Subscribe(this, "else");
+            if (elseExpr != null) 
+                elseExpr.Subscribe(this, "else");
             mSystemType = thenExpr.ValueType;
         }
 
@@ -561,7 +564,7 @@ namespace Eval4.Core
             get
             {
                 object result;
-                var test = System.Convert.ToBoolean(ifExpr.ObjectValue);
+                var test = Convert.ToBoolean(ifExpr.ObjectValue);
                 result = test ? thenExpr.ObjectValue : elseExpr.ObjectValue;
 
                 if (result != null && result.GetType() != mSystemType) result = System.Convert.ChangeType(result, mSystemType);
@@ -687,7 +690,7 @@ namespace Eval4.Core
         public void SetValue(object value)
         {
             mValue = (T)value;
-            base.RaiseValueChanged();
+            RaiseValueChanged();
         }
     }
 }

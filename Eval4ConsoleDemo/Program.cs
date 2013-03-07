@@ -31,7 +31,7 @@ namespace Eval4.ConsoleDemo
 
             public double SinI(double v)
             {
-                return System.Math.Sin(v);
+                return Math.Sin(v);
             }
         }
 
@@ -58,8 +58,8 @@ namespace Eval4.ConsoleDemo
                         command = line.Substring(0, indexOfColon);
                         restOfLine = line.Substring(indexOfColon + 1).Trim();
                     }
-                    string cmd1, cmd2;
-                    cmd1 = command.Trim();
+                    string cmd2;
+                    string cmd1 = command.Trim();
                     var indexOfSpace = cmd1.IndexOf(' ');
                     if (indexOfSpace >= 0)
                     {
@@ -84,7 +84,8 @@ namespace Eval4.ConsoleDemo
                             break;
                         case "expectedresult":
                         case "expectedvalue":
-                            if (string.IsNullOrEmpty(cmd2)) cmd2 = mFormula;
+                            if (string.IsNullOrEmpty(cmd2)) 
+                                cmd2 = mFormula;
                             TestFormula(cmd2, restOfLine);
                             break;
                         case "set":
@@ -140,7 +141,7 @@ namespace Eval4.ConsoleDemo
                     WriteLine(ConsoleColor.Red, "Unknown language " + language);
                     break;
             }
-            ev.SetVariable("arr", new int[] { 2, 4, 6 });
+            ev.SetVariable("arr", new[] { 2, 4, 6 });
         }
 
         private static void TestFormula(string formula, string expectedResult)

@@ -35,10 +35,7 @@ namespace Eval4.Demo
 				double diff=(TimerEnd - mTimerStart)/ (mTimerFreq / 1000.0);
 				return (int)(diff);
 			}
-			else 
-			{
-				return 0;
-			}
+		    return 0;
 		}
 	}
 }
