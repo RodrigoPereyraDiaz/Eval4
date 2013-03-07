@@ -1,11 +1,6 @@
-﻿using Eval4;
-using Eval4.Core;
+﻿using Eval4.Core;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Eval4.ConsoleDemo
 {
@@ -152,7 +147,7 @@ namespace Eval4.ConsoleDemo
         {
             Write(ConsoleColor.Gray, formula);
             Write(ConsoleColor.DarkGray, " = ");
-            String resultString = null;
+            String resultString;
             Exception ex0 = null;
             try
             {
@@ -172,6 +167,7 @@ namespace Eval4.ConsoleDemo
                 WriteLine(ConsoleColor.Red, resultString);
                 WriteLine(ConsoleColor.Red, "Expected " + expectedResult);
             }
+            // ToDo: Expresion is always false
             if (ex0 != null)
             {
                 WriteLine(ConsoleColor.Red, ex0.Message);
