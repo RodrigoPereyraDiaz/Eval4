@@ -1,13 +1,10 @@
-Imports System.Reflection
-Imports System.Data
-
 Public Class Evaluator
     Friend mEnvironmentFunctionsList As ArrayList
     Public RaiseVariableNotFoundException As Boolean
     Public ReadOnly Syntax As eParserSyntax
     Public ReadOnly CaseSensitive As Boolean
 
-    Sub New(Optional ByVal syntax As eParserSyntax = eParserSyntax.vb, Optional ByVal caseSensitive As Boolean = False)
+    Sub New(Optional ByVal syntax As eParserSyntax = eParserSyntax.Vb, Optional ByVal caseSensitive As Boolean = False)
         Me.Syntax = syntax
         Me.CaseSensitive = caseSensitive
         mEnvironmentFunctionsList = New ArrayList

@@ -4,7 +4,7 @@ Public Class EvalVariable
     Private mValue As Object
     Private mDescription As String
     Private mName As String
-    Private mSystemType As System.Type
+    Private mSystemType As Type
     Private mEvalType As EvalType
 
 #Region "iEvalTypedValue implementation"
@@ -32,7 +32,7 @@ Public Class EvalVariable
         End Get
     End Property
 
-    Public ReadOnly Property systemType() As System.Type Implements iEvalTypedValue.systemType
+    Public ReadOnly Property systemType() As Type Implements iEvalTypedValue.SystemType
         Get
             Return mSystemType
         End Get
@@ -40,7 +40,7 @@ Public Class EvalVariable
 
 #End Region
 
-    Sub New(ByVal name As String, ByVal originalValue As Object, ByVal description As String, ByVal systemType As System.Type)
+    Sub New(ByVal name As String, ByVal originalValue As Object, ByVal description As String, ByVal systemType As Type)
         mName = name
         mValue = originalValue
         mDescription = description
@@ -55,11 +55,11 @@ Public Class EvalVariable
         Set(ByVal Value As Object)
             If Not Value Is mValue Then
                 mValue = Value
-                RaiseEvent ValueChanged(Me, New System.EventArgs)
+                RaiseEvent ValueChanged(Me, New EventArgs)
             End If
         End Set
     End Property
 
-    Public Event ValueChanged(ByVal Sender As Object, ByVal e As System.EventArgs) Implements iEvalTypedValue.ValueChanged
+    Public Event ValueChanged(ByVal Sender As Object, ByVal e As EventArgs) Implements iEvalTypedValue.ValueChanged
 End Class
 

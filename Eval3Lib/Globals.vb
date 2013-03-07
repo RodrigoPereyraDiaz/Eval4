@@ -69,7 +69,7 @@ Public Module Globals
         End If
     End Function
 
-    Friend Function GetSystemType(ByVal t As EvalType) As System.Type
+    Friend Function GetSystemType(ByVal t As EvalType) As Type
         Select Case t
             Case EvalType.Boolean
                 Return GetType(Boolean)

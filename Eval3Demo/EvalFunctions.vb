@@ -1,5 +1,3 @@
-Imports Eval3
-
 Public Class EvalFunctions
 
     Private Shared daylist() As String = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}

@@ -1,5 +1,4 @@
 Imports System.Reflection
-Imports System.Data
 
 Friend Class parser
     Private mTokenizer As tokenizer
@@ -57,10 +56,10 @@ Friend Class parser
                         Exit Do
                 Case eTokenType.value_number
                         Try
-                            ValueLeft = New opCodeImmediate(EvalType.Number, Double.Parse( _
-                                mTokenizer.value.ToString, _
-                                Globalization.NumberStyles.Float, _
-                                System.Globalization.CultureInfo.InvariantCulture))
+                        ValueLeft = New opCodeImmediate(EvalType.Number, Double.Parse( _
+                            mTokenizer.value.ToString, _
+                            Globalization.NumberStyles.Float, _
+                            Globalization.CultureInfo.InvariantCulture))
                         Catch ex As Exception
                             mTokenizer.RaiseError(String.Format("Invalid number {0}", mTokenizer.value.ToString))
                         End Try
@@ -217,7 +216,7 @@ Friend Class parser
 
     Private Function GetLocalFunction(ByVal base As Object, ByVal baseType As Type, ByVal funcName As String, ByVal parameters As ArrayList, ByVal CallType As eCallType) As opCode
         Dim mi As MemberInfo
-        Dim var As iEvalTypedValue
+        Dim var As iEvalTypedValue 'variable is never used
         mi = GetMemberInfo(baseType, funcName, parameters)
         If Not mi Is Nothing Then
             Select Case mi.MemberType
@@ -243,14 +242,14 @@ Friend Class parser
     End Function
 
     Private Function GetMemberInfo(ByVal objType As Type, ByVal func As String, ByVal parameters As ArrayList) As MemberInfo
-        Dim bindingAttr As System.Reflection.BindingFlags
+        Dim bindingAttr As BindingFlags
         bindingAttr = BindingFlags.GetProperty _
                 Or BindingFlags.GetField _
                 Or BindingFlags.Public _
                 Or BindingFlags.InvokeMethod _
                 Or BindingFlags.Instance _
                 Or BindingFlags.Static
-        If Me.mEvaluator.CaseSensitive = False Then
+        If mEvaluator.CaseSensitive = False Then
             bindingAttr = bindingAttr Or BindingFlags.IgnoreCase
         End If
         Dim mis As MemberInfo()
@@ -260,7 +259,6 @@ Friend Class parser
         Else
             mis = objType.GetMember(func, bindingAttr)
         End If
-
 
         ' There is a bit of cooking here...
         ' lets find the most acceptable Member
@@ -285,7 +283,7 @@ Friend Class parser
             If plist Is Nothing Then plist = New ParameterInfo() {}
             If parameters Is Nothing Then parameters = New ArrayList
 
-            Dim pi As Reflection.ParameterInfo
+            Dim pi As ParameterInfo
             If parameters.Count > plist.Length Then
                 Score = 0
             Else
@@ -342,7 +340,7 @@ Friend Class parser
     Private Sub ParseIdentifier(ByRef ValueLeft As opCode)
         ' first check functions
         Dim parameters As ArrayList   ' parameters... 
-        'Dim types As New ArrayList
+        Dim types As New ArrayList    ' variable is never used.  
         Dim func As String = mTokenizer.value.ToString
         mTokenizer.NextToken()
         Dim isBrackets As Boolean

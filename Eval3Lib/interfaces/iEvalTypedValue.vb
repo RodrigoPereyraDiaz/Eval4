@@ -3,4 +3,3 @@ Public Interface iEvalTypedValue
     ReadOnly Property SystemType() As Type
     ReadOnly Property EvalType() As EvalType
 End Interface
-

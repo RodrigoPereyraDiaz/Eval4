@@ -38,9 +38,9 @@ Public MustInherit Class opCode
         End Get
     End Property
 
-    Public Overridable ReadOnly Property systemType() As System.Type Implements iEvalTypedValue.systemType
+    Public Overridable ReadOnly Property systemType() As Type Implements iEvalTypedValue.SystemType
         Get
-            Return Globals.GetSystemType(Me.EvalType)
+            Return GetSystemType(Me.EvalType)
         End Get
     End Property
 
@@ -71,7 +71,7 @@ Public MustInherit Class opCode
         Param2 = swp
     End Sub
 
-    Public Event ValueChanged(ByVal Sender As Object, ByVal e As System.EventArgs) Implements iEvalTypedValue.ValueChanged
+    Public Event ValueChanged(ByVal Sender As Object, ByVal e As EventArgs) Implements iEvalTypedValue.ValueChanged
 End Class
 
 Friend Class opCodeVariable
@@ -95,8 +95,8 @@ Friend Class opCodeVariable
         End Get
     End Property
 
-    Private Sub mVariable_ValueChanged(ByVal Sender As Object, ByVal e As System.EventArgs) Handles mVariable.ValueChanged
-        MyBase.RaiseEventValueChanged(Sender, e)
+    Private Sub mVariable_ValueChanged(ByVal Sender As Object, ByVal e As EventArgs) Handles mVariable.ValueChanged
+        RaiseEventValueChanged(Sender, e)
     End Sub
 End Class
 
@@ -163,8 +163,8 @@ Friend Class opCodeUnary
         End Get
     End Property
 
-    Private Sub mParam1_ValueChanged(ByVal Sender As Object, ByVal e As System.EventArgs) Handles mParam1.ValueChanged
-        MyBase.RaiseEventValueChanged(Sender, e)
+    Private Sub mParam1_ValueChanged(ByVal Sender As Object, ByVal e As EventArgs) Handles mParam1.ValueChanged
+        RaiseEventValueChanged(Sender, e)
     End Sub
 End Class
 
@@ -215,8 +215,8 @@ Friend Class opCodeConvert
         End Get
     End Property
 
-    Private Sub mParam1_ValueChanged(ByVal Sender As Object, ByVal e As System.EventArgs) Handles mParam1.ValueChanged
-        MyBase.RaiseEventValueChanged(Sender, e)
+    Private Sub mParam1_ValueChanged(ByVal Sender As Object, ByVal e As EventArgs) Handles mParam1.ValueChanged
+        RaiseEventValueChanged(Sender, e)
     End Sub
 End Class
 
@@ -224,13 +224,13 @@ Friend Class opCodeSystemTypeConvert
     Inherits opCode
     WithEvents mParam1 As iEvalTypedValue
     Private mEvalType As EvalType = EvalType.Unknown
-    Private mSystemType As System.Type
+    Private mSystemType As Type
 
-    Sub New(ByVal param1 As iEvalTypedValue, ByVal Type As System.Type)
+    Sub New(ByVal param1 As iEvalTypedValue, ByVal Type As Type)
         mParam1 = param1
         mValueDelegate = AddressOf [CType]
         mSystemType = Type
-        mEvalType = Globals.GetEvalType(Type)
+        mEvalType = GetEvalType(Type)
     End Sub
 
     Private Function [CType]() As Object
@@ -243,14 +243,14 @@ Friend Class opCodeSystemTypeConvert
         End Get
     End Property
 
-    Public Overrides ReadOnly Property systemType() As System.Type
+    Public Overrides ReadOnly Property systemType() As Type
         Get
             Return mSystemType
         End Get
     End Property
 
-    Private Sub mParam1_ValueChanged(ByVal Sender As Object, ByVal e As System.EventArgs) Handles mParam1.ValueChanged
-        MyBase.RaiseEventValueChanged(Sender, e)
+    Private Sub mParam1_ValueChanged(ByVal Sender As Object, ByVal e As EventArgs) Handles mParam1.ValueChanged
+        RaiseEventValueChanged(Sender, e)
     End Sub
 End Class
 
@@ -410,12 +410,12 @@ Friend Class opCodeBinary
         End Get
     End Property
 
-    Private Sub mParam1_ValueChanged(ByVal Sender As Object, ByVal e As System.EventArgs) Handles mParam1.ValueChanged
-        MyBase.RaiseEventValueChanged(Sender, e)
+    Private Sub mParam1_ValueChanged(ByVal Sender As Object, ByVal e As EventArgs) Handles mParam1.ValueChanged
+        RaiseEventValueChanged(Sender, e)
     End Sub
 
-    Private Sub mParam2_ValueChanged(ByVal Sender As Object, ByVal e As System.EventArgs) Handles mParam2.ValueChanged
-        MyBase.RaiseEventValueChanged(Sender, e)
+    Private Sub mParam2_ValueChanged(ByVal Sender As Object, ByVal e As EventArgs) Handles mParam2.ValueChanged
+        RaiseEventValueChanged(Sender, e)
     End Sub
 End Class
 
@@ -435,7 +435,7 @@ Public Class opCodeGetVariable
         End Get
     End Property
 
-    Public Overrides ReadOnly Property systemType() As System.Type
+    Public Overrides ReadOnly Property systemType() As Type
         Get
             Return mParam1.SystemType
         End Get
@@ -447,8 +447,8 @@ Public Class opCodeGetVariable
         End Get
     End Property
 
-    Private Sub mParam1_ValueChanged(ByVal Sender As Object, ByVal e As System.EventArgs) Handles mParam1.ValueChanged
-        MyBase.RaiseEventValueChanged(Sender, e)
+    Private Sub mParam1_ValueChanged(ByVal Sender As Object, ByVal e As EventArgs) Handles mParam1.ValueChanged
+        RaiseEventValueChanged(Sender, e)
     End Sub
 
 End Class
@@ -457,20 +457,20 @@ Public Class opCodeCallMethod
     Inherits opCode
 
     Private mBaseObject As Object
-    Private mBaseSystemType As System.Type
+    Private mBaseSystemType As Type
     Private mBaseEvalType As EvalType
     WithEvents mBaseValue As iEvalValue  ' for the events only
     Private mBaseValueObject As Object
 
-    Private mMethod As System.Reflection.MemberInfo
+    Private mMethod As Reflection.MemberInfo
     Private mParams As iEvalTypedValue()
     Private mParamValues As Object()
 
-    Private mResultSystemType As System.Type
+    Private mResultSystemType As Type
     Private mResultEvalType As EvalType
     WithEvents mResultValue As iEvalValue  ' just for some
 
-    Friend Sub New(ByVal baseObject As Object, ByVal method As System.Reflection.MemberInfo, ByVal params As IList)
+    Friend Sub New(ByVal baseObject As Object, ByVal method As Reflection.MemberInfo, ByVal params As IList)
         If params Is Nothing Then params = New iEvalTypedValue() {}
         Dim newParams(params.Count - 1) As iEvalTypedValue
         Dim newParamValues(params.Count - 1) As Object
@@ -493,11 +493,11 @@ Public Class opCodeCallMethod
                 End With
             Else
                 mBaseSystemType = mBaseObject.GetType()
-                mBaseEvalType = Globals.GetEvalType(mBaseSystemType)
+                mBaseEvalType = GetEvalType(mBaseSystemType)
             End If
         Else
             mBaseSystemType = mBaseObject.GetType
-            mBaseEvalType = Globals.GetEvalType(mBaseSystemType)
+            mBaseEvalType = GetEvalType(mBaseSystemType)
         End If
 
         Dim paramInfo() As Reflection.ParameterInfo
@@ -544,21 +544,21 @@ Public Class opCodeCallMethod
                     mResultEvalType = EvalType.Object
                 Else
                     mResultSystemType = v.GetType
-                    mResultEvalType = Globals.GetEvalType(mResultSystemType)
+                    mResultEvalType = GetEvalType(mResultSystemType)
                 End If
             End If
         Else
-            mResultSystemType = systemType
-            mResultEvalType = Globals.GetEvalType(systemType)
+            mResultSystemType = SystemType
+            mResultEvalType = GetEvalType(SystemType)
         End If
     End Sub
 
-    Protected Friend Shared Function GetNew(ByVal tokenizer As tokenizer, ByVal baseObject As Object, ByVal method As System.Reflection.MemberInfo, ByVal params As IList) As opCode
+    Protected Friend Shared Function GetNew(ByVal tokenizer As tokenizer, ByVal baseObject As Object, ByVal method As Reflection.MemberInfo, ByVal params As IList) As opCode
         Dim o As opCode
         o = New opCodeCallMethod(baseObject, method, params)
 
-        If o.EvalType <> Eval3.EvalType.Object _
-                    AndAlso Not o.systemType Is Globals.GetSystemType(o.EvalType) Then
+        If o.EvalType <> EvalType.Object _
+                    AndAlso Not o.systemType Is GetSystemType(o.EvalType) Then
             Return New opCodeConvert(tokenizer, o, o.EvalType)
         Else
             Return o
@@ -590,7 +590,7 @@ Public Class opCodeCallMethod
         Else
             mBaseValueObject = mBaseObject
         End If
-        Return MyBase.mValueDelegate()
+        Return mValueDelegate()
     End Function
 
     Public Overrides ReadOnly Property Value() As Object
@@ -604,7 +604,7 @@ Public Class opCodeCallMethod
         End Get
     End Property
 
-    Public Overrides ReadOnly Property SystemType() As System.Type
+    Public Overrides ReadOnly Property SystemType() As Type
         Get
             Return mResultSystemType
         End Get
@@ -616,16 +616,16 @@ Public Class opCodeCallMethod
         End Get
     End Property
 
-    Private Sub mParamsValueChanged(ByVal Sender As Object, ByVal e As System.EventArgs)
-        MyBase.RaiseEventValueChanged(Sender, e)
+    Private Sub mParamsValueChanged(ByVal Sender As Object, ByVal e As EventArgs)
+        RaiseEventValueChanged(Sender, e)
     End Sub
 
-    Private Sub mBaseVariable_ValueChanged(ByVal Sender As Object, ByVal e As System.EventArgs) Handles mBaseValue.ValueChanged
-        MyBase.RaiseEventValueChanged(Sender, e)
+    Private Sub mBaseVariable_ValueChanged(ByVal Sender As Object, ByVal e As EventArgs) Handles mBaseValue.ValueChanged
+        RaiseEventValueChanged(Sender, e)
     End Sub
 
-    Private Sub mResultVariable_ValueChanged(ByVal Sender As Object, ByVal e As System.EventArgs) Handles mResultValue.ValueChanged
-        MyBase.RaiseEventValueChanged(Sender, e)
+    Private Sub mResultVariable_ValueChanged(ByVal Sender As Object, ByVal e As EventArgs) Handles mResultValue.ValueChanged
+        RaiseEventValueChanged(Sender, e)
     End Sub
 End Class
 
@@ -637,7 +637,7 @@ Public Class opCodeGetArrayEntry
     Private mParams As iEvalTypedValue()
     Private mValues As Integer()
     Private mResultEvalType As EvalType
-    Private mResultSystemType As System.Type
+    Private mResultSystemType As Type
 
     Public Sub New(ByVal array As opCode, ByVal params As IList)
         Dim newParams(params.Count - 1) As iEvalTypedValue
@@ -647,7 +647,7 @@ Public Class opCodeGetArrayEntry
         mParams = newParams
         mValues = newValues
         mResultSystemType = array.systemType.GetElementType
-        mResultEvalType = Globals.GetEvalType(mResultSystemType)
+        mResultEvalType = GetEvalType(mResultSystemType)
     End Sub
 
     Public Overrides ReadOnly Property Value() As Object
@@ -662,7 +662,7 @@ Public Class opCodeGetArrayEntry
         End Get
     End Property
 
-    Public Overrides ReadOnly Property SystemType() As System.Type
+    Public Overrides ReadOnly Property SystemType() As Type
         Get
             Return mResultSystemType
         End Get
@@ -674,8 +674,8 @@ Public Class opCodeGetArrayEntry
         End Get
     End Property
 
-    Private Sub mBaseVariable_ValueChanged(ByVal Sender As Object, ByVal e As System.EventArgs) Handles mArray.ValueChanged
-        MyBase.RaiseEventValueChanged(Sender, e)
+    Private Sub mBaseVariable_ValueChanged(ByVal Sender As Object, ByVal e As EventArgs) Handles mArray.ValueChanged
+        RaiseEventValueChanged(Sender, e)
     End Sub
 
 End Class

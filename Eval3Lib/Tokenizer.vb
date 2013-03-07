@@ -28,7 +28,7 @@ Public Class tokenizer
                 msg &= ". " & ex.Message
             End If
         End If
-        Throw New Evaluator.parserException(msg, Me.mString, Me.mPos)
+        Throw New Evaluator.parserException(msg, mString, mPos)
     End Sub
 
     Friend Sub RaiseUnexpectedToken(Optional ByVal msg As String = Nothing)
@@ -217,7 +217,7 @@ Public Class tokenizer
             NextChar()
         End If
 
-        Dim PreviousChar As Char
+        Dim PreviousChar As Char ' variable is never used
         Do While mCurChar <> Nothing
             If InQuote AndAlso mCurChar = OriginalChar Then
                 NextChar()
@@ -233,19 +233,19 @@ Public Class tokenizer
                     NextChar()
                     Dim SaveValue As System.Text.StringBuilder = value
                     Dim SaveStartPos As Integer = startpos
-                    Me.value = New System.Text.StringBuilder
-                    Me.NextToken() ' restart the tokenizer for the subExpr
+                    value = New System.Text.StringBuilder
+                    NextToken() ' restart the tokenizer for the subExpr
                     Dim subExpr As Object
                     Try
                         ' subExpr = mParser.ParseExpr(0, ePriority.none)
                         If subExpr Is Nothing Then
-                            Me.value.Append("<nothing>")
+                            value.Append("<nothing>")
                         Else
-                            Me.value.Append(Evaluator.ConvertToString(subExpr))
+                            value.Append(Evaluator.ConvertToString(subExpr))
                         End If
                     Catch ex As Exception
                         ' XML don't like < and >
-                        Me.value.Append("[Error " & ex.Message & "]")
+                        value.Append("[Error " & ex.Message & "]")
                     End Try
                     SaveValue.Append(value.ToString)
                     value = SaveValue
@@ -265,7 +265,7 @@ Public Class tokenizer
 
     Private Sub ParseDate()
         NextChar() ' eat the #
-        Dim zone As Integer = 0
+        Dim zone As Integer = 0 ' variable is never used.
         While (mCurChar >= "0"c And mCurChar <= "9"c) Or (mCurChar = "/"c) Or (mCurChar = ":"c) Or (mCurChar = " "c)
             value.Append(mCurChar)
             NextChar()
