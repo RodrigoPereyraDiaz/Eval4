@@ -1,90 +1,60 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
     <ProductVersion>7.10.3077</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{AEB9514B-11BB-41F4-BD38-5497FC2E021B}</ProjectGuid>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon />
     <AssemblyKeyContainerName />
-    <AssemblyName>Eval3RichText</AssemblyName>
     <AssemblyOriginatorKeyFile />
     <AssemblyOriginatorKeyMode>None</AssemblyOriginatorKeyMode>
     <DefaultClientScript>JScript</DefaultClientScript>
     <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
-    <DelaySign>false</DelaySign>
-    <OutputType>Library</OutputType>
     <OptionCompare>Binary</OptionCompare>
     <OptionExplicit>On</OptionExplicit>
     <OptionStrict>Off</OptionStrict>
     <RootNamespace>Eval3.RichText</RootNamespace>
     <StartupObject />
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
+    <FileUpgradeFlags />
     <MyType>Windows</MyType>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
-    <OldToolsVersion>0.0</OldToolsVersion>
+    <TargetFramework>net20</TargetFramework>
     <UpgradeBackupLocation />
     <SccProjectName>Svn</SccProjectName>
     <SccLocalPath>Svn</SccLocalPath>
     <SccAuxPath>Svn</SccAuxPath>
     <SccProvider>SubversionScc</SccProvider>
+    <OutputPath>..\bin\</OutputPath>
+    <WarningLevel>1</WarningLevel>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <NoWarn>42016,42017,42018,42019,42032,42353,42354,42355</NoWarn>
+    <DefineConstants />
+    <BaseAddress>285212672</BaseAddress>
+    <DocumentationFile>Eval3RichText.xml</DocumentationFile>
+    <DefineTrace>true</DefineTrace>
+    <ConfigurationOverrideFile />
+    <PreBuildEvent />
+    <PostBuildEvent />
+    <PreBuildEvent />
+    <PostBuildEvent />
+    <PreBuildEvent />
+    <PostBuildEvent />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>..\bin\</OutputPath>
-    <DocumentationFile>Eval3RichText.xml</DocumentationFile>
-    <BaseAddress>285212672</BaseAddress>
-    <ConfigurationOverrideFile />
-    <DefineConstants />
     <DefineDebug>true</DefineDebug>
-    <DefineTrace>true</DefineTrace>
-    <DebugSymbols>true</DebugSymbols>
-    <Optimize>false</Optimize>
-    <RegisterForComInterop>false</RegisterForComInterop>
-    <RemoveIntegerChecks>false</RemoveIntegerChecks>
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <WarningLevel>1</WarningLevel>
-    <NoWarn>42016,42017,42018,42019,42032,42353,42354,42355</NoWarn>
     <DebugType>full</DebugType>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>..\bin\</OutputPath>
-    <DocumentationFile>Eval3RichText.xml</DocumentationFile>
-    <BaseAddress>285212672</BaseAddress>
-    <ConfigurationOverrideFile />
-    <DefineConstants />
     <DefineDebug>false</DefineDebug>
-    <DefineTrace>true</DefineTrace>
-    <DebugSymbols>false</DebugSymbols>
-    <Optimize>true</Optimize>
-    <RegisterForComInterop>false</RegisterForComInterop>
-    <RemoveIntegerChecks>false</RemoveIntegerChecks>
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <WarningLevel>1</WarningLevel>
-    <NoWarn>42016,42017,42018,42019,42032,42353,42354,42355</NoWarn>
     <DebugType>none</DebugType>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent />
+    <PostBuildEvent />
+  </PropertyGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
   <ItemGroup>
-    <Reference Include="System">
-      <Name>System</Name>
-    </Reference>
-    <Reference Include="System.Data">
-      <Name>System.Data</Name>
-    </Reference>
-    <Reference Include="System.Drawing">
-      <Name>System.Drawing</Name>
-    </Reference>
-    <Reference Include="System.Windows.Forms">
-      <Name>System.Windows.Forms</Name>
-    </Reference>
-    <Reference Include="System.Xml">
-      <Name>System.XML</Name>
-    </Reference>
+    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
     <Import Include="Microsoft.VisualBasic" />
@@ -94,64 +64,11 @@
     <Import Include="System.Diagnostics" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssemblyInfo.vb">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Div.vb">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Font.vb">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Globals.vb">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Image.vb">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="layer.vb">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Margins.vb">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="NumValue.vb">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Paragraph.vb">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="RichText.vb">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="RichTextControl.vb">
+    <Compile Update="RichTextControl.vb">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Skin.vb">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Skinable.vb">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="skinElement.vb">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="SkinLoader.vb">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="visualElement.vb">
-      <SubType>Code</SubType>
-    </Compile>
-    <EmbeddedResource Include="RichTextControl.resx">
+    <EmbeddedResource Update="RichTextControl.resx">
       <DependentUpon>RichTextControl.vb</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="My Project\" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
-  <PropertyGroup>
-    <PreBuildEvent />
-    <PostBuildEvent />
-  </PropertyGroup>
 </Project>

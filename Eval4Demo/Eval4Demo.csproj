@@ -1,12 +1,7 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
     <ProductVersion>7.10.3077</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{4D2BB58F-AB5B-4610-ACE8-37ABBF9818E7}</ProjectGuid>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ApplicationIcon>App.ico</ApplicationIcon>
     <AssemblyKeyContainerName />
     <AssemblyName>Eval4DemoCSharp</AssemblyName>
@@ -14,15 +9,12 @@
     <DefaultClientScript>JScript</DefaultClientScript>
     <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
-    <DelaySign>false</DelaySign>
     <OutputType>WinExe</OutputType>
     <RootNamespace>Eval4.Demo</RootNamespace>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
     <StartupObject />
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <OldToolsVersion>0.0</OldToolsVersion>
+    <FileUpgradeFlags />
+    <TargetFramework>net45</TargetFramework>
     <UpgradeBackupLocation />
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
@@ -39,165 +31,104 @@
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
     <SccProjectName>Svn</SccProjectName>
     <SccLocalPath>Svn</SccLocalPath>
     <SccAuxPath>Svn</SccAuxPath>
     <SccProvider>SubversionScc</SccProvider>
+    <Deterministic>false</Deterministic>
+    <AssemblyVersion>1.0.*</AssemblyVersion>
+    <FileVersion>1.0.*</FileVersion>
+    <OutputPath>..\bin\</OutputPath>
+    <RemoveIntegerChecks>false</RemoveIntegerChecks>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <NoWarn />
+    <BaseAddress>285212672</BaseAddress>
+    <DocumentationFile />
+    <FileAlignment>4096</FileAlignment>
+    <ConfigurationOverrideFile />
+    <NoStdLib>false</NoStdLib>
+    <PreBuildEvent />
+    <PostBuildEvent />
+    <PreBuildEvent />
+    <PostBuildEvent />
+    <PreBuildEvent />
+    <PostBuildEvent />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <OutputPath>..\bin\</OutputPath>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
-    <BaseAddress>285212672</BaseAddress>
-    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
-    <ConfigurationOverrideFile />
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DocumentationFile />
-    <DebugSymbols>true</DebugSymbols>
-    <FileAlignment>4096</FileAlignment>
-    <NoStdLib>false</NoStdLib>
-    <NoWarn />
-    <Optimize>false</Optimize>
-    <RegisterForComInterop>false</RegisterForComInterop>
-    <RemoveIntegerChecks>false</RemoveIntegerChecks>
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <WarningLevel>4</WarningLevel>
     <DebugType>full</DebugType>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <PlatformTarget>x86</PlatformTarget>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <OutputPath>..\bin\</OutputPath>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
-    <BaseAddress>285212672</BaseAddress>
-    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
-    <ConfigurationOverrideFile />
-    <DefineConstants>TRACE</DefineConstants>
-    <DocumentationFile />
-    <DebugSymbols>false</DebugSymbols>
-    <FileAlignment>4096</FileAlignment>
-    <NoStdLib>false</NoStdLib>
-    <NoWarn />
-    <Optimize>true</Optimize>
-    <RegisterForComInterop>false</RegisterForComInterop>
-    <RemoveIntegerChecks>false</RemoveIntegerChecks>
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <WarningLevel>4</WarningLevel>
     <DebugType>none</DebugType>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent />
+    <PostBuildEvent />
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System">
-      <Name>System</Name>
-    </Reference>
-    <Reference Include="System.Data">
-      <Name>System.Data</Name>
-    </Reference>
-    <Reference Include="System.Drawing">
-      <Name>System.Drawing</Name>
-    </Reference>
-    <Reference Include="System.Windows.Forms">
-      <Name>System.Windows.Forms</Name>
-    </Reference>
-    <Reference Include="System.Xml">
-      <Name>System.XML</Name>
-    </Reference>
+    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssemblyInfo.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="BitmapFormula.cs">
+    <Compile Update="BitmapFormula.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="BitmapFormula.Designer.cs">
+    <Compile Update="BitmapFormula.Designer.cs">
       <DependentUpon>BitmapFormula.cs</DependentUpon>
     </Compile>
-    <Compile Include="CellsViewer.cs">
+    <Compile Update="CellsViewer.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="DynamicFormulas.cs">
+    <Compile Update="DynamicFormulas.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="DynamicFormulas.Designer.cs">
+    <Compile Update="DynamicFormulas.Designer.cs">
       <DependentUpon>DynamicFormulas.cs</DependentUpon>
     </Compile>
-    <Compile Include="EvalFunctions.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="FormulaTab.cs">
+    <Compile Update="FormulaTab.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="FormulaTab.Designer.cs">
+    <Compile Update="FormulaTab.Designer.cs">
       <DependentUpon>FormulaTab.cs</DependentUpon>
     </Compile>
-    <Compile Include="ExcelSheet.cs">
+    <Compile Update="ExcelSheet.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="ExcelSheet.Designer.cs">
+    <Compile Update="ExcelSheet.Designer.cs">
       <DependentUpon>ExcelSheet.cs</DependentUpon>
     </Compile>
-    <Compile Include="Form1.cs">
+    <Compile Update="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FormulaTextBox.cs">
+    <Compile Update="FormulaTextBox.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Timer.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Content Include="App.ico" />
-    <EmbeddedResource Include="BitmapFormula.resx">
+    <EmbeddedResource Update="BitmapFormula.resx">
       <DependentUpon>BitmapFormula.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="DynamicFormulas.resx">
+    <EmbeddedResource Update="DynamicFormulas.resx">
       <DependentUpon>DynamicFormulas.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FormulaTab.resx">
+    <EmbeddedResource Update="FormulaTab.resx">
       <DependentUpon>FormulaTab.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ExcelSheet.resx">
+    <EmbeddedResource Update="ExcelSheet.resx">
       <DependentUpon>ExcelSheet.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Form1.resx">
+    <EmbeddedResource Update="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
-      <Visible>False</Visible>
-      <ProductName>Windows Installer 3.1</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
+    <ProjectReference Include="..\Eval4Lib\Eval4Lib.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Eval4Lib\Eval4Lib.csproj">
-      <Project>{21896275-AF6E-4F6E-B057-F28B02BCF7E8}</Project>
-      <Name>Eval4Lib</Name>
-    </ProjectReference>
+    <Compile Remove="ObservableTime.cs" />
+    <Compile Remove="Program.cs" />
+    <Compile Remove="Properties\AssemblyInfo.cs" />
+    <Compile Remove="Properties\Resources.Designer.cs" />
+    <Compile Remove="Properties\Settings.Designer.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PreBuildEvent />
-    <PostBuildEvent />
-  </PropertyGroup>
 </Project>
