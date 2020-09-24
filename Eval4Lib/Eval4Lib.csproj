@@ -3,10 +3,6 @@
     <RootNamespace>Eval4</RootNamespace>
     <AssemblyName>Eval4</AssemblyName>
     <TargetFramework>net45</TargetFramework>
-    <SccProjectName>Svn</SccProjectName>
-    <SccLocalPath>Svn</SccLocalPath>
-    <SccAuxPath>Svn</SccAuxPath>
-    <SccProvider>SubversionScc</SccProvider>
     <AssemblyTitle>Eval3LibCs</AssemblyTitle>
     <Product>Eval3LibCs</Product>
     <Copyright>Copyright ©  2012</Copyright>

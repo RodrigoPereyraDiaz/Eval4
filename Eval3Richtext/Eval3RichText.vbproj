@@ -18,10 +18,6 @@
     <MyType>Windows</MyType>
     <TargetFramework>net20</TargetFramework>
     <UpgradeBackupLocation />
-    <SccProjectName>Svn</SccProjectName>
-    <SccLocalPath>Svn</SccLocalPath>
-    <SccAuxPath>Svn</SccAuxPath>
-    <SccProvider>SubversionScc</SccProvider>
     <OutputPath>..\bin\</OutputPath>
     <WarningLevel>1</WarningLevel>
     <RemoveIntegerChecks>false</RemoveIntegerChecks>
