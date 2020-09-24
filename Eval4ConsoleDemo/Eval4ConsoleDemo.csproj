@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <RootNamespace>Eval4.ConsoleDemo</RootNamespace>
-    <TargetFramework>net45</TargetFramework>
+    <TargetFramework>net48</TargetFramework>
     <AssemblyTitle>Eval4ConsoleDemo</AssemblyTitle>
     <Product>Eval4ConsoleDemo</Product>
     <Copyright>Copyright ©  2012</Copyright>
