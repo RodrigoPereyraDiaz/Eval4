@@ -3,8 +3,8 @@
     <RootNamespace>Eval4</RootNamespace>
     <AssemblyName>Eval4</AssemblyName>
     <TargetFramework>net45</TargetFramework>
-    <AssemblyTitle>Eval3LibCs</AssemblyTitle>
-    <Product>Eval3LibCs</Product>
+    <AssemblyTitle>Eval4LibCs</AssemblyTitle>
+    <Product>Eval4LibCs</Product>
     <Copyright>Copyright ©  2012</Copyright>
     <OutputPath>bin\$(Configuration)\</OutputPath>
   </PropertyGroup>
